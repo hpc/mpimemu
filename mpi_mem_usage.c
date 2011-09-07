@@ -29,6 +29,9 @@ o EXAMPLE USAGE
     mpirun -np 16 ./mpi_mem_usage
     srun -n16 ./mpi_mem_usage
     aprun -n 16 ./mpi_mem_usage
+
+o TODO
+    detect rank placement
 ///////////////////////////////////////////////////////////////////////////// */
 
 #include <stdlib.h>
