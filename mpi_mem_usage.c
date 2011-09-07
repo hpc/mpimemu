@@ -45,7 +45,8 @@ o EXAMPLE USAGE
 /* application name */
 #define MPIMEMU_NAME "mpi_mem_usage"
 /* current version */
-#define MPIMEMU_VER  "0.1.3"
+#define MPIMEMU_VER  "0.1.4dr"
+/* TODO - this shoud be a run-time parameter */
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 /* target PPN - USER CHANGE BELOW TO MATCH TARGET MACHINE                     */
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
