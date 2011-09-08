@@ -615,30 +615,34 @@ get_global_mma(unsigned long int **in_out_min_vec_ptr,
                int num_members)
 {
     int i;
-    unsigned long int *io_min_vp = *in_out_min_vec_ptr;
-    unsigned long int *io_max_vp = *in_out_max_vec_ptr;
-    double *io_ave_vp            = *in_out_ave_vec_ptr;
-    double *o_min_samp_vp        = *out_min_samp_vec_ptr;
-    double *o_max_samp_vp        = *out_max_samp_vec_ptr;
+    unsigned long int *io_min_vp   = *in_out_min_vec_ptr;
+    unsigned long int *io_max_vp   = *in_out_max_vec_ptr;
+    double *io_ave_vp              = *in_out_ave_vec_ptr;
+    double *o_min_samp_vp          = *out_min_samp_vec_ptr;
+    double *o_max_samp_vp          = *out_max_samp_vec_ptr;
+    unsigned long int tmp_send_buf = 0;
+    double tmp_double_buf          = 0.0;
 
     for (i = 0; i < vec_len; ++i) {
-        mpi_ret_code = MPI_Allreduce(MPI_IN_PLACE, &io_min_vp[i], 1,
+        tmp_send_buf = io_min_vp[i];
+        mpi_ret_code = MPI_Allreduce(&tmp_send_buf, &io_min_vp[i], 1,
                                      MPI_UNSIGNED_LONG, MPI_SUM, comm);
         MPIMEMU_MPICHK(mpi_ret_code, error);
 
         o_min_samp_vp[i] = (0 == io_min_vp[i]) ? 0.0 :
                            (double)io_min_vp[i]/(double)num_members;
 
-
-        mpi_ret_code = MPI_Allreduce(MPI_IN_PLACE, &io_max_vp[i], 1,
+        tmp_send_buf = io_max_vp[i];
+        mpi_ret_code = MPI_Allreduce(&tmp_send_buf, &io_max_vp[i], 1,
                                      MPI_UNSIGNED_LONG, MPI_SUM, comm);
         MPIMEMU_MPICHK(mpi_ret_code, error);
 
         o_max_samp_vp[i] = (0 == io_max_vp[i]) ? 0.0 :
                            (double)io_max_vp[i]/(double)num_members;
 
-        mpi_ret_code = MPI_Allreduce(MPI_IN_PLACE, &io_ave_vp[i], 1, MPI_DOUBLE,
-                                     MPI_SUM, comm);
+        tmp_double_buf = io_ave_vp[i];
+        mpi_ret_code = MPI_Allreduce(&tmp_double_buf, &io_ave_vp[i], 1,
+                                     MPI_DOUBLE, MPI_SUM, comm);
         MPIMEMU_MPICHK(mpi_ret_code, error);
 
         io_ave_vp[i] = (0.0 == io_ave_vp[i]) ? 0.0 :
