@@ -14,10 +14,13 @@
 
 # Author: Samuel K. Gutierrez
 
-TARGET = mpi_mem_usage 
 SHELL  = /bin/sh
+
+TARGET = mpi_mem_usage 
+
 CC     = mpicc
-#CFLAGS = -Wall
+#CC     = cc
+CFLAGS = -Wall
 
 .SUFFIXES:
 .SUFFIXES: .c .o
