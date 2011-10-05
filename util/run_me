@@ -1,0 +1,94 @@
+#!/bin/bash
+
+###############################################################################
+# Copyright (c) 2010-2011 Los Alamos National Security, LLC.
+#                         All rights reserved.
+#
+# This program was prepared by Los Alamos National Security, LLC at Los Alamos
+# National Laboratory (LANL) under contract No. DE-AC52-06NA25396 with the U.S.
+# Department of Energy (DOE). All rights in the program are reserved by the DOE
+# and Los Alamos National Security, LLC. Permission is granted to the public to
+# copy and use this software without charge, provided that this Notice and any
+# statement of authorship are reproduced on all copies. Neither the U.S.
+# Government nor LANS makes any warranty, express or implied, or assumes any
+# liability or responsibility for the use of this software.
+################################################################################
+
+# Author: Samuel K. Gutierrez
+
+source ./mmu_util
+source ./mmu_config
+
+trap "mmu_echo INTERRUPTED!" SIGINT SIGTERM
+
+mmu_build()
+{
+    if [[ ! -x $mmu_target ]]
+    then
+        make CC=$mmu_cc > /dev/null 2>&1
+        if [[ $? != 0 ]]
+        then
+            mmu_err "build failure"
+        fi
+    else
+        mmu_echo "no_build $mmu_target"
+    fi
+}
+
+mmu_run()
+{
+    run_str="$mmu_run_cmd -n $1 ./$mmu_target"
+
+    # place run output in data_dir/numpe
+    mmu_run_and_check "$run_str" | tee "$2/$1"
+}
+
+mmu_gen_seq()
+{
+    i=1
+    x=$mmu_ppn
+    while [[ $x -le $mmu_max_procs ]]
+    do
+        echo "$x"
+        x=$(( $mmu_ppn * $mmu_mult * $i ))
+        i=$(( i += 1 ))
+    done
+}
+
+start_date=`date "+%Y_%m_%d"`
+
+# find an available data directory
+dir_index=0
+while [[ -d "$mmu_stats_dir/$start_date/`printf $PF_FM $dir_indx`" ]]
+do
+    if [[ $dir_index -ge $TRY_LIMIT ]]
+    then
+        mmu_echo "try limit exceeded: failed to find available data dir..."
+    else
+        (( dir_indx += 1 ))
+    fi
+done
+data_dir="$mmu_stats_dir/$start_date/`printf $PF_FM $dir_indx`"
+# make the data dir
+mmu_run_and_check "mkdir -p $data_dir"
+# let the user know where the data is going to be stored
+mmu_echo "data_dir $data_dir"
+mmu_echo ""
+
+# build the code
+mmu_build
+
+# run the tests at various scales
+for i in `mmu_gen_seq`
+do
+    mmu_run $i "$data_dir"
+done
+
+# do we need to also run at the largest requested size?
+if [[ "`mmu_gen_seq | tail -n 1`" != $mmu_max_procs ]]
+then
+    mmu_run $mmu_max_procs "$data_dir"
+    sleep 1
+fi
+
+exit 0
