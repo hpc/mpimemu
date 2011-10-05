@@ -121,9 +121,9 @@ do {                                                                           \
 } while (0)
 
 /* master rank printf */
-#define MMU_MPF(pfargs...)                                                 \
+#define MMU_MPF(pfargs...)                                                     \
 do {                                                                           \
-    if (my_rank == (MMU_MASTER_RANK)) {                                    \
+    if (my_rank == (MMU_MASTER_RANK)) {                                        \
         fprintf(stdout, pfargs);                                               \
         fflush(stdout);                                                        \
     }                                                                          \
@@ -178,7 +178,6 @@ enum {
 typedef enum {
     MEM_TYPE_NODE = 0,
     MEM_TYPE_PROC
-
 } mem_info_type_t;
 
 typedef enum {
@@ -569,15 +568,25 @@ out:
 static int
 fini_mpi(void)
 {
-    mpi_ret_code = MPI_Comm_free(&worker_comm);
-    MMU_MPICHK(mpi_ret_code, error);
+    char *bad_func = NULL;
+    int rc;
 
-    mpi_ret_code = MPI_Finalize();
-    MMU_MPICHK(mpi_ret_code, error);
+    if (MPI_SUCCESS != (rc = MPI_Comm_free(&worker_comm))) {
+        bad_func = "MPI_Comm_free";
+        goto out;
+    }
+    if (MPI_SUCCESS != (rc = MPI_Finalize())) {
+        bad_func = "MPI_Finalize";
+        goto out;
+    }
 
+out:
+    if (NULL != bad_func) {
+        MMU_ERR_MSG("%s failure detected [mpi rc: %d (%s)]\n", bad_func, rc,
+                    mmu_mpi_rc2estr(rc));
+        return MMU_FAILURE_MPI;
+    }
     return MMU_SUCCESS;
-error:
-    return MMU_FAILURE;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
