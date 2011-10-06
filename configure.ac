@@ -22,8 +22,6 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([mpi_mem_usage.c])
 
-AC_CONFIG_AUX_DIR([config])
-
 AM_INIT_AUTOMAKE([foreign])
 
 AM_CONFIG_HEADER([config.h])

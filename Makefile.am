@@ -1,5 +1,4 @@
 EXTRA_DIST = AUTHORS README THANKS COPYRIGHT autogen ChangeLog util
-ACLOCAL_AMFLAGS = -I config
 
 bin_PROGRAMS = mpi_mem_usage
 
