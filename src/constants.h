@@ -19,31 +19,6 @@
 #include "config.h"
 #endif
 
-/* return codes used for internal purposes */
-enum {
-    /* general success return code */
-    MMU_SUCCESS = 0,
-    /* general failure return code */
-    MMU_FAILURE,
-    /* general mpi failure return code */
-    MMU_FAILURE_MPI,
-    /* out of resources failure return code */
-    MMU_FAILURE_OOR
-} mpimemu_ret;
-
-/* memory query types */
-typedef enum {
-    MEM_TYPE_NODE = 0,
-    MEM_TYPE_PROC
-} mem_info_type_t;
-
-/* local reduction operations */
-typedef enum {
-    LOCAL_MIN = 0,
-    LOCAL_MAX,
-    LOCAL_SUM
-} local_reduction_ops;
-
 /* TODO - this shoud be a run-time parameter */
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 /* target PPN - USER CHANGE BELOW TO MATCH TARGET MACHINE                     */
@@ -77,9 +52,6 @@ typedef enum {
 #define MMU_TIME_STR_MAX    16
 /* at most 10 samples/second (in microseconds) */
 #define MMU_SLEEPY_TIME     100000
-#define MMU_FAILURE         0
-/* success return code */
-#define MMU_SUCCESS         1
 /* number of items we are recording for node mem info */
 #define MMU_MEM_INFO_LEN    13
 /* number of items we are recording for proc mem info */
@@ -94,5 +66,107 @@ typedef enum {
 #define MMU_PATH_MAX        1024
 /* number of memory types */
 #define MMU_NUM_MEM_TYPES   2
+
+/* return codes used for internal purposes */
+enum {
+    /* general success return code */
+    MMU_SUCCESS = 0,
+    /* general failure return code */
+    MMU_FAILURE,
+    /* general mpi failure return code */
+    MMU_FAILURE_MPI,
+    /* out of resources failure return code */
+    MMU_FAILURE_OOR
+} mpimemu_ret;
+
+/* memory query types */
+typedef enum {
+    MEM_TYPE_NODE = 0,
+    MEM_TYPE_PROC
+} mem_info_type_t;
+
+/* local reduction operations */
+typedef enum {
+    LOCAL_MIN = 0,
+    LOCAL_MAX,
+    LOCAL_SUM
+} local_reduction_ops;
+
+typedef enum {
+    STATUS_VMPEAK = 0,
+    STATUS_VMSIZE,
+    STATUS_VMLCK,
+    STATUS_VMHWM,
+    STATUS_VMRSS,
+    STATUS_VMDATA,
+    STATUS_VMSTK,
+    STATUS_VMEXE,
+    STATUS_VMLIB,
+    STATUS_VMPTE
+} status_type_index_t;
+
+/* "valid" status key values */
+static const char *status_name_list[MMU_KEY_LEN_MAX] = {
+    "VmPeak",
+    "VmSize",
+    "VmLck",
+    "VmHWM",
+    "VmRSS",
+    "VmData",
+    "VmStk",
+    "VmExe",
+    "VmLib",
+    "VmPTE"
+};
+
+typedef enum {
+    MEM_TOTAL_INDEX = 0,
+    MEM_FREE_INDEX,
+    MEM_USED_INDEX,
+    BUFFERS_INDEX,
+    CACHED_INDEX,
+    SWAP_CACHED_INDEX,
+    ACTIVE_INDEX,
+    INACTIVE_INDEX,
+    SWAP_TOTAL_INDEX,
+    SWAP_FREE_INDEX,
+    DIRTY_INDEX,
+    COMMIT_LIMIT_INDEX,
+    COMMITTED_AS_INDEX
+} mem_info_type_index;
+
+/* "valid" node key values */
+static const char *meminfo_name_list[MMU_KEY_LEN_MAX] = {
+    "MemTotal",
+    "MemFree",
+    "MemUsed",
+    "Buffers",
+    "Cached",
+    "SwapCached",
+    "Active",
+    "Inactive",
+    "SwapTotal",
+    "SwapFree",
+    "Dirty",
+    "CommitLimit",
+    "Committed_AS"
+};
+
+/* mem info stuff */
+typedef struct mem_info_t {
+    const char **index_name_ptr;
+    int num_elements;
+} mem_info_t;
+
+/**
+ * mem info array
+ * items should following the ordering specified by mem_info_type_t
+ */
+static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
+    /* node */
+    {meminfo_name_list,  MMU_MEM_INFO_LEN},
+    /* proc */
+    {status_name_list, MMU_NUM_STATUS_VARS}
+};
 
 #endif /* ifndef CONSTANTS_INCLUDED */
