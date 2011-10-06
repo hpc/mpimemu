@@ -15,5 +15,5 @@
 bin_PROGRAMS = mpimemu
 
 mpimemu_SOURCES = \
+constants.h \
 mpimemu.c
-
