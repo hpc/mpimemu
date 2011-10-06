@@ -45,6 +45,8 @@ o TODO
 #include <limits.h>
 #include <stdbool.h>
 
+#include "constants.h"
+
 #include "mpi.h"
 
 /* application name */
@@ -129,19 +131,6 @@ do {                                                                           \
     }                                                                          \
 } while (0)
 
-
-/* return codes used for internal purposes */
-enum {
-    /* general success return code */
-    MMU_SUCCESS = 0,
-    /* general failure return code */
-    MMU_FAILURE,
-    /* general mpi failure return code */
-    MMU_FAILURE_MPI,
-    /* out of resources failure return code */
-    MMU_FAILURE_OOR
-};
-
 /* pre mpi init prefix */
 #define MMU_PMPI_PREFIX    "Pre_MPI_Init_"
 /* file containing node memory usage information */
@@ -173,12 +162,6 @@ enum {
 #define MMU_PATH_MAX        1024
 /* number of memory types */
 #define MMU_NUM_MEM_TYPES   2
-
-/* memory query types */
-typedef enum {
-    MEM_TYPE_NODE = 0,
-    MEM_TYPE_PROC
-} mem_info_type_t;
 
 typedef enum {
     STATUS_VMPEAK = 0,
@@ -256,13 +239,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     /* proc */
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
-
-/* local reduction operations */
-typedef enum {
-    LOCAL_MIN = 0,
-    LOCAL_MAX,
-    LOCAL_SUM
-} local_reduction_ops;
 
 /* my rank */
 static int my_rank;
@@ -1221,25 +1197,3 @@ finil:
     MPI_Finalize();
     return EXIT_FAILURE;
 }
-
-/* /////////////////////////////////////////////////////////////////////////////
-o CHANGE LOG
-
-2010-08-23 Samuel K. Gutierrez samuelREMOVE_ME[at]lanl.gov
-    * minor style changes
-
-2010-08-23 Samuel K. Gutierrez samuel(remove_me)[at]lanl.gov
-    * initial implementation.
-
-2010-11-30 Samuel K. Gutierrez samuel(remove_me)[at]lanl.gov
-    * per proc memory usage information.
-    * pre mpi_init memory utilization.
-    * cleanup and bug fixes.
-
-2010-12-01 Samuel K. Gutierrez samuel(remove_me)[at]lanl.gov
-    * v0.1.0 ready for cielo testing
-
-2011-03-10 Samuel K. Gutierrez samuel(remove_me)[at]lanl.gov
-    * added static to a few local vars and funcs.
-    * on to 0.1.1
-///////////////////////////////////////////////////////////////////////////// */
