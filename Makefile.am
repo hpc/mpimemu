@@ -1,10 +1,3 @@
-EXTRA_DIST = AUTHORS README THANKS COPYRIGHT autogen ChangeLog util
-
-bin_PROGRAMS = mpi_mem_usage
-
-mpi_mem_usage_SOURCES = \
-mpi_mem_usage.c
-
 ###############################################################################
 # Copyright (c) 2011      Los Alamos National Security, LLC.
 #                         All rights reserved.
@@ -18,3 +11,8 @@ mpi_mem_usage.c
 # Government nor LANS makes any warranty, express or implied, or assumes any
 # liability or responsibility for the use of this software.
 ################################################################################
+
+SUBDIRS = src
+
+EXTRA_DIST = AUTHORS README THANKS COPYRIGHT autogen ChangeLog util
+

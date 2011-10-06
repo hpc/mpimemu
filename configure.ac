@@ -20,7 +20,7 @@ AC_INIT([mpi_mem_usage], [0.1.6dev], [samuelREMOVEME@lanl.gov])
 # If So, Build Using AM_SILENT_RULES
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_CONFIG_SRCDIR([mpi_mem_usage.c])
+AC_CONFIG_SRCDIR([src])
 
 AM_INIT_AUTOMAKE([foreign])
 
@@ -43,6 +43,7 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strerror strtoul])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile
+                 src/Makefile])
 
 AC_OUTPUT
