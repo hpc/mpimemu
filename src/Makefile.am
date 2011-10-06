@@ -12,8 +12,8 @@
 # liability or responsibility for the use of this software.
 ################################################################################
 
-bin_PROGRAMS = mpi_mem_usage
+bin_PROGRAMS = mpimemu
 
-mpi_mem_usage_SOURCES = \
-mpi_mem_usage.c
+mpimemu_SOURCES = \
+mpimemu.c
 

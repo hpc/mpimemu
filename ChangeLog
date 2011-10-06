@@ -1,3 +1,7 @@
+2011-10-05 Samuel K. Gutierrez
+	* changed application name from "mpi_mem_usage" to "mpimemu"
+	* now using autoconf and automake
+
 2011-03-10 Samuel K. Gutierrez
 	* added static to a few local vars and funcs.
 	* on to 0.1.1
