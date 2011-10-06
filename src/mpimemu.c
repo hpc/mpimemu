@@ -33,7 +33,6 @@ o EXAMPLE USAGE
 o TODO
     detect rank placement
 ///////////////////////////////////////////////////////////////////////////// */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -49,10 +48,6 @@ o TODO
 
 #include "mpi.h"
 
-/* application name */
-#define MMU_NAME "mpi_mem_usage"
-/* current version */
-#define MMU_VER  "0.1.6dev"
 
 /* TODO - this shoud be a run-time parameter */
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
@@ -1021,7 +1016,7 @@ main(int argc,
     }
 
     /* let the "master process" print out some header stuff */
-    MMU_MPF("# %s %s\n", MMU_NAME, MMU_VER);
+    MMU_MPF("# %s %s\n", PACKAGE, PACKAGE_VERSION);
     MMU_MPF("# host %s\n", hostname_buff);
     MMU_MPF("# date_time %s\n", start_time_buff);
     MMU_MPF("# ppn %d \n", (int)MMU_PPN);

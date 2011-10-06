@@ -15,6 +15,10 @@
 #ifndef CONSTANTS_INCLUDED
 #define CONSTANTS_INCLUDED
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* return codes used for internal purposes */
 enum {
     /* general success return code */
