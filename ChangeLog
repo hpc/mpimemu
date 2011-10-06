@@ -1,0 +1,14 @@
+2011-03-10 Samuel K. Gutierrez
+	* added static to a few local vars and funcs.
+	* on to 0.1.1
+
+2010-12-01 Samuel K. Gutierrez
+	* v0.1.0 ready for cielo testing
+
+2010-11-30 Samuel K. Gutierrez
+	* per proc memory usage information.
+	* pre mpi_init memory utilization.
+	* cleanup and bug fixes.
+
+2010-08-23 Samuel K. Gutierrez
+	* initial implementation.
