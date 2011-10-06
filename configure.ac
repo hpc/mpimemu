@@ -47,3 +47,19 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile])
 
 AC_OUTPUT
+
+# let the user know the configuration 
+
+cat << EOF
+
+mpimemu configuration
+#####################
+
+CC      : $CC
+CFLAGS  : $CFLAGS
+LDFLAGS : $LDFLAGS
+LIBS    : $LIBS
+CPPFLAGS: $CPPFLAGS
+CFF     : $CPP
+
+EOF
