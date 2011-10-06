@@ -17,4 +17,4 @@ bin_PROGRAMS = mpimemu
 mpimemu_SOURCES = \
 constants.h \
 conv_macros.h \
-mpimemu.c
+mpimemu.h mpimemu.c

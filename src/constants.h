@@ -152,21 +152,4 @@ static const char *meminfo_name_list[MMU_KEY_LEN_MAX] = {
     "Committed_AS"
 };
 
-/* mem info stuff */
-typedef struct mem_info_t {
-    const char **index_name_ptr;
-    int num_elements;
-} mem_info_t;
-
-/**
- * mem info array
- * items should following the ordering specified by mem_info_type_t
- */
-static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
-    /* node */
-    {meminfo_name_list,  MMU_MEM_INFO_LEN},
-    /* proc */
-    {status_name_list, MMU_NUM_STATUS_VARS}
-};
-
 #endif /* ifndef CONSTANTS_INCLUDED */
