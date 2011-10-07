@@ -33,16 +33,30 @@ o EXAMPLE USAGE
 o TODO
     detect rank placement
 ///////////////////////////////////////////////////////////////////////////// */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <time.h>
-#include <string.h>
 #include <errno.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <stdbool.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 #include "constants.h"
 #include "util.h"
@@ -50,7 +64,6 @@ o TODO
 #include "mpimemu.h"
 
 #include "mpi.h"
-
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
