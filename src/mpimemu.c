@@ -139,12 +139,12 @@ node_mem_usage_destruct(mmu_node_mem_usage_container_t *containerp)
     if (NULL != containerp->max_sample_aves) {
         free(containerp->max_sample_aves);
     }
-    for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        if (NULL != containerp->samples[i]) {
-            free(containerp->samples[i]);
-        }
-    }
     if (NULL != containerp->samples) {
+        for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
+            if (NULL != containerp->samples[i]) {
+                free(containerp->samples[i]);
+            }
+        }
         free(containerp->samples);
     }
     return MMU_SUCCESS;
