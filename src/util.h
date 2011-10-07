@@ -15,31 +15,19 @@
 #ifndef UTIL_INCLUDED
 #define UTIL_INCLUDED 
 
-#include <stdlib.h>
+double *
+lfcalloc(size_t count);
 
-/* ////////////////////////////////////////////////////////////////////////// */
-/* inline utility functions */
-/* ////////////////////////////////////////////////////////////////////////// */
+unsigned long int *
+lucalloc(size_t count);
 
-/* ////////////////////////////////////////////////////////////////////////// */
-static inline double *
-lfcalloc(size_t count)
-{
-    return (double *)calloc(count, sizeof(double));
-}
+unsigned long int **
+lupcalloc(size_t count);
 
-/* ////////////////////////////////////////////////////////////////////////// */
-static inline unsigned long int *
-lucalloc(size_t count)
-{
-    return (unsigned long int *)calloc(count, sizeof(unsigned long int));
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-static inline unsigned long int **
-lupcalloc(size_t count)
-{
-    return (unsigned long int **)calloc(count, sizeof(unsigned long int *));
-}
+unsigned long int
+strtoul_wec(const char *nptr,
+            char **endptr,
+            int base,
+            int *ret_code);
 
 #endif /* ifndef UTIL_INCLUDED */

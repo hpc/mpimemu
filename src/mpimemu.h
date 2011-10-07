@@ -96,12 +96,6 @@ reduce_local(const unsigned long int *in_vec,
              int in_vec_len,
              int op);
 
-static unsigned long int
-strtoul_wec(const char *nptr,
-            char **endptr,
-            int base,
-            int *ret_code);
-
 static int
 is_valid_key(int mem_info_type,
              const char *key,

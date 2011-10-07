@@ -54,9 +54,6 @@ o TODO
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif
-#ifdef HAVE_LIMITS_H
-#include <limits.h>
-#endif
 
 #include "constants.h"
 #include "util.h"
@@ -371,36 +368,6 @@ reduce_local(const unsigned long int *in_vec,
     return MMU_SUCCESS;
 err:
     return MMU_FAILURE;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-/* strtoul with error checks - yeah, i said it */
-static unsigned long int
-strtoul_wec(const char *nptr,
-            char **endptr,
-            int base,
-            int *ret_code)
-{
-    char *end_ptr = NULL;
-    unsigned long int value;
-
-    /* assume all is well */
-    *ret_code = MMU_SUCCESS;
-
-    /* check for strtoul errors */
-    errno = 0;
-    value = strtoul(nptr, endptr, 10);
-
-    if ((ERANGE == errno && (ULONG_MAX == value || 0 == value)) ||
-        (0 != errno && 0 == value)) {
-        *ret_code = MMU_FAILURE;
-    }
-    if (nptr == end_ptr) {
-        *ret_code = MMU_FAILURE;
-    }
-
-    /* caller must always check the return code */
-    return value;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
