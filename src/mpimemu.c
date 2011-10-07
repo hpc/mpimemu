@@ -87,43 +87,45 @@ init(void)
     /* ////////////////////////////////////////////////////////////////////// */
     /* node memory usage */
     /* ////////////////////////////////////////////////////////////////////// */
-    if (NULL == (node_mem_vals = lucalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.mem_vals = lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_min_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.min_sample_values =
+                    lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_max_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.max_sample_values =
+                    lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
-    if (NULL == (node_samples = lupcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (node_mem_usage.samples = lupcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
         rc = MMU_FAILURE_OOR;
         goto out;
     }
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        if (NULL == (node_samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
+        if (NULL == (node_mem_usage.samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
             MMU_OOR_COMPLAIN();
             rc = MMU_FAILURE_OOR;
             goto out;
@@ -295,16 +297,16 @@ fini(void)
 {
     int i;
     /* node */
-    free(node_mem_vals);
-    free(node_min_sample_values);
-    free(node_max_sample_values);
-    free(node_sample_aves);
-    free(node_min_sample_aves);
-    free(node_max_sample_aves);
+    free(node_mem_usage.mem_vals);
+    free(node_mem_usage.min_sample_values);
+    free(node_mem_usage.max_sample_values);
+    free(node_mem_usage.sample_aves);
+    free(node_mem_usage.min_sample_aves);
+    free(node_mem_usage.max_sample_aves);
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        free(node_samples[i]);
+        free(node_mem_usage.samples[i]);
     }
-    free(node_samples);
+    free(node_mem_usage.samples);
 
     /* proc */
     free(proc_mem_vals);
@@ -775,13 +777,13 @@ main(int argc,
         if (1 == my_color) {
             /* if so, update node memory usage */
             if (MMU_SUCCESS != update_mem_info(MEM_TYPE_NODE,
-                                                   node_mem_vals)) {
+                                               node_mem_usage.mem_vals)) {
                 MMU_ERR_MSG("unable to update node memory usage info\n");
                 goto error;
             }
             for (j = 0; j < MMU_MEM_INFO_LEN; ++j) {
                 /* record local node sample values */
-                node_samples[j][i] = node_mem_vals[j];
+                node_mem_usage.samples[j][i] = node_mem_usage.mem_vals[j];
             }
         }
 
@@ -804,22 +806,22 @@ main(int argc,
 
     if (1 == my_color) {
         /* calculate local values (node min, node max, node ave) */
-        if (MMU_SUCCESS != get_local_mma(node_samples,
-                                             MMU_MEM_INFO_LEN,
-                                             &node_min_sample_values,
-                                             &node_max_sample_values,
-                                             &node_sample_aves)) {
+        if (MMU_SUCCESS != get_local_mma(node_mem_usage.samples,
+                                         MMU_MEM_INFO_LEN,
+                                         &node_mem_usage.min_sample_values,
+                                         &node_mem_usage.max_sample_values,
+                                         &node_mem_usage.sample_aves)) {
             MMU_ERR_MSG("get_local_mma error\n");
             goto error;
         }
 
         /* calculate global values (node min, node max, node ave) */
-        if (MMU_SUCCESS != get_global_mma(&node_min_sample_values,
-                                              &node_max_sample_values,
-                                              &node_sample_aves,
+        if (MMU_SUCCESS != get_global_mma(&node_mem_usage.min_sample_values,
+                                              &node_mem_usage.max_sample_values,
+                                              &node_mem_usage.sample_aves,
                                               MMU_MEM_INFO_LEN,
-                                              &node_min_sample_aves,
-                                              &node_max_sample_aves,
+                                              &node_mem_usage.min_sample_aves,
+                                              &node_mem_usage.max_sample_aves,
                                               worker_comm,
                                               num_workers)) {
             MMU_ERR_MSG("get_global_mma error\n");
@@ -896,9 +898,9 @@ main(int argc,
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
             MMU_MPF("%s, %.2lf, %.2lf, %.2lf\n",
                         meminfo_name_list[i],
-                        node_min_sample_aves[i],
-                        node_max_sample_aves[i],
-                        node_sample_aves[i]);
+                        node_mem_usage.min_sample_aves[i],
+                        node_mem_usage.max_sample_aves[i],
+                        node_mem_usage.sample_aves[i]);
         }
     }
 

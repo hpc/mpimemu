@@ -35,6 +35,26 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
 
+typedef struct mmu_node_mem_usage_container_t {
+    /* holds values for each recorded value */
+    unsigned long int *mem_vals;
+    /* holds meminfo sample values */
+    unsigned long int **samples;
+    /* holds min sample values */
+    unsigned long int *min_sample_values;
+    /* holds max sample values */
+    unsigned long int *max_sample_values;
+    /* holds sample averages */
+    double *sample_aves;
+    /* holds sample averages */
+    double *min_sample_aves;
+    /* holds sample averages */
+    double *max_sample_aves;
+} mmu_node_mem_usage_container_t;
+
+/* container for all node memory usage values */
+static mmu_node_mem_usage_container_t node_mem_usage;
+
 /* my rank */
 static int my_rank;
 /**
@@ -58,23 +78,20 @@ static time_t raw_time;
 /* hostname buffer */
 static char hostname_buff[MPI_MAX_PROCESSOR_NAME];
 /* holds values for each recorded value */
-static unsigned long int *node_mem_vals = NULL, *proc_mem_vals = NULL;
+static unsigned long int *proc_mem_vals = NULL;
 /* holds meminfo sample values */
-static unsigned long int **node_samples = NULL,
-                         **pre_mpi_init_proc_samples = NULL,
+static unsigned long int **pre_mpi_init_proc_samples = NULL,
                          **proc_samples = NULL;
 /* holds min sample values */
-static unsigned long int *node_min_sample_values = NULL,
-                         *proc_min_sample_values = NULL;
+static unsigned long int *proc_min_sample_values = NULL;
 /* holds max sample values */
-static unsigned long int *node_max_sample_values = NULL,
-                         *proc_max_sample_values = NULL;
+static unsigned long int *proc_max_sample_values = NULL;
 /* holds sample averages */
-static double *node_sample_aves = NULL, *proc_sample_aves = NULL;
+static double *proc_sample_aves = NULL;
 /* holds sample averages */
-static double *node_min_sample_aves = NULL, *proc_min_sample_aves = NULL;
+static double *proc_min_sample_aves = NULL;
 /* holds sample averages */
-static double *node_max_sample_aves = NULL, *proc_max_sample_aves = NULL;
+static double *proc_max_sample_aves = NULL;
 /* number of processes that are doing work */
 static int num_workers;
 /* start time buffer */
