@@ -48,6 +48,12 @@ do {                                                                           \
     }                                                                          \
 } while (0)
 
+#define MMU_OOR_COMPLAIN()                                                     \
+do {                                                                           \
+    fprintf(stderr, MMU_ERR_PREFIX "out of resources\n");                      \
+    fflush(stderr);                                                            \
+} while (0)
+
 /* memory alloc check */
 #define MMU_MEMCHK(_ptr_,_gt_)                                                 \
 do {                                                                           \

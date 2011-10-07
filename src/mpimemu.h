@@ -136,15 +136,6 @@ get_global_mma(unsigned long int **in_out_min_vec_ptr,
                MPI_Comm comm,
                int num_members);
 
-static double *
-lfmalloc(size_t mult);
-
-static unsigned long int *
-lumalloc(size_t mult);
-
-static unsigned long int **
-lupmalloc(size_t mult);
-
 #if MMU_DO_SEND_RECV == 1
 static int
 do_send_recv_ring(void);

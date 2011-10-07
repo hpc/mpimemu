@@ -57,6 +57,7 @@ static int
 init(void)
 {
     int i;
+    int rc = MMU_FAILURE;
 
     /* get start date and time */
     time(&raw_time);
@@ -73,69 +74,111 @@ init(void)
     /* ////////////////////////////////////////////////////////////////////// */
     /* node memory usage */
     /* ////////////////////////////////////////////////////////////////////// */
-    node_mem_vals = lucalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_mem_vals, error);
-
-    node_min_sample_values = lucalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_min_sample_values, error);
-
-    node_max_sample_values = lucalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_max_sample_values, error);
-
-    node_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_sample_aves, error);
-
-    node_min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_min_sample_aves, error);
-
-    node_max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_max_sample_aves, error);
-
-    node_samples = lupcalloc(MMU_MEM_INFO_LEN);
-    MMU_MEMCHK(node_samples, error);
-
+    if (NULL == (node_mem_vals = lucalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_min_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_max_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (node_samples = lupcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        node_samples[i] = lucalloc(MMU_NUM_SAMPLES);
-        MMU_MEMCHK(node_samples[i], error);
+        if (NULL == (node_samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
+            MMU_OOR_COMPLAIN();
+            rc = MMU_FAILURE_OOR;
+            goto out;
+        }
     }
 
     /* ////////////////////////////////////////////////////////////////////// */
     /* proc memory usage vars */
     /* ////////////////////////////////////////////////////////////////////// */
-    proc_mem_vals = lucalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_mem_vals, error);
-
-    proc_min_sample_values = lucalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_min_sample_values, error);
-
-    proc_max_sample_values = lucalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_max_sample_values, error);
-
-    proc_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_sample_aves, error);
-
-    proc_min_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_min_sample_aves, error);
-
-    proc_max_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_max_sample_aves, error);
-
-    proc_samples = lupcalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(proc_samples, error);
-
-    pre_mpi_init_proc_samples = lupcalloc(MMU_NUM_STATUS_VARS);
-    MMU_MEMCHK(pre_mpi_init_proc_samples, error);
-
-    for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-        proc_samples[i] = lucalloc(MMU_NUM_SAMPLES);
-        MMU_MEMCHK(proc_samples[i], error);
-        pre_mpi_init_proc_samples[i] = lucalloc(MMU_NUM_SAMPLES);
-        MMU_MEMCHK(pre_mpi_init_proc_samples[i], error);
+    if (NULL == (proc_mem_vals = lucalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_min_sample_values = lucalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_max_sample_values = lucalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_min_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_max_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (proc_samples = lupcalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
+    }
+    if (NULL == (pre_mpi_init_proc_samples = lupcalloc(MMU_NUM_STATUS_VARS))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto out;
     }
 
-    return MMU_SUCCESS;
-error:
-    return MMU_FAILURE;
+    for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
+        if (NULL == (proc_samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
+            MMU_OOR_COMPLAIN();
+            rc = MMU_FAILURE_OOR;
+            goto out;
+        }
+        if (NULL == (pre_mpi_init_proc_samples[i] =
+                         lucalloc(MMU_NUM_SAMPLES))) {
+            MMU_OOR_COMPLAIN();
+            rc = MMU_FAILURE_OOR;
+            goto out;
+        }
+    }
+
+    rc = MMU_SUCCESS;
+
+out:
+    return rc;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
