@@ -38,6 +38,8 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 
 /* container for all node memory usage values */
 static mmu_mem_usage_container_t node_mem_usage;
+/* container for all process memory usage values */
+static mmu_mem_usage_container_t proc_mem_usage;
 
 /* my rank */
 static int my_rank;
@@ -61,21 +63,6 @@ static time_t raw_time;
 /* error string buffer */
 /* hostname buffer */
 static char hostname_buff[MPI_MAX_PROCESSOR_NAME];
-/* holds values for each recorded value */
-static unsigned long int *proc_mem_vals = NULL;
-/* holds meminfo sample values */
-static unsigned long int **pre_mpi_init_proc_samples = NULL,
-                         **proc_samples = NULL;
-/* holds min sample values */
-static unsigned long int *proc_min_sample_values = NULL;
-/* holds max sample values */
-static unsigned long int *proc_max_sample_values = NULL;
-/* holds sample averages */
-static double *proc_sample_aves = NULL;
-/* holds sample averages */
-static double *proc_min_sample_aves = NULL;
-/* holds sample averages */
-static double *proc_max_sample_aves = NULL;
 /* number of processes that are doing work */
 static int num_workers;
 /* start time buffer */

@@ -94,67 +94,16 @@ init(void)
         mem_usage_destruct(&node_mem_usage);
         goto out;
     }
-
     /* ////////////////////////////////////////////////////////////////////// */
     /* proc memory usage vars */
     /* ////////////////////////////////////////////////////////////////////// */
-    if (NULL == (proc_mem_vals = lucalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
+    if (MMU_SUCCESS != (rc = mem_usage_construct(&proc_mem_usage))) {
+        /* no check in error path */
+        mem_usage_destruct(&proc_mem_usage);
         goto out;
-    }
-    if (NULL == (proc_min_sample_values = lucalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (proc_max_sample_values = lucalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (proc_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (proc_min_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (proc_max_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (proc_samples = lupcalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-    if (NULL == (pre_mpi_init_proc_samples = lupcalloc(MMU_NUM_STATUS_VARS))) {
-        MMU_OOR_COMPLAIN();
-        rc = MMU_FAILURE_OOR;
-        goto out;
-    }
-
-    for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-        if (NULL == (proc_samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
-            MMU_OOR_COMPLAIN();
-            rc = MMU_FAILURE_OOR;
-            goto out;
-        }
-        if (NULL == (pre_mpi_init_proc_samples[i] =
-                         lucalloc(MMU_NUM_SAMPLES))) {
-            MMU_OOR_COMPLAIN();
-            rc = MMU_FAILURE_OOR;
-            goto out;
-        }
     }
 
     rc = MMU_SUCCESS;
-
 out:
     return rc;
 }
@@ -258,21 +207,15 @@ out:
 static int
 fini(void)
 {
-    int i;
-
-    /* proc */
-    free(proc_mem_vals);
-    free(proc_min_sample_values);
-    free(proc_max_sample_values);
-    free(proc_sample_aves);
-    free(proc_min_sample_aves);
-    free(proc_max_sample_aves);
-    for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-        free(proc_samples[i]);
-        free(pre_mpi_init_proc_samples[i]);
+    int rc;
+    if (MMU_SUCCESS != (rc = mem_usage_destruct(&node_mem_usage))) {
+        /* TODO add error message */
+        return rc;
     }
-    free(proc_samples);
-    free(pre_mpi_init_proc_samples);
+    if (MMU_SUCCESS != (rc = mem_usage_destruct(&proc_mem_usage))) {
+        /* TODO add error message */
+        return rc;
+    }
     return MMU_SUCCESS;
 }
 
@@ -666,14 +609,16 @@ main(int argc,
     /* ////////////////////////////////////////////////////////////////////// */
     for (i = 0; i < MMU_NUM_SAMPLES; ++i) {
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC, proc_mem_vals)) {
+        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC,
+                                           proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;
         }
 
         for (j = 0; j < MMU_NUM_STATUS_VARS; ++j) {
             /* record pre mpi process sample values */
-            pre_mpi_init_proc_samples[j][i] = proc_mem_vals[j];
+            proc_mem_usage.pre_mpi_init_samples[j][i] =
+                proc_mem_usage.mem_vals[j];
         }
 
         usleep((unsigned long)MMU_SLEEPY_TIME);
@@ -740,14 +685,15 @@ main(int argc,
         }
 
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC, proc_mem_vals)) {
+        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC,
+                                           proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;
         }
 
         for (j = 0; j < MMU_NUM_STATUS_VARS; ++j) {
             /* record process sample values */
-            proc_samples[j][i] = proc_mem_vals[j];
+            proc_mem_usage.samples[j][i] = proc_mem_usage.mem_vals[j];
         }
 
         usleep((unsigned long)MMU_SLEEPY_TIME);
@@ -782,21 +728,21 @@ main(int argc,
     }
 
     /* calculate pre mpi init local values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_local_mma(pre_mpi_init_proc_samples,
+    if (MMU_SUCCESS != get_local_mma(proc_mem_usage.pre_mpi_init_samples,
                                          MMU_NUM_STATUS_VARS,
-                                         &proc_min_sample_values,
-                                         &proc_max_sample_values,
-                                         &proc_sample_aves)) {
+                                         &proc_mem_usage.min_sample_values,
+                                         &proc_mem_usage.max_sample_values,
+                                         &proc_mem_usage.sample_aves)) {
         MMU_ERR_MSG("get_local_mma error\n");
         goto error;
     }
     /* calculate pre mpi init global values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_global_mma(&proc_min_sample_values,
-                                          &proc_max_sample_values,
-                                          &proc_sample_aves,
+    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage.min_sample_values,
+                                          &proc_mem_usage.max_sample_values,
+                                          &proc_mem_usage.sample_aves,
                                           MMU_NUM_STATUS_VARS,
-                                          &proc_min_sample_aves,
-                                          &proc_max_sample_aves,
+                                          &proc_mem_usage.min_sample_aves,
+                                          &proc_mem_usage.max_sample_aves,
                                           MPI_COMM_WORLD,
                                           num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
@@ -808,32 +754,32 @@ main(int argc,
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
             MMU_MPF(MMU_PMPI_PREFIX"%s, %.2lf, %.2lf, %.2lf\n",
                         status_name_list[i],
-                        proc_min_sample_aves[i],
-                        proc_max_sample_aves[i],
-                        proc_sample_aves[i]);
+                        proc_mem_usage.min_sample_aves[i],
+                        proc_mem_usage.max_sample_aves[i],
+                        proc_mem_usage.sample_aves[i]);
         }
     }
     /* ////////////////////////////////////////////////////////////////////// */
     /* post mpi init stuff */
     /* ////////////////////////////////////////////////////////////////////// */
-    if (MMU_SUCCESS != get_local_mma(proc_samples,
+    if (MMU_SUCCESS != get_local_mma(proc_mem_usage.samples,
                                          MMU_NUM_STATUS_VARS,
-                                         &proc_min_sample_values,
-                                         &proc_max_sample_values,
-                                         &proc_sample_aves)) {
+                                         &proc_mem_usage.min_sample_values,
+                                         &proc_mem_usage.max_sample_values,
+                                         &proc_mem_usage.sample_aves)) {
         MMU_ERR_MSG("get_local_mma error\n");
         goto error;
     }
 
     /* calculate global values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_global_mma(&proc_min_sample_values,
-                                          &proc_max_sample_values,
-                                          &proc_sample_aves,
-                                          MMU_NUM_STATUS_VARS,
-                                          &proc_min_sample_aves,
-                                          &proc_max_sample_aves,
-                                          MPI_COMM_WORLD,
-                                          num_ranks)) {
+    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage.min_sample_values,
+                                      &proc_mem_usage.max_sample_values,
+                                      &proc_mem_usage.sample_aves,
+                                      MMU_NUM_STATUS_VARS,
+                                      &proc_mem_usage.min_sample_aves,
+                                      &proc_mem_usage.max_sample_aves,
+                                      MPI_COMM_WORLD,
+                                      num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
@@ -843,9 +789,9 @@ main(int argc,
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
             MMU_MPF("%s, %.2lf, %.2lf, %.2lf\n",
                         status_name_list[i],
-                        proc_min_sample_aves[i],
-                        proc_max_sample_aves[i],
-                        proc_sample_aves[i]);
+                        proc_mem_usage.min_sample_aves[i],
+                        proc_mem_usage.max_sample_aves[i],
+                        proc_mem_usage.sample_aves[i]);
         }
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
             MMU_MPF("%s, %.2lf, %.2lf, %.2lf\n",
