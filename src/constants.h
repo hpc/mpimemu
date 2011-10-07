@@ -76,7 +76,9 @@ enum {
     /* general mpi failure return code */
     MMU_FAILURE_MPI,
     /* out of resources failure return code */
-    MMU_FAILURE_OOR
+    MMU_FAILURE_OOR,
+    /* invalid argument failure return code */
+    MMU_FAILURE_INVALID_ARG
 } mpimemu_ret;
 
 /* memory query types */
