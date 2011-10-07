@@ -18,4 +18,5 @@ mpimemu_SOURCES = \
 constants.h \
 conv_macros.h \
 util.h \
+memory_usage.h memory_usage.c \
 mpimemu.h mpimemu.c

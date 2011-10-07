@@ -15,6 +15,10 @@
 #ifndef CONV_MACROS_INCLUDED
 #define CONV_MACROS_INCLUDED 
 
+#include <stdlib.h>
+#include <stdio.h>
+#include "mpi.h"
+
 /* ////////////////////////////////////////////////////////////////////////// */
 /* convenience macros                                                         */
 /* ////////////////////////////////////////////////////////////////////////// */

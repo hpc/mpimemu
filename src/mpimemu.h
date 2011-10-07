@@ -16,6 +16,7 @@
 #define MPIMEMU_INCLUDED
 
 #include "constants.h"
+#include "memory_usage.h"
 #include "mpi.h"
 
 /* mem info stuff */
@@ -34,23 +35,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     /* proc */
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
-
-typedef struct mmu_node_mem_usage_container_t {
-    /* holds values for each recorded value */
-    unsigned long int *mem_vals;
-    /* holds meminfo sample values */
-    unsigned long int **samples;
-    /* holds min sample values */
-    unsigned long int *min_sample_values;
-    /* holds max sample values */
-    unsigned long int *max_sample_values;
-    /* holds sample averages */
-    double *sample_aves;
-    /* holds sample averages */
-    double *min_sample_aves;
-    /* holds sample averages */
-    double *max_sample_aves;
-} mmu_node_mem_usage_container_t;
 
 /* container for all node memory usage values */
 static mmu_node_mem_usage_container_t node_mem_usage;
