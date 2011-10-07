@@ -23,7 +23,7 @@
 #define MMU_TOSTRING(x)  MMU_STRINGIFY(x)
 
 #define MMU_ERR_AT       __FILE__ " ("MMU_TOSTRING(__LINE__)")"
-#define MMU_ERR_PREFIX   "-[MPI_MEM_USAGE ERROR: "MMU_ERR_AT"]- "
+#define MMU_ERR_PREFIX   "-[MPIMEMU ERROR: "MMU_ERR_AT"]- "
 
 /* error message */
 #define MMU_ERR_MSG(pfargs...)                                                 \
