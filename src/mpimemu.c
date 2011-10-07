@@ -45,35 +45,12 @@ o TODO
 #include <stdbool.h>
 
 #include "constants.h"
+#include "util.h"
 #include "conv_macros.h"
 #include "mpimemu.h"
 
 #include "mpi.h"
 
-/* ////////////////////////////////////////////////////////////////////////// */
-/* helper functions                                                           */
-/* ////////////////////////////////////////////////////////////////////////// */
-
-/* ////////////////////////////////////////////////////////////////////////// */
-static double *
-lfmalloc(size_t mult)
-{
-    return (double *)malloc(sizeof(double) * mult);
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-static unsigned long int *
-lumalloc(size_t mult)
-{
-    return (unsigned long int *)malloc(sizeof(unsigned long int) * mult);
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-static unsigned long int **
-lupmalloc(size_t mult)
-{
-    return (unsigned long int **)malloc(sizeof(unsigned long int *) * mult);
-}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
@@ -96,63 +73,63 @@ init(void)
     /* ////////////////////////////////////////////////////////////////////// */
     /* node memory usage */
     /* ////////////////////////////////////////////////////////////////////// */
-    node_mem_vals = lumalloc(MMU_MEM_INFO_LEN);
+    node_mem_vals = lucalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_mem_vals, error);
 
-    node_min_sample_values = lumalloc(MMU_MEM_INFO_LEN);
+    node_min_sample_values = lucalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_min_sample_values, error);
 
-    node_max_sample_values = lumalloc(MMU_MEM_INFO_LEN);
+    node_max_sample_values = lucalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_max_sample_values, error);
 
-    node_sample_aves = lfmalloc(MMU_MEM_INFO_LEN);
+    node_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_sample_aves, error);
 
-    node_min_sample_aves = lfmalloc(MMU_MEM_INFO_LEN);
+    node_min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_min_sample_aves, error);
 
-    node_max_sample_aves = lfmalloc(MMU_MEM_INFO_LEN);
+    node_max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_max_sample_aves, error);
 
-    node_samples = lupmalloc(MMU_MEM_INFO_LEN);
+    node_samples = lupcalloc(MMU_MEM_INFO_LEN);
     MMU_MEMCHK(node_samples, error);
 
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        node_samples[i] = lumalloc(MMU_NUM_SAMPLES);
+        node_samples[i] = lucalloc(MMU_NUM_SAMPLES);
         MMU_MEMCHK(node_samples[i], error);
     }
 
     /* ////////////////////////////////////////////////////////////////////// */
     /* proc memory usage vars */
     /* ////////////////////////////////////////////////////////////////////// */
-    proc_mem_vals = lumalloc(MMU_NUM_STATUS_VARS);
+    proc_mem_vals = lucalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_mem_vals, error);
 
-    proc_min_sample_values = lumalloc(MMU_NUM_STATUS_VARS);
+    proc_min_sample_values = lucalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_min_sample_values, error);
 
-    proc_max_sample_values = lumalloc(MMU_NUM_STATUS_VARS);
+    proc_max_sample_values = lucalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_max_sample_values, error);
 
-    proc_sample_aves = lfmalloc(MMU_NUM_STATUS_VARS);
+    proc_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_sample_aves, error);
 
-    proc_min_sample_aves = lfmalloc(MMU_NUM_STATUS_VARS);
+    proc_min_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_min_sample_aves, error);
 
-    proc_max_sample_aves = lfmalloc(MMU_NUM_STATUS_VARS);
+    proc_max_sample_aves = lfcalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_max_sample_aves, error);
 
-    proc_samples = lupmalloc(MMU_NUM_STATUS_VARS);
+    proc_samples = lupcalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(proc_samples, error);
 
-    pre_mpi_init_proc_samples = lupmalloc(MMU_NUM_STATUS_VARS);
+    pre_mpi_init_proc_samples = lupcalloc(MMU_NUM_STATUS_VARS);
     MMU_MEMCHK(pre_mpi_init_proc_samples, error);
 
     for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-        proc_samples[i] = lumalloc(MMU_NUM_SAMPLES);
+        proc_samples[i] = lucalloc(MMU_NUM_SAMPLES);
         MMU_MEMCHK(proc_samples[i], error);
-        pre_mpi_init_proc_samples[i] = lumalloc(MMU_NUM_SAMPLES);
+        pre_mpi_init_proc_samples[i] = lucalloc(MMU_NUM_SAMPLES);
         MMU_MEMCHK(pre_mpi_init_proc_samples[i], error);
     }
 
