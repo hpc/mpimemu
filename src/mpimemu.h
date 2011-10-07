@@ -37,7 +37,7 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 };
 
 /* container for all node memory usage values */
-static mmu_node_mem_usage_container_t node_mem_usage;
+static mmu_mem_usage_container_t node_mem_usage;
 
 /* my rank */
 static int my_rank;

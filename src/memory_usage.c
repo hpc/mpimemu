@@ -12,10 +12,6 @@
  * liability or responsibility for the use of this software.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdlib.h>
 
 #include "constants.h"
@@ -25,7 +21,7 @@
 
 /* ////////////////////////////////////////////////////////////////////////// */
 int
-node_mem_usage_construct(mmu_node_mem_usage_container_t *containerp)
+mem_usage_construct(mmu_mem_usage_container_t *containerp)
 {
     int i;
 
@@ -60,8 +56,18 @@ node_mem_usage_construct(mmu_node_mem_usage_container_t *containerp)
         MMU_OOR_COMPLAIN();
         return MMU_FAILURE_OOR;
     }
+    if (NULL == (containerp->pre_mpi_init_samples =
+                     lupcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        return MMU_FAILURE_OOR;
+    }
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
         if (NULL == (containerp->samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
+            MMU_OOR_COMPLAIN();
+            return MMU_FAILURE_OOR;
+        }
+        if (NULL == (containerp->pre_mpi_init_samples[i] =
+                         lucalloc(MMU_NUM_SAMPLES))) {
             MMU_OOR_COMPLAIN();
             return MMU_FAILURE_OOR;
         }
@@ -71,10 +77,9 @@ node_mem_usage_construct(mmu_node_mem_usage_container_t *containerp)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 int
-node_mem_usage_destruct(mmu_node_mem_usage_container_t *containerp)
+mem_usage_destruct(mmu_mem_usage_container_t *containerp)
 {
     int i;
-
     if (NULL == containerp) {
         return MMU_FAILURE_INVALID_ARG;
     }
@@ -101,32 +106,11 @@ node_mem_usage_destruct(mmu_node_mem_usage_container_t *containerp)
             if (NULL != containerp->samples[i]) {
                 free(containerp->samples[i]);
             }
+            if (NULL != containerp->pre_mpi_init_samples[i]) {
+                free(containerp->pre_mpi_init_samples[i]);
+            }
         }
         free(containerp->samples);
     }
     return MMU_SUCCESS;
 }
-
-#if 0
-/* ////////////////////////////////////////////////////////////////////////// */
-static int
-fini(void)
-{
-    int i;
-
-    /* proc */
-    free(proc_mem_vals);
-    free(proc_min_sample_values);
-    free(proc_max_sample_values);
-    free(proc_sample_aves);
-    free(proc_min_sample_aves);
-    free(proc_max_sample_aves);
-    for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-        free(proc_samples[i]);
-        free(pre_mpi_init_proc_samples[i]);
-    }
-    free(proc_samples);
-    free(pre_mpi_init_proc_samples);
-    return MMU_SUCCESS;
-}
-#endif

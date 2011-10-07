@@ -89,9 +89,9 @@ init(void)
     /* ////////////////////////////////////////////////////////////////////// */
     /* node memory usage */
     /* ////////////////////////////////////////////////////////////////////// */
-    if (MMU_SUCCESS != (rc = node_mem_usage_construct(&node_mem_usage))) {
+    if (MMU_SUCCESS != (rc = mem_usage_construct(&node_mem_usage))) {
         /* no check in error path */
-        node_mem_usage_destruct(&node_mem_usage);
+        mem_usage_destruct(&node_mem_usage);
         goto out;
     }
 

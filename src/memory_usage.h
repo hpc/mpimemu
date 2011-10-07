@@ -15,11 +15,13 @@
 #ifndef MEMORY_USAGE_INCLUDED
 #define MEMORY_USAGE_INCLUDED 
 
-typedef struct mmu_node_mem_usage_container_t {
+typedef struct mmu_mem_usage_container_t {
     /* holds values for each recorded value */
     unsigned long int *mem_vals;
     /* holds meminfo sample values */
     unsigned long int **samples;
+    /* holds pre-mpi init meminfo sample values */
+    unsigned long int **pre_mpi_init_samples;
     /* holds min sample values */
     unsigned long int *min_sample_values;
     /* holds max sample values */
@@ -30,12 +32,12 @@ typedef struct mmu_node_mem_usage_container_t {
     double *min_sample_aves;
     /* holds sample averages */
     double *max_sample_aves;
-} mmu_node_mem_usage_container_t;
+} mmu_mem_usage_container_t;
 
 int
-node_mem_usage_construct(mmu_node_mem_usage_container_t *containerp);
+mem_usage_construct(mmu_mem_usage_container_t *containerp);
 
 int
-node_mem_usage_destruct(mmu_node_mem_usage_container_t *containerp);
+mem_usage_destruct(mmu_mem_usage_container_t *containerp);
 
 #endif /* ifndef MEMORY_USAGE_INCLUDED */
