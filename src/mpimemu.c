@@ -68,7 +68,7 @@ static int
 init(void)
 {
     int i;
-    int rc = MMU_FAILURE;
+    int rc;
 
     /* get start date and time */
     time(&raw_time);
@@ -89,7 +89,7 @@ init(void)
     if (MMU_SUCCESS != (rc = mem_usage_construct(&node_mem_usage))) {
         /* no check in error path */
         mem_usage_destruct(&node_mem_usage);
-        goto out;
+        return rc;
     }
     /* ////////////////////////////////////////////////////////////////////// */
     /* proc memory usage vars */
@@ -97,12 +97,10 @@ init(void)
     if (MMU_SUCCESS != (rc = mem_usage_construct(&proc_mem_usage))) {
         /* no check in error path */
         mem_usage_destruct(&proc_mem_usage);
-        goto out;
+        return rc;
     }
 
-    rc = MMU_SUCCESS;
-out:
-    return rc;
+    return MMU_SUCCESS;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
