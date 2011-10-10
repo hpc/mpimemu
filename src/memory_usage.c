@@ -85,32 +85,41 @@ mem_usage_destruct(mmu_mem_usage_container_t *containerp)
     }
     if (NULL != containerp->mem_vals) {
         free(containerp->mem_vals);
+        containerp->mem_vals = NULL;
     }
     if (NULL != containerp->min_sample_values) {
         free(containerp->min_sample_values);
+        containerp->min_sample_values = NULL;
     }
     if (NULL != containerp->max_sample_values) {
         free(containerp->max_sample_values);
+        containerp->max_sample_values = NULL;
     }
     if (NULL != containerp->sample_aves) {
         free(containerp->sample_aves);
+        containerp->sample_aves = NULL;
     }
     if (NULL != containerp->min_sample_aves) {
         free(containerp->min_sample_aves);
+        containerp->min_sample_aves = NULL;
     }
     if (NULL != containerp->max_sample_aves) {
         free(containerp->max_sample_aves);
+        containerp->max_sample_aves = NULL;
     }
     if (NULL != containerp->samples) {
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
             if (NULL != containerp->samples[i]) {
                 free(containerp->samples[i]);
+                containerp->samples[i] = NULL;
             }
             if (NULL != containerp->pre_mpi_init_samples[i]) {
                 free(containerp->pre_mpi_init_samples[i]);
+                containerp->pre_mpi_init_samples[i] = NULL;
             }
         }
         free(containerp->samples);
+        containerp->samples = NULL;
     }
     return MMU_SUCCESS;
 }
