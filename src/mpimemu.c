@@ -77,9 +77,7 @@ init(process_info_t *proc_infop)
     /* get start date and time */
     time(&raw_time);
     bd_time_ptr = localtime(&raw_time);
-    strftime(start_time_buff,
-             MMU_TIME_STR_MAX,
-             "%Y%m%d-%H%M%S",
+    strftime(proc_infop->start_time_buf, MMU_TIME_STR_MAX, "%Y%m%d-%H%M%S",
              bd_time_ptr);
 
     /* record my pid */
@@ -133,7 +131,8 @@ init_mpi(process_info_t *proc_infop,
         goto out;
     }
     /* get comm size */
-    if (MPI_SUCCESS != (rc = MPI_Comm_size(MPI_COMM_WORLD, &num_ranks))) {
+    if (MPI_SUCCESS != (rc = MPI_Comm_size(MPI_COMM_WORLD,
+                                           &proc_infop->mpi.num_ranks))) {
         bad_func = "MPI_Comm_size";
         goto out;
     }
@@ -525,13 +524,13 @@ do_send_recv_ring(process_info_t *proc_infop)
     MPI_Status status;
 
     for (i = 1; i <= num_iters; ++i) {
-        r_neighbor = (proc_infop->mpi.rank + i) % num_ranks;
+        r_neighbor = (proc_infop->mpi.rank + i) % proc_infop->mpi.num_ranks;
         l_neighbor = proc_infop->mpi.rank;
 
         for (j = 0; j < i; ++j) {
             --l_neighbor;
             if (l_neighbor < 0) {
-                l_neighbor = num_ranks - 1;
+                l_neighbor = proc_infop->mpi.num_ranks - 1;
             }
         }
 
@@ -616,7 +615,7 @@ main(int argc,
      * idea: one rank process per node will calculate node memory usage.
      * ASSUMING: processes are placed in rank order.
      */
-    if (0 != (num_ranks % MMU_PPN)) {
+    if (0 != (process_info.mpi.num_ranks % MMU_PPN)) {
         if (MMU_MASTER_RANK == process_info.mpi.rank) {
             fprintf(stderr, "numpe must be a multiple of %d\n", (int)MMU_PPN);
         }
@@ -627,9 +626,9 @@ main(int argc,
     if (MMU_MASTER_RANK == process_info.mpi.rank) {
         printf("# %s %s\n", PACKAGE, PACKAGE_VERSION);
         printf("# host %s\n", process_info.hostname_buf);
-        printf("# date_time %s\n", start_time_buff);
+        printf("# date_time %s\n", process_info.start_time_buf);
         printf("# ppn %d \n", (int)MMU_PPN);
-        printf("# numpe %d\n", num_ranks);
+        printf("# numpe %d\n", process_info.mpi.num_ranks);
         printf("# with_send_recv %d\n", MMU_DO_SEND_RECV);
         printf("# num_samples %d \n", (int)MMU_NUM_SAMPLES);
         printf("# samples/s %.1lf \n", 1e6/(double)MMU_SLEEPY_TIME);
@@ -728,7 +727,7 @@ main(int argc,
                                           &proc_mem_usage.min_sample_aves,
                                           &proc_mem_usage.max_sample_aves,
                                           MPI_COMM_WORLD,
-                                          num_ranks)) {
+                                          process_info.mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
@@ -765,7 +764,7 @@ main(int argc,
                                       &proc_mem_usage.min_sample_aves,
                                       &proc_mem_usage.max_sample_aves,
                                       MPI_COMM_WORLD,
-                                      num_ranks)) {
+                                      process_info.mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
