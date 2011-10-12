@@ -149,16 +149,18 @@ init_mpi(process_info_t *proc_infop,
         goto out;
     }
     /* split into two groups - 0: no work; 1: all work and no play */
-    my_color = (0 == proc_infop->mpi.rank % MMU_PPN);
+    proc_infop->mpi.worker_id = (0 == proc_infop->mpi.rank % MMU_PPN);
 
-    if (MPI_SUCCESS != (rc = MPI_Comm_split(MPI_COMM_WORLD, my_color,
+    if (MPI_SUCCESS != (rc = MPI_Comm_split(MPI_COMM_WORLD,
+                                            proc_infop->mpi.worker_id,
                                             proc_infop->mpi.rank,
                                             &worker_comm))) {
         bad_func = "MPI_Comm_split";
         goto out;
     }
     /* how many workers do we have? */
-    if (MPI_SUCCESS != (rc = MPI_Allreduce(&my_color, &num_workers, 1,
+    if (MPI_SUCCESS != (rc = MPI_Allreduce(&proc_infop->mpi.worker_id,
+                                           &num_workers, 1,
                                            MPI_INT, MPI_SUM, MPI_COMM_WORLD))) {
         bad_func = "MPI_Allreduce";
         goto out;
@@ -650,7 +652,7 @@ main(int argc,
         do_send_recv_ring(&process_info);
 #endif
         /* do i need to do some real work? */
-        if (1 == my_color) {
+        if (1 == process_info.mpi.worker_id) {
             /* if so, update node memory usage */
             if (MMU_SUCCESS != update_mem_info(&process_info,
                                                MEM_TYPE_NODE,
@@ -683,7 +685,7 @@ main(int argc,
     /* end of main sampling loop */
     /* ////////////////////////////////////////////////////////////////////// */
 
-    if (1 == my_color) {
+    if (1 == process_info.mpi.worker_id) {
         /* calculate local values (node min, node max, node ave) */
         if (MMU_SUCCESS != get_local_mma(node_mem_usage.samples,
                                          MMU_MEM_INFO_LEN,

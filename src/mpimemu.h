@@ -31,6 +31,7 @@ typedef struct mpi_info_t {
     int rank;
     /* number of ranks in MPI_COMM_WORLD */
     int num_ranks;
+    /* 0 (collects node mem info) or 1 (performs dummy collectives) */
     int worker_id;
     int num_workers;
     MPI_Comm worker_comm;
@@ -54,11 +55,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
 
-/**
- * my color
- * either 0 (collects node mem info) or 1 (performs dummy collectives).
- */
-static int my_color;
 /* holds mpi return codes */
 static int mpi_ret_code;
 /* size of mpi_comm_world */
