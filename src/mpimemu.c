@@ -65,7 +65,7 @@ o TODO
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-init(void)
+init(process_info_t *proc_infop)
 {
     int i;
     int rc;
@@ -79,7 +79,7 @@ init(void)
              bd_time_ptr);
 
     /* record my pid */
-    my_pid = getpid();
+    proc_infop->pid = getpid();
 
     /* --- EVERYONE allocate some memory --- */
 
@@ -440,7 +440,8 @@ err:
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-update_mem_info(int mem_info_type,
+update_mem_info(process_info_t *proc_infop,
+                int mem_info_type,
                 unsigned long int *mem_vals)
 {
     char line_buffer[MMU_LINE_MAX];
@@ -455,7 +456,7 @@ update_mem_info(int mem_info_type,
 
         case MEM_TYPE_PROC:
             snprintf(file_name_buff, MMU_PATH_MAX - 1,
-                     MMU_PMEMINFO_TMPLT, (int)my_pid);
+                     MMU_PMEMINFO_TMPLT, (int)proc_infop->pid);
             break;
         default:
             MMU_ERR_MSG("unknown mem info type - sad all day\n");
@@ -562,9 +563,10 @@ main(int argc,
     int i, j;
     /* buffers for "dummy" work */
     int send_buff, recv_buff;
+    process_info_t process_info;
 
     /* init some buffs, etc. */
-    if (MMU_SUCCESS != init()) {
+    if (MMU_SUCCESS != init(&process_info)) {
         MMU_ERR_MSG("init error\n");
         goto error;
     }
@@ -574,7 +576,8 @@ main(int argc,
     /* ////////////////////////////////////////////////////////////////////// */
     for (i = 0; i < MMU_NUM_SAMPLES; ++i) {
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC,
+        if (MMU_SUCCESS != update_mem_info(&process_info,
+                                           MEM_TYPE_PROC,
                                            proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;
@@ -638,7 +641,8 @@ main(int argc,
         /* do i need to do some real work? */
         if (1 == my_color) {
             /* if so, update node memory usage */
-            if (MMU_SUCCESS != update_mem_info(MEM_TYPE_NODE,
+            if (MMU_SUCCESS != update_mem_info(&process_info,
+                                               MEM_TYPE_NODE,
                                                node_mem_usage.mem_vals)) {
                 MMU_ERR_MSG("unable to update node memory usage info\n");
                 goto error;
@@ -650,7 +654,8 @@ main(int argc,
         }
 
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(MEM_TYPE_PROC,
+        if (MMU_SUCCESS != update_mem_info(&process_info,
+                                           MEM_TYPE_PROC,
                                            proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;

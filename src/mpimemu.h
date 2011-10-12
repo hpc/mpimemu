@@ -25,6 +25,7 @@ typedef struct mem_info_t {
     int num_elements;
 } mem_info_t;
 
+/* container for mpi-related information */
 typedef struct mpi_info_t {
     int rank;
     int num_ranks;
@@ -36,14 +37,14 @@ typedef struct mpi_info_t {
 typedef struct process_info_t {
     char start_time_buf[MMU_TIME_STR_MAX];
     char hostname_buf[MPI_MAX_PROCESSOR_NAME];
+    /* my pid */
     pid_t pid;
     int rank;
     int worker_id;
     mpi_info_t mpi;
 } process_info_t;
 
-/**
- * mem info array
+/* mem info array
  * items should following the ordering specified by mem_info_type_t
  */
 static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
@@ -69,8 +70,6 @@ static int my_rank;
 static int my_color;
 /* holds mpi return codes */
 static int mpi_ret_code;
-/* my pid */
-static pid_t my_pid;
 /* size of mpi_comm_world */
 static int num_ranks;
 /* worker communicator (see: my_color) */
@@ -88,7 +87,7 @@ static int num_workers;
 static char start_time_buff[MMU_TIME_STR_MAX];
 
 static int
-init(void);
+init(process_info_t *proc_infop);
 
 static int
 init_mpi(int argc,
@@ -106,7 +105,8 @@ set_mem_info(int mem_info_type,
              const char *mem_info_str);
 
 static int
-update_mem_info(int mem_info_type,
+update_mem_info(process_info_t *proc_infop,
+                int mem_info_type,
                 unsigned long int *mem_vals);
 
 static int
