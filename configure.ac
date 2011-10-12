@@ -39,7 +39,7 @@ AC_LINK_IFELSE([
         [[MPI_Finalize();]])],
     [AC_MSG_RESULT([yes])],
     [AC_MSG_RESULT([no])
-    AC_MSG_ERROR([$CC cannot compile MPI applications. cannot continue.])]
+     AC_MSG_ERROR([$CC cannot compile MPI applications. cannot continue.])]
 )
 
 AM_PROG_CC_C_O
