@@ -63,11 +63,15 @@ o TODO
 
 #include "mpi.h"
 
+/* container for all node memory usage values */
+static mmu_mem_usage_container_t node_mem_usage;
+/* container for all process memory usage values */
+static mmu_mem_usage_container_t proc_mem_usage;
+
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
 init(process_info_t *proc_infop)
 {
-    int i;
     int rc;
 
     /* get start date and time */
@@ -115,7 +119,8 @@ mmu_mpi_rc2estr(int rc)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-init_mpi(int argc,
+init_mpi(process_info_t *proc_infop,
+         int argc,
          char **argv)
 {
     int i;
@@ -133,7 +138,8 @@ init_mpi(int argc,
         goto out;
     }
     /* get my rank */
-    if (MPI_SUCCESS != (rc = MPI_Comm_rank(MPI_COMM_WORLD, &my_rank))) {
+    if (MPI_SUCCESS != (rc = MPI_Comm_rank(MPI_COMM_WORLD,
+                                           &proc_infop->mpi.rank))) {
         bad_func = "MPI_Comm_rank";
         goto out;
     }
@@ -143,9 +149,10 @@ init_mpi(int argc,
         goto out;
     }
     /* split into two groups - 0: no work; 1: all work and no play */
-    my_color = (0 == my_rank % MMU_PPN);
+    my_color = (0 == proc_infop->mpi.rank % MMU_PPN);
 
-    if (MPI_SUCCESS != (rc = MPI_Comm_split(MPI_COMM_WORLD, my_color, my_rank,
+    if (MPI_SUCCESS != (rc = MPI_Comm_split(MPI_COMM_WORLD, my_color,
+                                            proc_infop->mpi.rank,
                                             &worker_comm))) {
         bad_func = "MPI_Comm_split";
         goto out;
@@ -500,7 +507,7 @@ err:
 /* ////////////////////////////////////////////////////////////////////////// */
 #if MMU_DO_SEND_RECV == 1
 static int
-do_send_recv_ring(void)
+do_send_recv_ring(process_info_t *proc_infop)
 {
     int i            = 0;
     int j            = 0;
@@ -515,8 +522,8 @@ do_send_recv_ring(void)
     MPI_Status status;
 
     for (i = 1; i <= num_iters; ++i) {
-        r_neighbor = (my_rank + i) % num_ranks;
-        l_neighbor = my_rank;
+        r_neighbor = (proc_infop->mpi.rank + i) % num_ranks;
+        l_neighbor = proc_infop->mpi.rank;
 
         for (j = 0; j < i; ++j) {
             --l_neighbor;
@@ -593,13 +600,13 @@ main(int argc,
     }
 
     /* init mpi, etc. */
-    if (MMU_SUCCESS != init_mpi(argc, argv)) {
+    if (MMU_SUCCESS != init_mpi(&process_info, argc, argv)) {
         MMU_ERR_MSG("mpi init error\n");
         goto error;
     }
 
     /* why not set the dummy send buff to my rank */
-    send_buff = my_rank;
+    send_buff = process_info.mpi.rank;
 
     /**
      * make sure numpe a multiple of MMU_PPN.
@@ -607,20 +614,24 @@ main(int argc,
      * ASSUMING: processes are placed in rank order.
      */
     if (0 != (num_ranks % MMU_PPN)) {
-        MMU_MPF("numpe must be a multiple of %d\n", (int)MMU_PPN);
+        if (MMU_MASTER_RANK == process_info.mpi.rank) {
+            fprintf(stderr, "numpe must be a multiple of %d\n", (int)MMU_PPN);
+        }
         goto finil;
     }
 
     /* let the "master process" print out some header stuff */
-    MMU_MPF("# %s %s\n", PACKAGE, PACKAGE_VERSION);
-    MMU_MPF("# host %s\n", hostname_buff);
-    MMU_MPF("# date_time %s\n", start_time_buff);
-    MMU_MPF("# ppn %d \n", (int)MMU_PPN);
-    MMU_MPF("# numpe %d\n", num_ranks);
-    MMU_MPF("# with_send_recv %d\n", MMU_DO_SEND_RECV);
-    MMU_MPF("# num_samples %d \n", (int)MMU_NUM_SAMPLES);
-    MMU_MPF("# samples/s %.1lf \n", 1e6/(double)MMU_SLEEPY_TIME);
-    MMU_MPF("# item_name, ave_min (kB), ave_max (kB), ave (kB)\n");
+    if (MMU_MASTER_RANK == process_info.mpi.rank) {
+        printf("# %s %s\n", PACKAGE, PACKAGE_VERSION);
+        printf("# host %s\n", hostname_buff);
+        printf("# date_time %s\n", start_time_buff);
+        printf("# ppn %d \n", (int)MMU_PPN);
+        printf("# numpe %d\n", num_ranks);
+        printf("# with_send_recv %d\n", MMU_DO_SEND_RECV);
+        printf("# num_samples %d \n", (int)MMU_NUM_SAMPLES);
+        printf("# samples/s %.1lf \n", 1e6/(double)MMU_SLEEPY_TIME);
+        printf("# item_name, ave_min (kB), ave_max (kB), ave (kB)\n");
+    }
 
     /* ////////////////////////////////////////////////////////////////////// */
     /* main sampling loop */
@@ -636,7 +647,7 @@ main(int argc,
          * idea: allocate more buffs to more closely emulate a real app.
          */
 #if MMU_DO_SEND_RECV == 1
-        do_send_recv_ring();
+        do_send_recv_ring(&process_info);
 #endif
         /* do i need to do some real work? */
         if (1 == my_color) {
@@ -720,13 +731,15 @@ main(int argc,
     }
 
     /* print pre mpi init results */
-    if (MMU_MASTER_RANK == my_rank) {
+    if (MMU_MASTER_RANK == process_info.mpi.rank) {
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-            MMU_MPF(MMU_PMPI_PREFIX"%s, %.2lf, %.2lf, %.2lf\n",
-                        status_name_list[i],
-                        proc_mem_usage.min_sample_aves[i],
-                        proc_mem_usage.max_sample_aves[i],
-                        proc_mem_usage.sample_aves[i]);
+            if (MMU_MASTER_RANK == process_info.mpi.rank) {
+                printf(MMU_PMPI_PREFIX"%s, %.2lf, %.2lf, %.2lf\n",
+                       status_name_list[i],
+                       proc_mem_usage.min_sample_aves[i],
+                       proc_mem_usage.max_sample_aves[i],
+                       proc_mem_usage.sample_aves[i]);
+            }
         }
     }
     /* ////////////////////////////////////////////////////////////////////// */
@@ -755,20 +768,20 @@ main(int argc,
     }
 
     /* print the results */
-    if (MMU_MASTER_RANK == my_rank) {
+    if (MMU_MASTER_RANK == process_info.mpi.rank) {
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-            MMU_MPF("%s, %.2lf, %.2lf, %.2lf\n",
-                        status_name_list[i],
-                        proc_mem_usage.min_sample_aves[i],
-                        proc_mem_usage.max_sample_aves[i],
-                        proc_mem_usage.sample_aves[i]);
+            printf("%s, %.2lf, %.2lf, %.2lf\n",
+                   status_name_list[i],
+                   proc_mem_usage.min_sample_aves[i],
+                   proc_mem_usage.max_sample_aves[i],
+                   proc_mem_usage.sample_aves[i]);
         }
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-            MMU_MPF("%s, %.2lf, %.2lf, %.2lf\n",
-                        meminfo_name_list[i],
-                        node_mem_usage.min_sample_aves[i],
-                        node_mem_usage.max_sample_aves[i],
-                        node_mem_usage.sample_aves[i]);
+            printf("%s, %.2lf, %.2lf, %.2lf\n",
+                   meminfo_name_list[i],
+                   node_mem_usage.min_sample_aves[i],
+                   node_mem_usage.max_sample_aves[i],
+                   node_mem_usage.sample_aves[i]);
         }
     }
 

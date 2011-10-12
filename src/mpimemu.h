@@ -27,7 +27,9 @@ typedef struct mem_info_t {
 
 /* container for mpi-related information */
 typedef struct mpi_info_t {
+    /* my rank */
     int rank;
+    /* number of ranks in MPI_COMM_WORLD */
     int num_ranks;
     int worker_id;
     int num_workers;
@@ -39,8 +41,6 @@ typedef struct process_info_t {
     char hostname_buf[MPI_MAX_PROCESSOR_NAME];
     /* my pid */
     pid_t pid;
-    int rank;
-    int worker_id;
     mpi_info_t mpi;
 } process_info_t;
 
@@ -54,15 +54,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
 
-/* container for all node memory usage values */
-static mmu_mem_usage_container_t node_mem_usage;
-/* container for all process memory usage values */
-static mmu_mem_usage_container_t proc_mem_usage;
-/* container for process information */
-static process_info_t process_info;
-
-/* my rank */
-static int my_rank;
 /**
  * my color
  * either 0 (collects node mem info) or 1 (performs dummy collectives).
@@ -90,7 +81,8 @@ static int
 init(process_info_t *proc_infop);
 
 static int
-init_mpi(int argc,
+init_mpi(process_info_t *proc_infop,
+         int argc,
          char **argv);
 
 static int
@@ -139,7 +131,7 @@ get_global_mma(unsigned long int **in_out_min_vec_ptr,
 
 #if MMU_DO_SEND_RECV == 1
 static int
-do_send_recv_ring(void);
+do_send_recv_ring(process_info_t *proc_infop);
 #endif
 
 #endif /* ifndef MPIMEMU_INCLUDED */

@@ -74,13 +74,4 @@ do {                                                                           \
     fflush(stdout);                                                            \
 } while (0)
 
-/* master rank printf */
-#define MMU_MPF(pfargs...)                                                     \
-do {                                                                           \
-    if (my_rank == (MMU_MASTER_RANK)) {                                        \
-        fprintf(stdout, pfargs);                                               \
-        fflush(stdout);                                                        \
-    }                                                                          \
-} while (0)
-
 #endif /* ifndef CONV_MACROS_INCLUDED */
