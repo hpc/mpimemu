@@ -59,12 +59,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
     {status_name_list, MMU_NUM_STATUS_VARS}
 };
 
-/* holds mpi return codes */
-static int mpi_ret_code;
-/* time junk */
-static struct tm *bd_time_ptr;
-static time_t raw_time;
-
 static int
 init(process_info_t *proc_infop);
 

@@ -73,6 +73,9 @@ static int
 init(process_info_t *proc_infop)
 {
     int rc;
+    /* time junk */
+    static struct tm *bd_time_ptr;
+    static time_t raw_time;
 
     /* get start date and time */
     time(&raw_time);
@@ -275,7 +278,7 @@ get_global_mma(unsigned long int **in_out_min_vec_ptr,
                MPI_Comm comm,
                int num_members)
 {
-    int i;
+    int i, mpi_ret_code;
     unsigned long int *io_min_vp   = *in_out_min_vec_ptr;
     unsigned long int *io_max_vp   = *in_out_max_vec_ptr;
     double *io_ave_vp              = *in_out_ave_vec_ptr;
@@ -569,7 +572,7 @@ main(int argc,
      char **argv)
 {
     /* tmp vars */
-    int i, j;
+    int i, j, mpi_ret_code;
     /* buffers for "dummy" work */
     int send_buff, recv_buff;
     process_info_t process_info;
