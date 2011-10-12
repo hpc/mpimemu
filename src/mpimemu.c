@@ -144,7 +144,8 @@ init_mpi(process_info_t *proc_infop,
         goto out;
     }
     /* get my host's name */
-    if (MPI_SUCCESS != (rc = MPI_Get_processor_name(hostname_buff, &i))) {
+    if (MPI_SUCCESS != (rc = MPI_Get_processor_name(proc_infop->hostname_buf,
+                                                    &i))) {
         bad_func = "MPI_Get_processor_name";
         goto out;
     }
@@ -625,7 +626,7 @@ main(int argc,
     /* let the "master process" print out some header stuff */
     if (MMU_MASTER_RANK == process_info.mpi.rank) {
         printf("# %s %s\n", PACKAGE, PACKAGE_VERSION);
-        printf("# host %s\n", hostname_buff);
+        printf("# host %s\n", process_info.hostname_buf);
         printf("# date_time %s\n", start_time_buff);
         printf("# ppn %d \n", (int)MMU_PPN);
         printf("# numpe %d\n", num_ranks);

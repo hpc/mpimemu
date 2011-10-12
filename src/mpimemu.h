@@ -39,6 +39,7 @@ typedef struct mpi_info_t {
 
 typedef struct process_info_t {
     char start_time_buf[MMU_TIME_STR_MAX];
+    /* holds host's name */
     char hostname_buf[MPI_MAX_PROCESSOR_NAME];
     /* my pid */
     pid_t pid;
@@ -65,9 +66,6 @@ static MPI_Comm worker_comm;
 /* time junk */
 static struct tm *bd_time_ptr;
 static time_t raw_time;
-/* error string buffer */
-/* hostname buffer */
-static char hostname_buff[MPI_MAX_PROCESSOR_NAME];
 /* number of processes that are doing work */
 static int num_workers;
 /* start time buffer */
