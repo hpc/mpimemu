@@ -155,7 +155,7 @@ init_mpi(process_info_t *proc_infop,
     if (MPI_SUCCESS != (rc = MPI_Comm_split(MPI_COMM_WORLD,
                                             proc_infop->mpi.worker_id,
                                             proc_infop->mpi.rank,
-                                            &worker_comm))) {
+                                            &proc_infop->mpi.worker_comm))) {
         bad_func = "MPI_Comm_split";
         goto out;
     }
@@ -185,12 +185,12 @@ out:
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-fini_mpi(void)
+fini_mpi(process_info_t *proc_infop)
 {
     char *bad_func = NULL;
     int rc;
 
-    if (MPI_SUCCESS != (rc = MPI_Comm_free(&worker_comm))) {
+    if (MPI_SUCCESS != (rc = MPI_Comm_free(&proc_infop->mpi.worker_comm))) {
         bad_func = "MPI_Comm_free";
         goto out;
     }
@@ -704,7 +704,7 @@ main(int argc,
                                               MMU_MEM_INFO_LEN,
                                               &node_mem_usage.min_sample_aves,
                                               &node_mem_usage.max_sample_aves,
-                                              worker_comm,
+                                              process_info.mpi.worker_comm,
                                               process_info.mpi.num_workers)) {
             MMU_ERR_MSG("get_global_mma error\n");
             goto error;
@@ -789,7 +789,7 @@ main(int argc,
     }
 
     /* done! */
-    if (MMU_SUCCESS != fini_mpi()) {
+    if (MMU_SUCCESS != fini_mpi(&process_info)) {
         MMU_ERR_MSG("mpi finalization error\n");
         goto error;
     }

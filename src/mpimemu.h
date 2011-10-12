@@ -35,6 +35,7 @@ typedef struct mpi_info_t {
     int worker_id;
     /* number of processes that are doing work */
     int num_workers;
+    /* worker communicator */
     MPI_Comm worker_comm;
 } mpi_info_t;
 
@@ -61,9 +62,6 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 static int mpi_ret_code;
 /* size of mpi_comm_world */
 static int num_ranks;
-/* worker communicator (see: my_color) */
-static MPI_Comm worker_comm;
-/* error string length */
 /* time junk */
 static struct tm *bd_time_ptr;
 static time_t raw_time;
@@ -82,7 +80,7 @@ static int
 fini(void);
 
 static int
-fini_mpi(void);
+fini_mpi(process_info_t *proc_infop);
 
 static int
 set_mem_info(int mem_info_type,
