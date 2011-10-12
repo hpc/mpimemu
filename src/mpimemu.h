@@ -33,6 +33,7 @@ typedef struct mpi_info_t {
     int num_ranks;
     /* 0 (collects node mem info) or 1 (performs dummy collectives) */
     int worker_id;
+    /* number of processes that are doing work */
     int num_workers;
     MPI_Comm worker_comm;
 } mpi_info_t;
@@ -66,8 +67,6 @@ static MPI_Comm worker_comm;
 /* time junk */
 static struct tm *bd_time_ptr;
 static time_t raw_time;
-/* number of processes that are doing work */
-static int num_workers;
 /* start time buffer */
 static char start_time_buff[MMU_TIME_STR_MAX];
 

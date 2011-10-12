@@ -161,7 +161,7 @@ init_mpi(process_info_t *proc_infop,
     }
     /* how many workers do we have? */
     if (MPI_SUCCESS != (rc = MPI_Allreduce(&proc_infop->mpi.worker_id,
-                                           &num_workers, 1,
+                                           &proc_infop->mpi.num_workers, 1,
                                            MPI_INT, MPI_SUM, MPI_COMM_WORLD))) {
         bad_func = "MPI_Allreduce";
         goto out;
@@ -705,7 +705,7 @@ main(int argc,
                                               &node_mem_usage.min_sample_aves,
                                               &node_mem_usage.max_sample_aves,
                                               worker_comm,
-                                              num_workers)) {
+                                              process_info.mpi.num_workers)) {
             MMU_ERR_MSG("get_global_mma error\n");
             goto error;
         }
