@@ -25,6 +25,23 @@ typedef struct mem_info_t {
     int num_elements;
 } mem_info_t;
 
+typedef struct mpi_info_t {
+    int rank;
+    int num_ranks;
+    int worker_id;
+    int num_workers;
+    MPI_Comm worker_comm;
+} mpi_info_t;
+
+typedef struct process_info_t {
+    char start_time_buf[MMU_TIME_STR_MAX];
+    char hostname_buf[MPI_MAX_PROCESSOR_NAME];
+    pid_t pid;
+    int rank;
+    int worker_id;
+    mpi_info_t mpi;
+} process_info_t;
+
 /**
  * mem info array
  * items should following the ordering specified by mem_info_type_t
@@ -40,6 +57,8 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 static mmu_mem_usage_container_t node_mem_usage;
 /* container for all process memory usage values */
 static mmu_mem_usage_container_t proc_mem_usage;
+/* container for process information */
+static process_info_t process_info;
 
 /* my rank */
 static int my_rank;
