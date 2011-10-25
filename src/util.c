@@ -48,6 +48,7 @@ lupcalloc(size_t count)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* strtoul with error checks - yeah, i said it */
+/* SKG - XXX bug? take a look at the use of end_ptr v endptr */
 unsigned long int
 strtoul_wec(const char *nptr,
             char **endptr,
