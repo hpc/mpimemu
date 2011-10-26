@@ -48,14 +48,12 @@ lupcalloc(size_t count)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* strtoul with error checks - yeah, i said it */
-/* SKG - XXX bug? take a look at the use of end_ptr v endptr */
 unsigned long int
 strtoul_wec(const char *nptr,
             char **endptr,
             int base,
             int *ret_code)
 {
-    char *end_ptr = NULL;
     unsigned long int value;
 
     /* assume all is well */
@@ -64,15 +62,10 @@ strtoul_wec(const char *nptr,
     /* check for strtoul errors */
     errno = 0;
     value = strtoul(nptr, endptr, 10);
-
-    if ((ERANGE == errno && (ULONG_MAX == value || 0 == value)) ||
-        (0 != errno && 0 == value)) {
+    /* did an error occur during strtoul? */
+    if (0 != errno) {
         *ret_code = MMU_FAILURE;
     }
-    if (nptr == end_ptr) {
-        *ret_code = MMU_FAILURE;
-    }
-
     /* caller must always check the return code */
     return value;
 }
