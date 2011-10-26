@@ -61,7 +61,7 @@ strtoul_wec(const char *nptr,
 
     /* check for strtoul errors */
     errno = 0;
-    value = strtoul(nptr, endptr, 10);
+    value = strtoul(nptr, endptr, base);
     /* did an error occur during strtoul? */
     if (0 != errno) {
         *ret_code = MMU_FAILURE;
