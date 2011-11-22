@@ -58,15 +58,6 @@ do {                                                                           \
     fflush(stderr);                                                            \
 } while (0)
 
-/* memory alloc check */
-#define MMU_MEMCHK(_ptr_,_gt_)                                                 \
-do {                                                                           \
-    if (NULL == (_ptr_)) {                                                     \
-        MMU_ERR_MSG("memory allocation error on %s\n", hostname_buff);         \
-        goto _gt_;                                                             \
-    }                                                                          \
-} while (0)
-
 /* printf with flush */
 #define MMU_PF(pfargs...)                                                      \
 do {                                                                           \

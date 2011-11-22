@@ -20,6 +20,7 @@
 #include "memory_usage.h"
 
 /* ////////////////////////////////////////////////////////////////////////// */
+/* SKG these functions need to be updated to include proper cleanup and take a ** */
 int
 mem_usage_construct(mmu_mem_usage_container_t *containerp)
 {

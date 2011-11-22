@@ -41,9 +41,9 @@ typedef struct mpi_info_t {
 
 typedef struct process_info_t {
     /* start time buffer */
-    char start_time_buf[MMU_TIME_STR_MAX];
+    char *start_time_buf;
     /* holds host's name */
-    char hostname_buf[MPI_MAX_PROCESSOR_NAME];
+    char *hostname_buf;
     /* my pid */
     pid_t pid;
     mpi_info_t mpi;
@@ -60,7 +60,7 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 };
 
 static int
-init(process_info_t *proc_infop);
+init(process_info_t **proc_infop);
 
 static int
 init_mpi(process_info_t *proc_infop,

@@ -37,6 +37,12 @@ o TODO
 #include "config.h"
 #endif
 
+#include "constants.h"
+#include "util.h"
+#include "conv_macros.h"
+#include "memory_usage.h"
+#include "mpimemu.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -55,13 +61,14 @@ o TODO
 #include <inttypes.h>
 #endif
 
-#include "constants.h"
-#include "util.h"
-#include "conv_macros.h"
-#include "memory_usage.h"
-#include "mpimemu.h"
-
 #include "mpi.h"
+
+/* static forward declarations for local utility functions */
+static int
+process_info_construct(process_info_t **p);
+
+static int
+process_info_destruct(process_info_t **p);
 
 /* container for all node memory usage values */
 static mmu_mem_usage_container_t node_mem_usage;
@@ -70,21 +77,89 @@ static mmu_mem_usage_container_t proc_mem_usage;
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-init(process_info_t *proc_infop)
+process_info_construct(process_info_t **p)
+{
+    int rc;
+    process_info_t *tmp = NULL;
+
+    if (NULL == p) return MMU_FAILURE_INVALID_ARG;
+
+    tmp = (process_info_t *)calloc(1, sizeof(process_info_t));
+    if (NULL == tmp) return MMU_FAILURE_OOR;
+
+    tmp->start_time_buf = (char *)calloc(MMU_TIME_STR_MAX, sizeof(char));
+    if (NULL == tmp->start_time_buf) {
+        rc = MMU_FAILURE_OOR;
+        goto error;
+    }
+
+    tmp->hostname_buf = (char *)calloc(MPI_MAX_PROCESSOR_NAME, sizeof(char));
+    if (NULL == tmp->hostname_buf) {
+        rc = MMU_FAILURE_OOR;
+        goto error;
+    }
+
+    *p = tmp;
+    return MMU_SUCCESS;
+
+error:
+    /* we pass &tmp here, because in an error path, that's what we want to
+     * destruct. no check in error path.
+     */
+    process_info_destruct(&tmp);
+    *p = NULL;
+    return rc;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static int
+process_info_destruct(process_info_t **p)
+{
+    process_info_t *tmp = NULL;
+
+    if (NULL == p) return MMU_FAILURE_INVALID_ARG;
+
+    tmp = *p;
+
+    if (NULL != tmp->hostname_buf) {
+        free(tmp->hostname_buf);
+        tmp->hostname_buf = NULL;
+    }
+    if (NULL != tmp->start_time_buf) {
+        free(tmp->start_time_buf);
+        tmp->start_time_buf = NULL;
+    }
+    if (NULL != tmp) {
+        free(tmp);
+        tmp = NULL;
+    }
+    *p = NULL;
+    return MMU_SUCCESS;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static int
+init(process_info_t **proc_infop)
 {
     int rc;
     /* time junk */
     static struct tm *bd_time_ptr;
     static time_t raw_time;
 
+    if (NULL == proc_infop) return MMU_FAILURE_INVALID_ARG;
+
+    if (MMU_SUCCESS != (rc = process_info_construct(proc_infop))) {
+        return rc;
+    }
+
     /* get start date and time */
     time(&raw_time);
     bd_time_ptr = localtime(&raw_time);
-    strftime(proc_infop->start_time_buf, MMU_TIME_STR_MAX, "%Y%m%d-%H%M%S",
+    strftime((*proc_infop)->start_time_buf, MMU_TIME_STR_MAX, "%Y%m%d-%H%M%S",
              bd_time_ptr);
 
     /* record my pid */
-    proc_infop->pid = getpid();
+    (*proc_infop)->pid = getpid();
 
     /* --- EVERYONE allocate some memory --- */
 
@@ -575,11 +650,12 @@ main(int argc,
     int i, j, mpi_ret_code;
     /* buffers for "dummy" work */
     int send_buff, recv_buff;
-    process_info_t process_info;
+    process_info_t *process_info;
 
     /* init some buffs, etc. */
     if (MMU_SUCCESS != init(&process_info)) {
         MMU_ERR_MSG("init error\n");
+        printf("%p\n", process_info);
         goto error;
     }
 
@@ -588,7 +664,7 @@ main(int argc,
     /* ////////////////////////////////////////////////////////////////////// */
     for (i = 0; i < MMU_NUM_SAMPLES; ++i) {
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(&process_info,
+        if (MMU_SUCCESS != update_mem_info(process_info,
                                            MEM_TYPE_PROC,
                                            proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
@@ -605,33 +681,33 @@ main(int argc,
     }
 
     /* init mpi, etc. */
-    if (MMU_SUCCESS != init_mpi(&process_info, argc, argv)) {
+    if (MMU_SUCCESS != init_mpi(process_info, argc, argv)) {
         MMU_ERR_MSG("mpi init error\n");
         goto error;
     }
 
     /* why not set the dummy send buff to my rank */
-    send_buff = process_info.mpi.rank;
+    send_buff = process_info->mpi.rank;
 
     /**
      * make sure numpe a multiple of MMU_PPN.
      * idea: one rank process per node will calculate node memory usage.
      * ASSUMING: processes are placed in rank order.
      */
-    if (0 != (process_info.mpi.num_ranks % MMU_PPN)) {
-        if (MMU_MASTER_RANK == process_info.mpi.rank) {
+    if (0 != (process_info->mpi.num_ranks % MMU_PPN)) {
+        if (MMU_MASTER_RANK == process_info->mpi.rank) {
             fprintf(stderr, "numpe must be a multiple of %d\n", (int)MMU_PPN);
         }
         goto finil;
     }
 
     /* let the "master process" print out some header stuff */
-    if (MMU_MASTER_RANK == process_info.mpi.rank) {
+    if (MMU_MASTER_RANK == process_info->mpi.rank) {
         printf("# %s %s\n", PACKAGE, PACKAGE_VERSION);
-        printf("# host %s\n", process_info.hostname_buf);
-        printf("# date_time %s\n", process_info.start_time_buf);
+        printf("# host %s\n", process_info->hostname_buf);
+        printf("# date_time %s\n", process_info->start_time_buf);
         printf("# ppn %d \n", (int)MMU_PPN);
-        printf("# numpe %d\n", process_info.mpi.num_ranks);
+        printf("# numpe %d\n", process_info->mpi.num_ranks);
         printf("# with_send_recv %d\n", MMU_DO_SEND_RECV);
         printf("# num_samples %d \n", (int)MMU_NUM_SAMPLES);
         printf("# samples/s %.1lf \n", 1e6/(double)MMU_SLEEPY_TIME);
@@ -652,12 +728,12 @@ main(int argc,
          * idea: allocate more buffs to more closely emulate a real app.
          */
 #if MMU_DO_SEND_RECV == 1
-        do_send_recv_ring(&process_info);
+        do_send_recv_ring(process_info);
 #endif
         /* do i need to do some real work? */
-        if (1 == process_info.mpi.worker_id) {
+        if (1 == process_info->mpi.worker_id) {
             /* if so, update node memory usage */
-            if (MMU_SUCCESS != update_mem_info(&process_info,
+            if (MMU_SUCCESS != update_mem_info(process_info,
                                                MEM_TYPE_NODE,
                                                node_mem_usage.mem_vals)) {
                 MMU_ERR_MSG("unable to update node memory usage info\n");
@@ -670,7 +746,7 @@ main(int argc,
         }
 
         /* all processes participate here ... update process mem usage */
-        if (MMU_SUCCESS != update_mem_info(&process_info,
+        if (MMU_SUCCESS != update_mem_info(process_info,
                                            MEM_TYPE_PROC,
                                            proc_mem_usage.mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
@@ -688,7 +764,7 @@ main(int argc,
     /* end of main sampling loop */
     /* ////////////////////////////////////////////////////////////////////// */
 
-    if (1 == process_info.mpi.worker_id) {
+    if (1 == process_info->mpi.worker_id) {
         /* calculate local values (node min, node max, node ave) */
         if (MMU_SUCCESS != get_local_mma(node_mem_usage.samples,
                                          MMU_MEM_INFO_LEN,
@@ -706,8 +782,8 @@ main(int argc,
                                               MMU_MEM_INFO_LEN,
                                               &node_mem_usage.min_sample_aves,
                                               &node_mem_usage.max_sample_aves,
-                                              process_info.mpi.worker_comm,
-                                              process_info.mpi.num_workers)) {
+                                              process_info->mpi.worker_comm,
+                                              process_info->mpi.num_workers)) {
             MMU_ERR_MSG("get_global_mma error\n");
             goto error;
         }
@@ -730,15 +806,15 @@ main(int argc,
                                           &proc_mem_usage.min_sample_aves,
                                           &proc_mem_usage.max_sample_aves,
                                           MPI_COMM_WORLD,
-                                          process_info.mpi.num_ranks)) {
+                                          process_info->mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
 
     /* print pre mpi init results */
-    if (MMU_MASTER_RANK == process_info.mpi.rank) {
+    if (MMU_MASTER_RANK == process_info->mpi.rank) {
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
-            if (MMU_MASTER_RANK == process_info.mpi.rank) {
+            if (MMU_MASTER_RANK == process_info->mpi.rank) {
                 printf(MMU_PMPI_PREFIX"%s, %.2lf, %.2lf, %.2lf\n",
                        status_name_list[i],
                        proc_mem_usage.min_sample_aves[i],
@@ -767,13 +843,13 @@ main(int argc,
                                       &proc_mem_usage.min_sample_aves,
                                       &proc_mem_usage.max_sample_aves,
                                       MPI_COMM_WORLD,
-                                      process_info.mpi.num_ranks)) {
+                                      process_info->mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
 
     /* print the results */
-    if (MMU_MASTER_RANK == process_info.mpi.rank) {
+    if (MMU_MASTER_RANK == process_info->mpi.rank) {
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
             printf("%s, %.2lf, %.2lf, %.2lf\n",
                    status_name_list[i],
@@ -791,7 +867,7 @@ main(int argc,
     }
 
     /* done! */
-    if (MMU_SUCCESS != fini_mpi(&process_info)) {
+    if (MMU_SUCCESS != fini_mpi(process_info)) {
         MMU_ERR_MSG("mpi finalization error\n");
         goto error;
     }

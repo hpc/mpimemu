@@ -15,6 +15,8 @@
 #ifndef UTIL_INCLUDED
 #define UTIL_INCLUDED 
 
+#include <stdlib.h>
+
 double *
 lfcalloc(size_t count);
 
