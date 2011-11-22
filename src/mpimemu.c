@@ -43,11 +43,15 @@ o TODO
 #include "memory_usage.h"
 #include "mpimemu.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_TIME_H
 #include <time.h>
-#include <errno.h>
+#endif
+#ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
+#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -69,11 +73,6 @@ process_info_construct(process_info_t **p);
 
 static int
 process_info_destruct(process_info_t **p);
-
-/* container for all node memory usage values */
-static mmu_mem_usage_container_t node_mem_usage;
-/* container for all process memory usage values */
-static mmu_mem_usage_container_t proc_mem_usage;
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
@@ -129,17 +128,17 @@ process_info_destruct(process_info_t **p)
         free(tmp->start_time_buf);
         tmp->start_time_buf = NULL;
     }
-    if (NULL != tmp) {
-        free(tmp);
-        tmp = NULL;
-    }
+    free(tmp);
+    tmp = NULL;
     *p = NULL;
     return MMU_SUCCESS;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-init(process_info_t **proc_infop)
+init(process_info_t **proc_infop,
+     mmu_mem_usage_container_t **node_mem_usagep,
+     mmu_mem_usage_container_t **proc_mem_usagep)
 {
     int rc;
     /* time junk */
@@ -163,23 +162,38 @@ init(process_info_t **proc_infop)
 
     /* --- EVERYONE allocate some memory --- */
 
-    /* ////////////////////////////////////////////////////////////////////// */
     /* node memory usage */
-    /* ////////////////////////////////////////////////////////////////////// */
-    if (MMU_SUCCESS != (rc = mem_usage_construct(&node_mem_usage))) {
-        /* no check in error path */
-        mem_usage_destruct(&node_mem_usage);
+    if (MMU_SUCCESS != (rc = mem_usage_construct(node_mem_usagep))) {
         return rc;
     }
-    /* ////////////////////////////////////////////////////////////////////// */
     /* proc memory usage vars */
-    /* ////////////////////////////////////////////////////////////////////// */
-    if (MMU_SUCCESS != (rc = mem_usage_construct(&proc_mem_usage))) {
-        /* no check in error path */
-        mem_usage_destruct(&proc_mem_usage);
+    if (MMU_SUCCESS != (rc = mem_usage_construct(proc_mem_usagep))) {
         return rc;
     }
 
+    return MMU_SUCCESS;
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static int
+fini(process_info_t **proc_infop,
+     mmu_mem_usage_container_t **node_mem_usagep,
+     mmu_mem_usage_container_t **proc_mem_usagep)
+{
+    int rc;
+
+    if (MMU_SUCCESS != (rc = mem_usage_destruct(node_mem_usagep))) {
+        /* TODO add error message */
+        return rc;
+    }
+    if (MMU_SUCCESS != (rc = mem_usage_destruct(proc_mem_usagep))) {
+        /* TODO add error message */
+        return rc;
+    }
+    if (MMU_SUCCESS != (rc = process_info_destruct(proc_infop))) {
+        /* TODO add error message */
+        return rc;
+    }
     return MMU_SUCCESS;
 }
 
@@ -285,21 +299,6 @@ out:
     return MMU_SUCCESS;
 }
 
-/* ////////////////////////////////////////////////////////////////////////// */
-static int
-fini(void)
-{
-    int rc;
-    if (MMU_SUCCESS != (rc = mem_usage_destruct(&node_mem_usage))) {
-        /* TODO add error message */
-        return rc;
-    }
-    if (MMU_SUCCESS != (rc = mem_usage_destruct(&proc_mem_usage))) {
-        /* TODO add error message */
-        return rc;
-    }
-    return MMU_SUCCESS;
-}
 
 /* ////////////////////////////////////////////////////////////////////////// */
 /* get local min, max, ave */
@@ -319,17 +318,17 @@ get_local_mma(unsigned long int **in_mat,
     for (i = 0; i < vec_len; ++i) {
         /* local min */
         if (MMU_SUCCESS != reduce_local(in_mat[i], &minv[i],
-                                            MMU_NUM_SAMPLES, LOCAL_MIN)) {
+                                        MMU_NUM_SAMPLES, LOCAL_MIN)) {
             goto err;
         }
         /* local max */
         if (MMU_SUCCESS != reduce_local(in_mat[i], &maxv[i],
-                                            MMU_NUM_SAMPLES, LOCAL_MAX)) {
+                                        MMU_NUM_SAMPLES, LOCAL_MAX)) {
             goto err;
         }
         /* local ave */
         if (MMU_SUCCESS != reduce_local(in_mat[i], &tmp_sum,
-                                            MMU_NUM_SAMPLES, LOCAL_SUM)) {
+                                        MMU_NUM_SAMPLES, LOCAL_SUM)) {
             goto err;
         }
         avev[i] = (0 == tmp_sum) ? 0.0 :
@@ -650,10 +649,14 @@ main(int argc,
     int i, j, mpi_ret_code;
     /* buffers for "dummy" work */
     int send_buff, recv_buff;
-    process_info_t *process_info;
+    process_info_t *process_info = NULL;
+    /* points to container for all node memory usage values */
+    mmu_mem_usage_container_t *node_mem_usage = NULL;
+    /* points to container for all process memory usage values */
+    mmu_mem_usage_container_t *proc_mem_usage = NULL;
 
     /* init some buffs, etc. */
-    if (MMU_SUCCESS != init(&process_info)) {
+    if (MMU_SUCCESS != init(&process_info, &node_mem_usage, &proc_mem_usage)) {
         MMU_ERR_MSG("init error\n");
         printf("%p\n", process_info);
         goto error;
@@ -666,15 +669,15 @@ main(int argc,
         /* all processes participate here ... update process mem usage */
         if (MMU_SUCCESS != update_mem_info(process_info,
                                            MEM_TYPE_PROC,
-                                           proc_mem_usage.mem_vals)) {
+                                           proc_mem_usage->mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;
         }
 
         for (j = 0; j < MMU_NUM_STATUS_VARS; ++j) {
             /* record pre mpi process sample values */
-            proc_mem_usage.pre_mpi_init_samples[j][i] =
-                proc_mem_usage.mem_vals[j];
+            proc_mem_usage->pre_mpi_init_samples[j][i] =
+                proc_mem_usage->mem_vals[j];
         }
 
         usleep((unsigned long)MMU_SLEEPY_TIME);
@@ -735,27 +738,27 @@ main(int argc,
             /* if so, update node memory usage */
             if (MMU_SUCCESS != update_mem_info(process_info,
                                                MEM_TYPE_NODE,
-                                               node_mem_usage.mem_vals)) {
+                                               node_mem_usage->mem_vals)) {
                 MMU_ERR_MSG("unable to update node memory usage info\n");
                 goto error;
             }
             for (j = 0; j < MMU_MEM_INFO_LEN; ++j) {
                 /* record local node sample values */
-                node_mem_usage.samples[j][i] = node_mem_usage.mem_vals[j];
+                node_mem_usage->samples[j][i] = node_mem_usage->mem_vals[j];
             }
         }
 
         /* all processes participate here ... update process mem usage */
         if (MMU_SUCCESS != update_mem_info(process_info,
                                            MEM_TYPE_PROC,
-                                           proc_mem_usage.mem_vals)) {
+                                           proc_mem_usage->mem_vals)) {
             MMU_ERR_MSG("unable to update proc memory usage info\n");
             goto error;
         }
 
         for (j = 0; j < MMU_NUM_STATUS_VARS; ++j) {
             /* record process sample values */
-            proc_mem_usage.samples[j][i] = proc_mem_usage.mem_vals[j];
+            proc_mem_usage->samples[j][i] = proc_mem_usage->mem_vals[j];
         }
 
         usleep((unsigned long)MMU_SLEEPY_TIME);
@@ -766,47 +769,47 @@ main(int argc,
 
     if (1 == process_info->mpi.worker_id) {
         /* calculate local values (node min, node max, node ave) */
-        if (MMU_SUCCESS != get_local_mma(node_mem_usage.samples,
+        if (MMU_SUCCESS != get_local_mma(node_mem_usage->samples,
                                          MMU_MEM_INFO_LEN,
-                                         &node_mem_usage.min_sample_values,
-                                         &node_mem_usage.max_sample_values,
-                                         &node_mem_usage.sample_aves)) {
+                                         &node_mem_usage->min_sample_values,
+                                         &node_mem_usage->max_sample_values,
+                                         &node_mem_usage->sample_aves)) {
             MMU_ERR_MSG("get_local_mma error\n");
             goto error;
         }
 
         /* calculate global values (node min, node max, node ave) */
-        if (MMU_SUCCESS != get_global_mma(&node_mem_usage.min_sample_values,
-                                              &node_mem_usage.max_sample_values,
-                                              &node_mem_usage.sample_aves,
-                                              MMU_MEM_INFO_LEN,
-                                              &node_mem_usage.min_sample_aves,
-                                              &node_mem_usage.max_sample_aves,
-                                              process_info->mpi.worker_comm,
-                                              process_info->mpi.num_workers)) {
+        if (MMU_SUCCESS != get_global_mma(&node_mem_usage->min_sample_values,
+                                          &node_mem_usage->max_sample_values,
+                                          &node_mem_usage->sample_aves,
+                                          MMU_MEM_INFO_LEN,
+                                          &node_mem_usage->min_sample_aves,
+                                          &node_mem_usage->max_sample_aves,
+                                          process_info->mpi.worker_comm,
+                                          process_info->mpi.num_workers)) {
             MMU_ERR_MSG("get_global_mma error\n");
             goto error;
         }
     }
 
     /* calculate pre mpi init local values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_local_mma(proc_mem_usage.pre_mpi_init_samples,
+    if (MMU_SUCCESS != get_local_mma(proc_mem_usage->pre_mpi_init_samples,
                                          MMU_NUM_STATUS_VARS,
-                                         &proc_mem_usage.min_sample_values,
-                                         &proc_mem_usage.max_sample_values,
-                                         &proc_mem_usage.sample_aves)) {
+                                         &proc_mem_usage->min_sample_values,
+                                         &proc_mem_usage->max_sample_values,
+                                         &proc_mem_usage->sample_aves)) {
         MMU_ERR_MSG("get_local_mma error\n");
         goto error;
     }
     /* calculate pre mpi init global values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage.min_sample_values,
-                                          &proc_mem_usage.max_sample_values,
-                                          &proc_mem_usage.sample_aves,
-                                          MMU_NUM_STATUS_VARS,
-                                          &proc_mem_usage.min_sample_aves,
-                                          &proc_mem_usage.max_sample_aves,
-                                          MPI_COMM_WORLD,
-                                          process_info->mpi.num_ranks)) {
+    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage->min_sample_values,
+                                      &proc_mem_usage->max_sample_values,
+                                      &proc_mem_usage->sample_aves,
+                                      MMU_NUM_STATUS_VARS,
+                                      &proc_mem_usage->min_sample_aves,
+                                      &proc_mem_usage->max_sample_aves,
+                                      MPI_COMM_WORLD,
+                                      process_info->mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
         goto error;
     }
@@ -817,31 +820,31 @@ main(int argc,
             if (MMU_MASTER_RANK == process_info->mpi.rank) {
                 printf(MMU_PMPI_PREFIX"%s, %.2lf, %.2lf, %.2lf\n",
                        status_name_list[i],
-                       proc_mem_usage.min_sample_aves[i],
-                       proc_mem_usage.max_sample_aves[i],
-                       proc_mem_usage.sample_aves[i]);
+                       proc_mem_usage->min_sample_aves[i],
+                       proc_mem_usage->max_sample_aves[i],
+                       proc_mem_usage->sample_aves[i]);
             }
         }
     }
     /* ////////////////////////////////////////////////////////////////////// */
     /* post mpi init stuff */
     /* ////////////////////////////////////////////////////////////////////// */
-    if (MMU_SUCCESS != get_local_mma(proc_mem_usage.samples,
-                                         MMU_NUM_STATUS_VARS,
-                                         &proc_mem_usage.min_sample_values,
-                                         &proc_mem_usage.max_sample_values,
-                                         &proc_mem_usage.sample_aves)) {
+    if (MMU_SUCCESS != get_local_mma(proc_mem_usage->samples,
+                                     MMU_NUM_STATUS_VARS,
+                                     &proc_mem_usage->min_sample_values,
+                                     &proc_mem_usage->max_sample_values,
+                                     &proc_mem_usage->sample_aves)) {
         MMU_ERR_MSG("get_local_mma error\n");
         goto error;
     }
 
     /* calculate global values (proc min, proc max, proc ave) */
-    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage.min_sample_values,
-                                      &proc_mem_usage.max_sample_values,
-                                      &proc_mem_usage.sample_aves,
+    if (MMU_SUCCESS != get_global_mma(&proc_mem_usage->min_sample_values,
+                                      &proc_mem_usage->max_sample_values,
+                                      &proc_mem_usage->sample_aves,
                                       MMU_NUM_STATUS_VARS,
-                                      &proc_mem_usage.min_sample_aves,
-                                      &proc_mem_usage.max_sample_aves,
+                                      &proc_mem_usage->min_sample_aves,
+                                      &proc_mem_usage->max_sample_aves,
                                       MPI_COMM_WORLD,
                                       process_info->mpi.num_ranks)) {
         MMU_ERR_MSG("get_global_mma error\n");
@@ -853,16 +856,16 @@ main(int argc,
         for (i = 0; i < MMU_NUM_STATUS_VARS; ++i) {
             printf("%s, %.2lf, %.2lf, %.2lf\n",
                    status_name_list[i],
-                   proc_mem_usage.min_sample_aves[i],
-                   proc_mem_usage.max_sample_aves[i],
-                   proc_mem_usage.sample_aves[i]);
+                   proc_mem_usage->min_sample_aves[i],
+                   proc_mem_usage->max_sample_aves[i],
+                   proc_mem_usage->sample_aves[i]);
         }
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
             printf("%s, %.2lf, %.2lf, %.2lf\n",
                    meminfo_name_list[i],
-                   node_mem_usage.min_sample_aves[i],
-                   node_mem_usage.max_sample_aves[i],
-                   node_mem_usage.sample_aves[i]);
+                   node_mem_usage->min_sample_aves[i],
+                   node_mem_usage->max_sample_aves[i],
+                   node_mem_usage->sample_aves[i]);
         }
     }
 
@@ -871,8 +874,7 @@ main(int argc,
         MMU_ERR_MSG("mpi finalization error\n");
         goto error;
     }
-
-    if (MMU_SUCCESS != fini()) {
+    if (MMU_SUCCESS != fini(&process_info, &node_mem_usage, &proc_mem_usage)) {
         MMU_ERR_MSG("finalization error\n");
         goto error;
     }

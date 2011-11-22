@@ -60,7 +60,9 @@ static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
 };
 
 static int
-init(process_info_t **proc_infop);
+init(process_info_t **proc_infop,
+     mmu_mem_usage_container_t **node_mem_usagep,
+     mmu_mem_usage_container_t **proc_mem_usagep);
 
 static int
 init_mpi(process_info_t *proc_infop,
@@ -68,7 +70,9 @@ init_mpi(process_info_t *proc_infop,
          char **argv);
 
 static int
-fini(void);
+fini(process_info_t **proc_infop,
+     mmu_mem_usage_container_t **node_mem_usagep,
+     mmu_mem_usage_container_t **proc_mem_usagep);
 
 static int
 fini_mpi(process_info_t *proc_infop);

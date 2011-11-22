@@ -35,9 +35,9 @@ typedef struct mmu_mem_usage_container_t {
 } mmu_mem_usage_container_t;
 
 int
-mem_usage_construct(mmu_mem_usage_container_t *containerp);
+mem_usage_construct(mmu_mem_usage_container_t **containerp);
 
 int
-mem_usage_destruct(mmu_mem_usage_container_t *containerp);
+mem_usage_destruct(mmu_mem_usage_container_t **containerp);
 
 #endif /* ifndef MEMORY_USAGE_INCLUDED */

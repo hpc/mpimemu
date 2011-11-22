@@ -49,7 +49,9 @@ AC_PROG_CC_C99
 # none at this point
 
 # checks for header files.
-AC_CHECK_HEADERS([inttypes.h limits.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([\
+inttypes.h limits.h stdint.h stdlib.h string.h unistd.h stdbool.h time.h\
+])
 
 # checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T

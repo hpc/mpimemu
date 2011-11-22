@@ -20,107 +20,133 @@
 #include "memory_usage.h"
 
 /* ////////////////////////////////////////////////////////////////////////// */
-/* SKG these functions need to be updated to include proper cleanup and take a ** */
+/* TODO pass lengths */
 int
-mem_usage_construct(mmu_mem_usage_container_t *containerp)
+mem_usage_construct(mmu_mem_usage_container_t **containerp)
 {
-    int i;
+    int i, rc;
+    mmu_mem_usage_container_t *tmp = NULL;
 
-    if (NULL == containerp) {
-        return MMU_FAILURE_INVALID_ARG;
-    }
-    if (NULL == (containerp->mem_vals = lucalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == containerp) return MMU_FAILURE_INVALID_ARG;
+
+    if (NULL == (tmp = calloc(1, sizeof(mmu_mem_usage_container_t)))) {
         MMU_OOR_COMPLAIN();
         return MMU_FAILURE_OOR;
     }
-    if (NULL == (containerp->min_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+    /* now let's allocate some memory for the struct members */
+    if (NULL == (tmp->mem_vals = lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->max_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->min_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->max_sample_values = lucalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->min_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->samples = lupcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->max_sample_aves = lfcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
-    if (NULL == (containerp->pre_mpi_init_samples =
-                     lupcalloc(MMU_MEM_INFO_LEN))) {
+    if (NULL == (tmp->samples = lupcalloc(MMU_MEM_INFO_LEN))) {
         MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
+        rc = MMU_FAILURE_OOR;
+        goto error;
+    }
+    if (NULL == (tmp->pre_mpi_init_samples = lupcalloc(MMU_MEM_INFO_LEN))) {
+        MMU_OOR_COMPLAIN();
+        rc = MMU_FAILURE_OOR;
+        goto error;
     }
     for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-        if (NULL == (containerp->samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
+        if (NULL == (tmp->samples[i] = lucalloc(MMU_NUM_SAMPLES))) {
             MMU_OOR_COMPLAIN();
-            return MMU_FAILURE_OOR;
+            rc = MMU_FAILURE_OOR;
+            goto error;
         }
-        if (NULL == (containerp->pre_mpi_init_samples[i] =
+        if (NULL == (tmp->pre_mpi_init_samples[i] =
                          lucalloc(MMU_NUM_SAMPLES))) {
             MMU_OOR_COMPLAIN();
-            return MMU_FAILURE_OOR;
+            rc = MMU_FAILURE_OOR;
+            goto error;
         }
     }
+    *containerp = tmp;
     return MMU_SUCCESS;
+
+error:
+    mem_usage_destruct(&tmp);
+    *containerp = NULL;
+    return rc;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
 int
-mem_usage_destruct(mmu_mem_usage_container_t *containerp)
+mem_usage_destruct(mmu_mem_usage_container_t **containerp)
 {
     int i;
-    if (NULL == containerp) {
-        return MMU_FAILURE_INVALID_ARG;
+    mmu_mem_usage_container_t *tmp = NULL;
+
+    if (NULL == containerp) return MMU_FAILURE_INVALID_ARG;
+
+    tmp = *containerp;
+
+    if (NULL != tmp->mem_vals) {
+        free(tmp->mem_vals);
+        tmp->mem_vals = NULL;
     }
-    if (NULL != containerp->mem_vals) {
-        free(containerp->mem_vals);
-        containerp->mem_vals = NULL;
+    if (NULL != tmp->min_sample_values) {
+        free(tmp->min_sample_values);
+        tmp->min_sample_values = NULL;
     }
-    if (NULL != containerp->min_sample_values) {
-        free(containerp->min_sample_values);
-        containerp->min_sample_values = NULL;
+    if (NULL != tmp->max_sample_values) {
+        free(tmp->max_sample_values);
+        tmp->max_sample_values = NULL;
     }
-    if (NULL != containerp->max_sample_values) {
-        free(containerp->max_sample_values);
-        containerp->max_sample_values = NULL;
+    if (NULL != tmp->sample_aves) {
+        free(tmp->sample_aves);
+        tmp->sample_aves = NULL;
     }
-    if (NULL != containerp->sample_aves) {
-        free(containerp->sample_aves);
-        containerp->sample_aves = NULL;
+    if (NULL != tmp->min_sample_aves) {
+        free(tmp->min_sample_aves);
+        tmp->min_sample_aves = NULL;
     }
-    if (NULL != containerp->min_sample_aves) {
-        free(containerp->min_sample_aves);
-        containerp->min_sample_aves = NULL;
+    if (NULL != tmp->max_sample_aves) {
+        free(tmp->max_sample_aves);
+        tmp->max_sample_aves = NULL;
     }
-    if (NULL != containerp->max_sample_aves) {
-        free(containerp->max_sample_aves);
-        containerp->max_sample_aves = NULL;
-    }
-    if (NULL != containerp->samples) {
+    if (NULL != tmp->samples) {
+        /* TODO we should be able to figure out the length */
         for (i = 0; i < MMU_MEM_INFO_LEN; ++i) {
-            if (NULL != containerp->samples[i]) {
-                free(containerp->samples[i]);
-                containerp->samples[i] = NULL;
+            if (NULL != tmp->samples[i]) {
+                free(tmp->samples[i]);
+                tmp->samples[i] = NULL;
             }
-            if (NULL != containerp->pre_mpi_init_samples[i]) {
-                free(containerp->pre_mpi_init_samples[i]);
-                containerp->pre_mpi_init_samples[i] = NULL;
+            if (NULL != tmp->pre_mpi_init_samples[i]) {
+                free(tmp->pre_mpi_init_samples[i]);
+                tmp->pre_mpi_init_samples[i] = NULL;
             }
         }
-        free(containerp->samples);
-        containerp->samples = NULL;
+        free(tmp->samples);
+        tmp->samples = NULL;
     }
+    free(tmp);
+    *containerp = NULL;
     return MMU_SUCCESS;
 }
