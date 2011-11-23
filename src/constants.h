@@ -46,8 +46,6 @@
 #define MMU_PMEMINFO_TMPLT "/proc/%d/status"
 /* line buffer max */
 #define MMU_LINE_MAX        128
-/* key value max length */
-#define MMU_KEY_LEN_MAX     32
 /* start time string max length */
 #define MMU_TIME_STR_MAX    16
 /* at most 10 samples/second (in microseconds) */
@@ -107,20 +105,6 @@ typedef enum {
     STATUS_VMPTE
 } status_type_index_t;
 
-/* "valid" status key values */
-static const char *status_name_list[MMU_KEY_LEN_MAX] = {
-    "VmPeak",
-    "VmSize",
-    "VmLck",
-    "VmHWM",
-    "VmRSS",
-    "VmData",
-    "VmStk",
-    "VmExe",
-    "VmLib",
-    "VmPTE"
-};
-
 typedef enum {
     MEM_TOTAL_INDEX = 0,
     MEM_FREE_INDEX,
@@ -137,21 +121,5 @@ typedef enum {
     COMMITTED_AS_INDEX
 } mem_info_type_index;
 
-/* "valid" node key values */
-static const char *meminfo_name_list[MMU_KEY_LEN_MAX] = {
-    "MemTotal",
-    "MemFree",
-    "MemUsed",
-    "Buffers",
-    "Cached",
-    "SwapCached",
-    "Active",
-    "Inactive",
-    "SwapTotal",
-    "SwapFree",
-    "Dirty",
-    "CommitLimit",
-    "Committed_AS"
-};
 
 #endif /* ifndef CONSTANTS_INCLUDED */

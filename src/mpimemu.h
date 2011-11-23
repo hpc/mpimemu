@@ -19,12 +19,6 @@
 #include "memory_usage.h"
 #include "mpi.h"
 
-/* mem info stuff */
-typedef struct mem_info_t {
-    const char **index_name_ptr;
-    int num_elements;
-} mem_info_t;
-
 /* container for mpi-related information */
 typedef struct mpi_info_t {
     /* my rank */
@@ -48,16 +42,6 @@ typedef struct process_info_t {
     pid_t pid;
     mpi_info_t mpi;
 } process_info_t;
-
-/* mem info array
- * items should following the ordering specified by mem_info_type_t
- */
-static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
-    /* node */
-    {meminfo_name_list,  MMU_MEM_INFO_LEN},
-    /* proc */
-    {status_name_list, MMU_NUM_STATUS_VARS}
-};
 
 static int
 init(process_info_t **proc_infop,

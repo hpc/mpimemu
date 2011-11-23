@@ -67,6 +67,56 @@ o TODO
 
 #include "mpi.h"
 
+/* key value max length */
+#define MMU_KEY_LEN_MAX     32
+
+/* mem info stuff */
+typedef struct mem_info_t {
+    const char **index_name_ptr;
+    int num_elements;
+} mem_info_t;
+
+/* "valid" status key values */
+static const char *status_name_list[MMU_KEY_LEN_MAX] = {
+    "VmPeak",
+    "VmSize",
+    "VmLck",
+    "VmHWM",
+    "VmRSS",
+    "VmData",
+    "VmStk",
+    "VmExe",
+    "VmLib",
+    "VmPTE"
+};
+
+/* "valid" node key values */
+static const char *meminfo_name_list[MMU_KEY_LEN_MAX] = {
+    "MemTotal",
+    "MemFree",
+    "MemUsed",
+    "Buffers",
+    "Cached",
+    "SwapCached",
+    "Active",
+    "Inactive",
+    "SwapTotal",
+    "SwapFree",
+    "Dirty",
+    "CommitLimit",
+    "Committed_AS"
+};
+
+/* mem info array
+ * items should following the ordering specified by mem_info_type_t
+ */
+static mem_info_t mem_info[MMU_NUM_MEM_TYPES] = {
+    /* node */
+    {meminfo_name_list,  MMU_MEM_INFO_LEN},
+    /* proc */
+    {status_name_list, MMU_NUM_STATUS_VARS}
+};
+
 /* static forward declarations for local utility functions */
 static int
 process_info_construct(process_info_t **p);
