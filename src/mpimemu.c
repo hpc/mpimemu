@@ -38,7 +38,7 @@ o TODO
 #endif
 
 #include "constants.h"
-#include "util.h"
+#include "mmu_util.h"
 #include "conv_macros.h"
 #include "memory_usage.h"
 #include "mpimemu.h"

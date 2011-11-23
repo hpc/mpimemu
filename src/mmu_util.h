@@ -12,8 +12,8 @@
  * liability or responsibility for the use of this software.
  */
 
-#ifndef UTIL_INCLUDED
-#define UTIL_INCLUDED 
+#ifndef MMU_UTIL_INCLUDED
+#define MMU_UTIL_INCLUDED 
 
 #include <stdlib.h>
 
@@ -32,4 +32,4 @@ strtoul_wec(const char *nptr,
             int base,
             int *ret_code);
 
-#endif /* ifndef UTIL_INCLUDED */
+#endif /* ifndef MMU_UTIL_INCLUDED */

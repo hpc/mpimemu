@@ -16,14 +16,14 @@
 #include "config.h"
 #endif
 
+#include "constants.h"
+#include "mmu_util.h"
+
+#include <errno.h>
 #include <stdlib.h>
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
 #endif
-#include <errno.h>
-
-#include "constants.h"
-#include "util.h"
 
 /* ////////////////////////////////////////////////////////////////////////// */
 double *
