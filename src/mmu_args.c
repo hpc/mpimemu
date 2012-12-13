@@ -41,12 +41,14 @@
 #include <stdbool.h>
 #endif
 
-const char *opt_string = "s:t:w";
+const char *opt_string = "s:t:whv";
 
 static struct option long_opts[] = {
     {"samples-per-sec", required_argument, NULL, 's'},
     {"sample-time",     required_argument, NULL, 't'},
     {"enable-workload", no_argument,       NULL, 'w'},
+    {"help",            no_argument,       NULL, 'h'},
+    {"version",         no_argument,       NULL, 'v'},
     {NULL,              0,                 NULL,  0 }
 };
 
@@ -139,10 +141,32 @@ mmu_args_dup_argv(int argc, char **argv)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
-static inline void
+static void
 mmu_args_usage(void)
 {
-    printf("TODO USAGE\n");
+    char *usage =
+    "\nUsage:\n"
+    "[mpirun|aprun|srun|etc] "PACKAGE" [OPTIONS]\n"
+    "Options:\n"
+    "[-s|--samples-per-sec X] "
+    "Specifies sampling rate (default: 10)\n"
+    "[-t|--sample-time X]     "
+    "Specifies sampling duration in seconds (default: 10)\n"
+    "[-w|--enable-workload]   "
+    "Enable synthetic MPI communication workload (default: disabled)\n"
+    "[-h|--help]              "
+    "Show this message and exit\n"
+    "[-v|--version]           "
+    "Show version and exit\n";
+
+    fprintf(stdout, "%s", usage);
+}
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static void
+showver(void)
+{
+    fprintf(stdout, "%s\n", PACKAGE_STRING);
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
@@ -298,6 +322,18 @@ mmu_args_process_user_input(mmu_args_t *a,
                 if (MMU_SUCCESS != (rc = handle_w(a))) {
                     goto show_usage;
                 }
+                break;
+
+            case 'h': /* help! */
+                mmu_args_usage();
+                rc = MMU_SUCCESS_EXIT_SUCCESS;
+                goto cleanup;
+                break;
+
+            case 'v': /* version, please */
+                showver();
+                rc = MMU_SUCCESS_EXIT_SUCCESS;
+                goto cleanup;
                 break;
 
             default:

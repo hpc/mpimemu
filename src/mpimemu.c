@@ -143,6 +143,12 @@ main(int argc,
         /* do not set bad_func here because mmu_args_process_user_input will
          * supply all the output.  we don't want to complain about this type of
          * error. */
+        if (MMU_SUCCESS_EXIT_SUCCESS == rc) {
+            ec = EXIT_SUCCESS;
+        }
+        else {
+            ec = EXIT_FAILURE;
+        }
         goto out;
     }
     /* update process with run settings */

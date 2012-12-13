@@ -24,6 +24,8 @@
 enum {
     /* general success return code */
     MMU_SUCCESS = 0,
+    /* for argument processing: like help and version */
+    MMU_SUCCESS_EXIT_SUCCESS,
     /* general failure return code */
     MMU_FAILURE,
     /* general mpi failure return code */
