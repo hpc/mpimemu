@@ -3,19 +3,24 @@
 mpimemu (MPI Memory Usage) is a simple tool that helps approximate memory
 usage of MPI libraries.
 
-# Building
+## Building
 
-# Environment Setup
+## Environment Setup
 
-# Running
+## Running
 
-# FAQ
+## Interpreting the Data
+Take idle system memory usage into consideration (e.g system image size).
+Gives a general sense of memory usage scaling, not necessarily MPI library
+usage.
+
+## FAQ
 
 Why is configure failing with:
 X cannot compile MPI applications. cannot continue.  
 ./configure CC=mpicc
 
----
+***
 Copyright (c) 2011-2012 Los Alamos National Security, LLC.
                         All rights reserved.
 
