@@ -31,6 +31,12 @@ my $SCRIPT_VER = '0.1';
 my $MPIMEMU_NAME = 'mpimemu';
 
 ################################################################################
+sub usage
+{
+    print "\nPlease see README for environment setup instructions.\n";
+}
+
+################################################################################
 sub env_def
 {
     my ($env) = @_;
@@ -135,7 +141,9 @@ sub get_setup
                     $env_hash{$env} = $ENV{$env};
                 }
                 else {
-                    die "$env not defined. cannot continue.\n";
+                    print "$env not defined. cannot continue.\n";
+                    usage();
+                    exit(1);
                 }
             }
             case 'MPIMEMU_START_INDEX' {
