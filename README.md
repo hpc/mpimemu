@@ -3,6 +3,12 @@
 mpimemu (MPI Memory Usage) is a simple tool that helps approximate memory
 usage of MPI libraries.
 
+# Building
+
+# Environment Setup
+
+# Running
+
 # FAQ
 
 Why is configure failing with:

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+###############################################################################
+# Copyright (c) 2012      Los Alamos National Security, LLC.
+#                         All rights reserved.
+#
+# This program was prepared by Los Alamos National Security, LLC at Los Alamos
+# National Laboratory (LANL) under contract No. DE-AC52-06NA25396 with the U.S.
+# Department of Energy (DOE). All rights in the program are reserved by the DOE
+# and Los Alamos National Security, LLC. Permission is granted to the public to
+# copy and use this software without charge, provided that this Notice and any
+# statement of authorship are reproduced on all copies. Neither the U.S.
+# Government nor LANS makes any warranty, express or implied, or assumes any
+# liability or responsibility for the use of this software.
+################################################################################
+
+### used for cray xe6
+
+mpilib="mpt"
+#mpilib="openmpi"
+
+if [ -z "$PS1" ]; then
+    echo "cannot continue: please source $0, don't run it."
+    exit 1;
+fi
+
+### common stuff ###
+export MPIMEMU_START_INDEX=0
+export MPIMEMU_PPN=16
+export MPIMEMU_MAX_PES=64
+
+### some example numpe functions
+# Y increments by one starting at $MPIMEMU_START_INDEX
+export MPIMEMU_NUMPE_FUN="2**Y"
+#export MPIMEMU_NUMPE_FUN="2 * Y * $MPIMEMU_PPN"
+#export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * Y * 2"
+#export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN ** Y"
+export MPIMEMU_DATA_DIR_PREFIX="$HOME"
+# in samples per second
+export MPIMEMU_SAMPS_PER_S="10"
+# in seconds
+export MPIMEMU_SAMP_DURATION="10"
+# disables synthetic mpi workload during data collection
+#export MPIMEMU_DISABLE_WORKLOAD=1
+
+if [[ "$mpilib" == "mpt" ]]; then
+    export MPIMEMU_RUN_CMD="aprun -n nnn aaa"
+elif [[ "$mpilib" == "openmpi" ]]; then
+    #export MPIMEMU_RUN_CMD="mpirun -n nnn -npernode NNN aaa"
+    export MPIMEMU_RUN_CMD="mpirun -n nnn aaa"
+else
+    echo "unsupported mpi lib requested: $mpilib"
+fi
