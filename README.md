@@ -6,7 +6,7 @@ usage of MPI libraries.
 # FAQ
 
 Why is configure failing with:
-<blah> cannot compile MPI applications. cannot continue.
+X cannot compile MPI applications. cannot continue.  
 ./configure CC=mpicc
 
 ***
