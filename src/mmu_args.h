@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2011 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -12,16 +12,35 @@
  * liability or responsibility for the use of this software.
  */
 
-#ifndef MMU_UTIL_INCLUDED
-#define MMU_UTIL_INCLUDED 
+#ifndef MMU_ARGS_INCLUDED
+#define MMU_ARGS_INCLUDED
 
-#include "mmu_constants.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
 
-const char *
-mmu_util_rc2str(int rc);
+typedef struct mmu_args_t {
+    int sample_rate;
+    int sample_time;
+    bool enable_workload;
+} mmu_args_t;
 
 int
-mmu_util_str_to_ull(const char *str,
-                    unsigned long long int *val_if_valid);
+mmu_args_construct(mmu_args_t **a);
 
-#endif /* ifndef MMU_UTIL_INCLUDED */
+int
+mmu_args_destruct(mmu_args_t **a);
+
+char **
+mmu_args_dup_argv(int argc, char **argv);
+
+void
+mmu_args_free_dup_argv(char **dup);
+
+int
+mmu_args_process_user_input(mmu_args_t *a, int argc, char **argv);
+
+#endif /* ifndef MMU_ARGS_INCLUDED */

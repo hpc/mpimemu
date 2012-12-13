@@ -1,6 +1,10 @@
 #!/bin/bash
 
+echo "starting autoreconf..."
+
 autoreconf --force --install
+
+exit $?
 
 ###############################################################################
 # Copyright (c) 2011      Los Alamos National Security, LLC.

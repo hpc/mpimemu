@@ -1,5 +1,3 @@
-#!/bin/bash
-
 ###############################################################################
 # Copyright (c) 2010-2011 Los Alamos National Security, LLC.
 #                         All rights reserved.
@@ -16,26 +14,26 @@
 
 # Author: Samuel K. Gutierrez
 
-PF_FM="%04d"
-TRY_LIMIT=1024
+# plots mpi_mem_usage node memory usage .csv files
 
-mmu_err()
-{
-    echo "$1"
-    exit 1
-}
+title_v=\
+"TITLE"
 
-mmu_run_and_check()
-{
-    $1
-    if [[ $? != 0 ]]
-    then
-        mmu_err "$1 failure"
-    fi
-}
+set terminal postscript enhanced color
+set output '| ps2pdf - NAME.pdf'
 
-mmu_echo()
-{
-    str="# ""$1"
-    echo -e $str
-}
+set title title_v
+set xlabel "Number of MPI Tasks"
+set ylabel "Memory Usage (kB)"
+
+plot \
+'./node-mem-usage.csv' using 1:2 with linespoints title 'ave memused', \
+'./node-mem-usage.csv' using 1:3 with linespoints title 'ave cached', \
+'./node-mem-usage.csv' using 1:4 with linespoints title 'ave active', \
+'./node-mem-usage.csv' using 1:5 with linespoints title 'ave inactive', \
+'./node-mem-usage.csv' using 1:(column(2) - column(3)) with \
+linespoints title 'ave mem used (ave memused - ave cached)'
+
+# NOTES
+# memory usage from the user's standpoint is best represented by:
+# memused - cached

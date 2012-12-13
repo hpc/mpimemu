@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# Copyright (c) 2010-2011 Los Alamos National Security, LLC.
+# Copyright (c) 2012      Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -14,21 +14,28 @@
 # liability or responsibility for the use of this software.
 ################################################################################
 
-# Author: Samuel K. Gutierrez
+if [ -z "$PS1" ]; then
+    echo "cannot continue: please source $0, don't run it."
+    exit 1;
+fi
 
-# target binary
-mmu_target=mpi_mem_usage
-# run command
-mmu_run_cmd="aprun"
-#mmu_run_cmd="mpirun"
-# CC
-mmu_cc=cc
-#mmu_cc=mpicc
-# ppn
-mmu_ppn=16
-# max ppn
-mmu_max_procs=32
-# multiplier (mmu_ppn * mmu_mult * i) for i = 1,2,3,...,n
-mmu_mult=2
-# stats base directory
-mmu_stats_dir=MMU_STATS
+export MPIMEMU_START_INDEX=0
+export MPIMEMU_PPN=4
+export MPIMEMU_MAX_PES=64
+#export MPIMEMU_RUN_CMD="mpirun -n nnn -npernode NNN aaa"
+export MPIMEMU_RUN_CMD="mpirun -n nnn aaa"
+
+### some example numpe functions
+#export MPIMEMU_NUMPE_FUN="2**Y"
+#export MPIMEMU_NUMPE_FUN="2 * Y * $MPIMEMU_PPN"
+export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * Y * 2"
+export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN ** Y"
+
+
+export MPIMEMU_DATA_DIR_PREFIX="$HOME"
+# in samples per second
+export MPIMEMU_SAMPS_PER_S="10"
+# in seconds
+export MPIMEMU_SAMP_DURATION="2"
+# disables synthetic mpi workload during data collection
+#export MPIMEMU_DISABLE_WORKLOAD=1

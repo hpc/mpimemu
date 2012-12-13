@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2011      Los Alamos National Security, LLC.
+# Copyright (c) 2011-2012 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -14,7 +14,7 @@
 
 AC_PREREQ([2.60])
 
-AC_INIT([mpimemu], [0.1.6dev], [samuelREMOVEME@lanl.gov])
+AC_INIT([mpimemu], [1.0-rc0], [samuel@lanl.gov])
 
 # Check If AM_SILENT_RULES Rule Are Supported
 # If So, Build Using AM_SILENT_RULES
@@ -44,13 +44,15 @@ AC_LINK_IFELSE([
 
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
+AC_GNU_SOURCE
 
 # checks for libraries.
 # none at this point
 
 # checks for header files.
 AC_CHECK_HEADERS([\
-inttypes.h limits.h stdint.h stdlib.h string.h unistd.h stdbool.h time.h\
+inttypes.h limits.h stdint.h stdlib.h string.h unistd.h stdbool.h time.h \
+getopt.h ctype.h netdb.h sys/socket.h netinet/in.h arpa/inet.h
 ])
 
 # checks for typedefs, structures, and compiler characteristics.
@@ -71,13 +73,13 @@ AC_OUTPUT
 cat << EOF
 
 mpimemu configuration
-#####################
-
-CC      : $CC
-CFLAGS  : $CFLAGS
-LDFLAGS : $LDFLAGS
-LIBS    : $LIBS
-CPPFLAGS: $CPPFLAGS
-CPP     : $CPP
++--------------------
+|
+| CC      : $CC
+| CFLAGS  : $CFLAGS
+| LDFLAGS : $LDFLAGS
+| LIBS    : $LIBS
+| CPPFLAGS: $CPPFLAGS
+| CPP     : $CPP
 
 EOF

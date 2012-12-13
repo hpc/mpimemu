@@ -1,0 +1,345 @@
+#!/usr/bin/env perl
+
+###############################################################################
+# Copyright (c) 2012      Los Alamos National Security, LLC.
+#                         All rights reserved.
+#
+# This program was prepared by Los Alamos National Security, LLC at Los Alamos
+# National Laboratory (LANL) under contract No. DE-AC52-06NA25396 with the U.S.
+# Department of Energy (DOE). All rights in the program are reserved by the DOE
+# and Los Alamos National Security, LLC. Permission is granted to the public to
+# copy and use this software without charge, provided that this Notice and any
+# statement of authorship are reproduced on all copies. Neither the U.S.
+# Government nor LANS makes any warranty, express or implied, or assumes any
+# liability or responsibility for the use of this software.
+################################################################################
+
+# Author: Samuel K. Gutierrez
+
+use strict;
+use warnings;
+
+use Switch;
+use Cwd qw(abs_path);
+use File::Spec::Functions;
+use File::Basename;
+use Text::Wrap;
+use POSIX qw(strftime);
+use Time::HiRes qw(gettimeofday tv_interval clock_gettime clock stat);
+
+my $SCRIPT_VER = '0.1';
+my $MPIMEMU_NAME = 'mpimemu';
+
+################################################################################
+sub env_def
+{
+    my ($env) = @_;
+
+    return ($ENV{$env});
+}
+
+################################################################################
+sub echo_setup
+{
+    my (%setup) = @_;
+
+    print "# setup begin\n";
+    for (keys %setup) {
+        print "# $_: $setup{$_}\n";
+    }
+    print "# setup end\n";
+}
+
+################################################################################
+sub echo_run_info
+{
+    print "# what: " . basename($0) . " $SCRIPT_VER" . "\n";
+    print "# who: " . $ENV{'USER'} . "\n";
+    print "# when: " . strftime('%m%d%Y-%H%M%S', localtime) . "\n";
+
+}
+
+################################################################################
+sub which_mpimemu
+{
+    my $which_mpimemu = undef;
+
+    $which_mpimemu = `which mpimemu 2>/dev/null`;
+
+    if (!$which_mpimemu) {
+        # check if it is in the same directory as this script
+        my $script_abs_dir_name = dirname(abs_path($0));
+        my $mmu_test_path = catfile($script_abs_dir_name, $MPIMEMU_NAME);
+        if (-x $mmu_test_path) {
+            return $mmu_test_path;
+        }
+        else {
+            my $err = "Cannot find $MPIMEMU_NAME. " .
+                      "Please define MPIMEMU_BIN_PATH, " .
+                      "or add the location of $MPIMEMU_NAME to your PATH.\n";
+            print wrap('', '', $err) . "\n";
+            exit(1);
+        }
+    }
+    else {
+        return $which_mpimemu;
+    }
+}
+
+################################################################################
+sub make_datadir
+{
+    my ($dataprefix) = @_;
+
+    my $datadir = $MPIMEMU_NAME . '-' . $ENV{'USER'} . '-' .
+                  strftime('%m%d%Y', localtime);
+    my $fullpath = catfile($dataprefix, $datadir);
+    my $i = 1;
+    my $lock_file = undef;
+
+    # XXX a race condition here. use file locks if need be.
+    while (-x $fullpath) {
+        $fullpath = catfile($dataprefix, "$datadir-$i");
+        $i++;
+    }
+    mkdir($fullpath) or die "Fatal Error: Cannot create data directory: $!\n";
+    # now add a lock file within the data dir. protect against some other job
+    # from dumping data into this directory.
+    $lock_file = catfile($fullpath, ".lock");
+    # did another job lock this directory?
+    if (-x $lock_file) {
+        my $err = "Foreign lockfile found in $fullpath. Cannot continue.\n";
+        print wrap('', '', $err) . "\n";
+        exit(1);
+    }
+    # create the lock file with our pid
+    open(LOCKFILE, ">", $lock_file) or die "Cannot create lock file: $!\n";
+    print LOCKFILE "$$\n";
+    close(LOCKFILE) or die "Cannot close lock file: $!\n";
+    return $fullpath;
+}
+
+################################################################################
+sub get_setup
+{
+    my (@env_array) = @_;
+    my %env_hash = ();
+
+    @env_hash{@env_array} = undef;
+
+    foreach my $env (@env_array) {
+        switch ($env) {
+            case ['MPIMEMU_MAX_PES', 'MPIMEMU_PPN',
+                  'MPIMEMU_RUN_CMD', 'MPIMEMU_NUMPE_FUN'] {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                else {
+                    die "$env not defined. cannot continue.\n";
+                }
+            }
+            case 'MPIMEMU_START_INDEX' {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                # if not, set to default value
+                else {
+                    $env_hash{$env} = '0';
+                }
+            }
+            case 'MPIMEMU_DATA_DIR_PREFIX' {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                # if not, set to default value
+                else {
+                    $env_hash{$env} = $ENV{'HOME'};
+                }
+            }
+            case 'MPIMEMU_BIN_PATH' {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                # if not, search for something usable
+                else {
+                    $env_hash{$env} = which_mpimemu();
+                }
+            }
+            case ['MPIMEMU_SAMPS_PER_S', 'MPIMEMU_SAMP_DURATION'] {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                # default is either 10 samples/s or 10 seconds of sampling.
+                else {
+                    $env_hash{$env} = '10';
+                }
+            }
+            case ['MPIMEMU_DISABLE_WORKLOAD'] {
+                if (env_def($env)) {
+                    $env_hash{$env} = 'yes';
+                }
+                # default is either 10 samples/s or 10 seconds of sampling.
+                else {
+                    $env_hash{$env} = 'no';
+                }
+            }
+        }
+    }
+    return %env_hash;
+}
+
+################################################################################
+sub get_real_run_cmd
+{
+    my ($run_cmd, $numpe, $ppn, $app, $with_workload) = @_;
+
+    # make sure that the string we are working with has all the required
+    # variables. don't include NNN, because they may not want to use that
+    # switch. nnn and aaa are required.
+    if (!($run_cmd =~ /nnn/ and $run_cmd =~ /aaa/)) {
+        die "Invalid run command provided. Must contain nnn and aaa " .
+            "variables.\n";
+    }
+    # substitute the placeholders with the real values
+    if ($run_cmd =~ /NNN/) {
+        $run_cmd =~ s/NNN/$ppn/;
+    }
+    $run_cmd =~ s/nnn/$numpe/;
+    $run_cmd =~ s/aaa/$app/;
+
+    if ($with_workload) {
+        $run_cmd = $run_cmd . ' -w';
+    }
+
+    return $run_cmd;
+}
+
+################################################################################
+# returns an array of the numpes that will be used during the run.
+sub get_numpes
+{
+    my ($starti, $numpefun, $maxnumpe) = @_;
+    my $i = 0;
+    my $cur_numpe = 0;
+    my @numpes = ();
+    my $cur_math_expr = $numpefun;
+
+    if (!($numpefun =~ /Y/)) {
+        my $err = "Invalid MPIMEMU_NUMPE_FUN format provided - " .
+                  "missing 'Y' variable. Cannot continue.\n";
+        print wrap('', '', $err) . "\n";
+        exit(1);
+    }
+
+    $cur_math_expr =~ s/Y/$i/;
+    $cur_numpe = eval($cur_math_expr);
+
+    while ($cur_numpe <= $maxnumpe) {
+        push(@numpes, $cur_numpe);
+        $i++;
+        $cur_math_expr = $numpefun;
+        $cur_math_expr =~ s/Y/$i/;
+        $cur_numpe = eval($cur_math_expr);
+    }
+    # remove 0 if present
+    if ($numpes[0] == 0) {
+        splice(@numpes, 0, 1);
+    }
+    # make sure that we have maxnumpe in the array
+    if ($numpes[-1] != $maxnumpe) {
+        push(@numpes, $maxnumpe);
+    }
+    return @numpes;
+}
+
+################################################################################
+sub with_workload
+{
+    return !(env_def('MPIMEMU_DISABLE_WORKLOAD'));
+}
+
+################################################################################
+sub run
+{
+    my %setup = @_;
+
+    my $maxnumpe = $setup{'MPIMEMU_MAX_PES'}; 
+    my $ppn = $setup{'MPIMEMU_PPN'};
+    my $numpefun = $setup{'MPIMEMU_NUMPE_FUN'};
+    my $starti = $setup{'MPIMEMU_START_INDEX'};
+    my $app_str = "$setup{'MPIMEMU_BIN_PATH'} " .
+                  "-t $setup{'MPIMEMU_SAMP_DURATION'} " .
+                  "-s $setup{'MPIMEMU_SAMPS_PER_S'}";
+    my $datadir = make_datadir($setup{'MPIMEMU_DATA_DIR_PREFIX'});
+    my $num_runs = 0;
+    my @numpes = ();
+    my $t0 = undef;
+    my $elapsed = undef;
+
+    @numpes = get_numpes($starti, $numpefun, $maxnumpe);
+    #start timer
+    $t0 = [gettimeofday];
+    for my $numpe (@numpes) {
+        my $cmd = get_real_run_cmd($setup{'MPIMEMU_RUN_CMD'}, $numpe,
+                                   $setup{'MPIMEMU_PPN'},
+                                   $app_str,
+                                   with_workload());
+        my $log = catfile($datadir, $numpe);
+        print wrap('', '', "\n# running: $cmd\n");
+        # run the command and capture its output
+        unless (open(OUTFILE, "$cmd 2>&1 |")) {
+            die "Fatal Error: Cannot spawn $cmd!\n";
+        }
+        unless (open(LOGFILE, ">$log")) {
+            die "Fatal Error: Cannot open LOGFILE\n";
+        }
+        while (defined(my $out_line = <OUTFILE>)) {
+            print $out_line;
+            print LOGFILE $out_line;
+        }
+        unless (close(OUTFILE)) {
+            die "Fatal Error: $!\n";
+        }
+        unless (close(LOGFILE)) {
+            die "Fatal Error: $!\n";
+        }
+        $num_runs++;
+        sleep(1);
+    }
+    $elapsed = tv_interval($t0);
+    print "\n# done with $num_runs run(s) in $elapsed second(s).\n";
+    print "# data written to: $datadir\n\n";
+}
+
+################################################################################
+sub main
+{
+    # environment variables that dictate how mpimemu-run behaves.
+    my @mpimemu_envs = (
+        'MPIMEMU_START_INDEX',
+        'MPIMEMU_MAX_PES',
+        'MPIMEMU_PPN',
+        'MPIMEMU_RUN_CMD',
+        'MPIMEMU_NUMPE_FUN',
+        'MPIMEMU_DATA_DIR_PREFIX',
+        'MPIMEMU_BIN_PATH',
+        'MPIMEMU_SAMPS_PER_S',
+        'MPIMEMU_SAMP_DURATION',
+        'MPIMEMU_DISABLE_WORKLOAD'
+    );
+    # application settings hash table
+    my %setup_hash = ();
+    # set setup and also check if all the required envs are set.
+    %setup_hash = get_setup(@mpimemu_envs);
+    # if we are here, then we have a good setup
+    echo_run_info();
+    echo_setup(%setup_hash);
+    # run the thing
+    run(%setup_hash);
+
+    return 0;
+}
+
+################################################################################
+################################################################################
+exit(main());

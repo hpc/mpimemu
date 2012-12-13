@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2011      Los Alamos National Security, LLC.
+# Copyright (c) 2011-2012 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -15,8 +15,18 @@
 bin_PROGRAMS = mpimemu
 
 mpimemu_SOURCES = \
-constants.h \
-conv_macros.h \
-mmu_util.c mmu_util.h \
-memory_usage.h memory_usage.c \
-mpimemu.h mpimemu.c
+mmu_constants.h \
+mmu_conv_macros.h \
+mmu_memory_common.h \
+mmu_util.h mmu_util.c \
+mmu_args.h mmu_args.c \
+mmu_list.h mmu_list.c \
+mmu_memory_sample.h mmu_memory_sample.c \
+mmu_memory.h mmu_memory.c \
+mmu_process.h mmu_process.c \
+mmu_mpi.h mmu_mpi.c \
+mpimemu.c
+
+bin_SCRIPTS = \
+mpimemu-run \
+mpimemu-mkstats
