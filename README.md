@@ -9,7 +9,7 @@ Why is configure failing with:
 X cannot compile MPI applications. cannot continue.  
 ./configure CC=mpicc
 
-***
+---
 Copyright (c) 2011-2012 Los Alamos National Security, LLC.
                         All rights reserved.
 
