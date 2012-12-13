@@ -1,6 +1,4 @@
-################################################################################
-#                                   mpimemu                                    #
-################################################################################
+# mpimemu
 
 mpimemu (MPI Memory Usage) is a simple tool that helps approximate memory
 usage of MPI libraries.
@@ -11,6 +9,7 @@ Why is configure failing with:
 <blah> cannot compile MPI applications. cannot continue.
 ./configure CC=mpicc
 
+***
 Copyright (c) 2011-2012 Los Alamos National Security, LLC.
                         All rights reserved.
 
