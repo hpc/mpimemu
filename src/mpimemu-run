@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ###############################################################################
-# Copyright (c) 2012      Los Alamos National Security, LLC.
+# Copyright (c) 2012-2013 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -135,8 +135,7 @@ sub get_setup
 
     foreach my $env (@env_array) {
         switch ($env) {
-            case ['MPIMEMU_MAX_PES', 'MPIMEMU_PPN',
-                  'MPIMEMU_RUN_CMD', 'MPIMEMU_NUMPE_FUN'] {
+            case ['MPIMEMU_MAX_PES', 'MPIMEMU_RUN_CMD', 'MPIMEMU_NUMPE_FUN'] {
                 if (env_def($env)) {
                     $env_hash{$env} = $ENV{$env};
                 }
@@ -153,6 +152,15 @@ sub get_setup
                 # if not, set to default value
                 else {
                     $env_hash{$env} = '0';
+                }
+            }
+            case 'MPIMEMU_PPN' {
+                if (env_def($env)) {
+                    $env_hash{$env} = $ENV{$env};
+                }
+                # if not, set to default value
+                else {
+                    $env_hash{$env} = '1';
                 }
             }
             case 'MPIMEMU_DATA_DIR_PREFIX' {
@@ -186,7 +194,6 @@ sub get_setup
                 if (env_def($env)) {
                     $env_hash{$env} = 'yes';
                 }
-                # default is either 10 samples/s or 10 seconds of sampling.
                 else {
                     $env_hash{$env} = 'no';
                 }
@@ -211,6 +218,10 @@ sub get_real_run_cmd
     # substitute the placeholders with the real values
     if ($run_cmd =~ /NNN/) {
         $run_cmd =~ s/NNN/$ppn/;
+        if (!env_def('MPIMEMU_PPN')) {
+            print "# WARNING: 'NNN' provided, but MPIMEMU_PPN not set. " .
+                  "MPIMEMU_PPN set to 1.\n";
+        }
     }
     $run_cmd =~ s/nnn/$numpe/;
     $run_cmd =~ s/aaa/$app/;
@@ -232,21 +243,21 @@ sub get_numpes
     my @numpes = ();
     my $cur_math_expr = $numpefun;
 
-    if (!($numpefun =~ /Y/)) {
+    if (!($numpefun =~ /X/)) {
         my $err = "Invalid MPIMEMU_NUMPE_FUN format provided - " .
-                  "missing 'Y' variable. Cannot continue.\n";
+                  "missing 'X' variable. Cannot continue.\n";
         print wrap('', '', $err) . "\n";
         exit(1);
     }
 
-    $cur_math_expr =~ s/Y/$i/;
+    $cur_math_expr =~ s/X/$i/;
     $cur_numpe = eval($cur_math_expr);
 
     while ($cur_numpe <= $maxnumpe) {
         push(@numpes, $cur_numpe);
         $i++;
         $cur_math_expr = $numpefun;
-        $cur_math_expr =~ s/Y/$i/;
+        $cur_math_expr =~ s/X/$i/;
         $cur_numpe = eval($cur_math_expr);
     }
     # remove 0 if present

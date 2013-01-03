@@ -1,0 +1,84 @@
+# mpimemu
+
+This repository contains the source code for mpimemu, a simple tool that helps
+approximate MPI library memory usage as a function of scale.
+
+################################################################################
+
+## Installation
+
+First make certain that mpicc or another MPI wrapper compiler with similar
+capabilities is in your $PATH.
+
+o Standard Configure -- mpicc and cc will be checked by default.
+./configure
+
+o Configure with Different Wrapper Compiler
+./configure CC=[NEWCC]
+
+o Build
+
+make && make install
+
+o Example Configure and Build
+./configure --prefix=$HOME/local/mpimemu && make && make install
+
+o Installation Notes
+mpimemu does not necessarily need to be installed (via "make install") -- it can
+be used from within its source directory.
+
+## Environment Setup
+
+mpimemu-run is a helper utility used to run a succession of mpimemu instances
+of various sizes. The following environment variables change the way
+mpimemu-run behaves.
+
+o Required Environment Variables
+- MPIMEMU_MAX_PES: Specifies the maximum number of MPI ranks that will be
+                   launched.
+
+- MPIMEMU_RUN_CMD: Specifies a "run template" that will be used to launch
+                   mpimemu jobs.
+                   * Example Run Template with mpirun 
+                     mpirun -n nnn aaa
+                     mpirun -n nnn -npernode NNN aaa
+                   * Example Run Template with aprun
+                     aprun -n nnn aaa
+
+                   * Required Template Variables
+                     - nnn: Replaced with the total number processes to be
+                            launched.
+                     - aaa: Replaced with the mpimemu run string.
+                   * Optional Template Variables
+                     - NNN: Replaced with MPIMEMU_PPN. If MPIMEMU_PPN is not
+                            set, 1 will be used.
+
+- MPIMEMU_NUMPE_FUN: Specifies the function that... TODO
+
+o Optional Environment Variables
+- MPIMEMU_PPN: Specifies the number of MPI ranks per node.
+## Running
+
+## Interpreting the Data
+Take idle system memory usage into consideration (e.g system image size).
+Gives a general sense of memory usage scaling, not necessarily MPI library
+usage.
+
+## FAQ
+
+Why is configure failing with:
+[X] cannot compile MPI applications. cannot continue.
+Try the following if using mpicc.
+./configure CC=mpicc
+
+Copyright (c) 2011-2013 Los Alamos National Security, LLC.
+                        All rights reserved.
+
+This program was prepared by Los Alamos National Security, LLC at Los Alamos
+National Laboratory (LANL) under contract No. DE-AC52-06NA25396 with the U.S.
+Department of Energy (DOE). All rights in the program are reserved by the DOE
+and Los Alamos National Security, LLC. Permission is granted to the public to
+copy and use this software without charge, provided that this Notice and any
+statement of authorship are reproduced on all copies. Neither the U.S.
+Government nor LANS makes any warranty, express or implied, or assumes any
+liability or responsibility for the use of this software.

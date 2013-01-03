@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# Copyright (c) 2012      Los Alamos National Security, LLC.
+# Copyright (c) 2012-2013 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -26,10 +26,10 @@ export MPIMEMU_MAX_PES=64
 export MPIMEMU_RUN_CMD="mpirun -n nnn aaa"
 
 ### some example numpe functions
-#export MPIMEMU_NUMPE_FUN="2**Y"
-#export MPIMEMU_NUMPE_FUN="2 * Y * $MPIMEMU_PPN"
-export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * Y * 2"
-export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN ** Y"
+#export MPIMEMU_NUMPE_FUN="2**X"
+#export MPIMEMU_NUMPE_FUN="2 * X * $MPIMEMU_PPN"
+export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * X * 2"
+export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN ** X"
 
 
 export MPIMEMU_DATA_DIR_PREFIX="$HOME"
