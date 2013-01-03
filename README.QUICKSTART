@@ -1,0 +1,35 @@
+################################################################################
+
+Quick Start Guide for mpimemu
+
+Please see README for mpimemu environment details.
+
+################################################################################
+
+Configure and build mpimemu.
+
+Modify util/env-setup-bash to meet your specific needs.
+
+NOTE: If you are using a shell other than bash, you can easily replicate
+      env-setup-bash's functionality in whatever language is most convenient.
+
+Source util/env-setup-bash to load your setup.
+
+Run mpimemu-run, found in the src directory.
+
+Run mpimemu-mkstats -i [/path/to/generated/data]
+
+Plot generated CSV data.
+
+################################################################################
+Copyright (c) 2013      Los Alamos National Security, LLC.
+                        All rights reserved.
+
+This program was prepared by Los Alamos National Security, LLC at Los Alamos
+National Laboratory (LANL) under contract No. DE-AC52-06NA25396 with the U.S.
+Department of Energy (DOE). All rights in the program are reserved by the DOE
+and Los Alamos National Security, LLC. Permission is granted to the public to
+copy and use this software without charge, provided that this Notice and any
+statement of authorship are reproduced on all copies. Neither the U.S.
+Government nor LANS makes any warranty, express or implied, or assumes any
+liability or responsibility for the use of this software.
