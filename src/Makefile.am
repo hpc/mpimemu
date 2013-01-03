@@ -27,6 +27,6 @@ mmu_process.h mmu_process.c \
 mmu_mpi.h mmu_mpi.c \
 mpimemu.c
 
-bin_SCRIPTS = \
+dist_bin_SCRIPTS = \
 mpimemu-run \
 mpimemu-mkstats
