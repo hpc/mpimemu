@@ -60,12 +60,12 @@ o Required Environment Variables
                    mpimemu jobs.
 
                    *** Example Run Template with mpirun
-                     mpirun -n nnn aaa
-                     mpirun -n nnn -npernode NNN aaa
+                       mpirun -n nnn aaa
+                       mpirun -n nnn -npernode NNN aaa
 
                    *** Example Run Template with aprun
-                     aprun -n nnn aaa
-                     aprun -n nnn -N NNN aaa
+                       aprun -n nnn aaa
+                       aprun -n nnn -N NNN aaa
 
                    * Required Template Variables
                      - nnn: Replaced with the total number processes to be
