@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2013 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -41,6 +41,8 @@ typedef struct mmu_memory_t {
     /* /// sample types /// */
     /* list of pre-mpi_init samples (self) */
     mmu_list_t *self_pre_mpi_init_samples;
+    /* list of pre-mpi_init samples (node) */
+    mmu_list_t *node_pre_mpi_init_samples;
     /* list of post-mpi_init samples (self) */
     mmu_list_t *self_post_mpi_init_samples;
     /* list of post-mpi_init samples (node/bogus) */

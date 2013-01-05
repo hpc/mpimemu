@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2013 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -315,8 +315,12 @@ get_sample(mmu_memory_t *mem,
     else if (MMU_MEMORY_SAMPLE_NODE(flags) ||
              MMU_MEMORY_SAMPLE_NODE_BOGUS(flags)) {
         info_path = "/proc/meminfo";
-        /* we only have post_mpi_init node samples */
-        target_list_ptr = mem->node_post_mpi_init_samples;
+        if (MMU_MEMORY_SAMPLE_PRE_MPI_INIT(flags)) {
+            target_list_ptr = mem->node_pre_mpi_init_samples;
+        }
+        else {
+            target_list_ptr = mem->node_post_mpi_init_samples;
+        }
     }
     else {
         fprintf(stderr, MMU_ERR_PREFIX"unknown option. cannot continue.\n");
@@ -584,6 +588,16 @@ mmu_memory_construct(mmu_memory_t **m)
         ++num_samp_types;
     }
     if (MMU_SUCCESS != (rc =
+        mmu_list_construct(&tmp->node_pre_mpi_init_samples))) {
+        /* rc already set */
+        goto out;
+    }
+    else {
+        tmp->sample_list[MMU_MEMORY_NODE_PRE_INIT] =
+            tmp->node_pre_mpi_init_samples;
+        ++num_samp_types;
+    }
+    if (MMU_SUCCESS != (rc =
         mmu_list_construct(&tmp->self_post_mpi_init_samples))) {
         /* rc already set */
         goto out;
@@ -634,6 +648,7 @@ mmu_memory_destruct(mmu_memory_t **m)
 
     if (NULL != tmp) {
         mmu_list_destruct(&tmp->self_pre_mpi_init_samples);
+        mmu_list_destruct(&tmp->node_pre_mpi_init_samples);
         mmu_list_destruct(&tmp->self_post_mpi_init_samples);
         mmu_list_destruct(&tmp->node_post_mpi_init_samples);
         if (NULL != tmp->sample_list) free(tmp->sample_list);
@@ -785,8 +800,8 @@ mmu_memory_get_item_label(mmu_memory_list_type_t type,
         case (MMU_MEMORY_SELF_POST_INIT):
             return mmu_memory_proc_self_tab[type_index];
 
+        case (MMU_MEMORY_NODE_PRE_INIT):
         case (MMU_MEMORY_NODE_POST_INIT):
-        case (MMU_MEMORY_LAST):
             return mmu_memory_proc_node_tab[type_index];
         default:
             return NULL;

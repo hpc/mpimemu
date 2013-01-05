@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2013 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -211,26 +211,6 @@ sample(mmu_process_t *p, mmu_memory_flags_t flags)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 int
-mmu_process_sample_memory_usage_self(mmu_process_t *p)
-{
-    mmu_memory_flags_t flags;
-
-    if (NULL == p) return MMU_FAILURE_INVALID_ARG;
-
-    /* self will never collect node usage, so just set self flag */
-    flags = MMU_MEMORY_FLAGS_SAMPLE_SELF;
-
-    /* is this pre or post mpi init? */
-    if (!mmu_process_mpi_initialized()) {
-        /* if so, set that bit */
-        flags |= MMU_MEMORY_FLAGS_SAMPLE_PRE_MPI_INIT;
-    }
-
-    return sample(p, flags);
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-int
 mmu_process_sample_memory_usage_all(mmu_process_t *p)
 {
     mmu_memory_flags_t flags;
@@ -239,12 +219,15 @@ mmu_process_sample_memory_usage_all(mmu_process_t *p)
 
     flags = MMU_MEMORY_FLAGS_SAMPLE_SELF;
 
-    /* is this pre or post mpi init? */
+    /* is this pre or post mpi init? if pre-mpi init also add the sample node
+     * flag because the hood delegate cannot possibly be determined, so have
+     * everyone collect node data. */
     if (!mmu_process_mpi_initialized()) {
-        flags |= MMU_MEMORY_FLAGS_SAMPLE_PRE_MPI_INIT;
+        flags |= MMU_MEMORY_FLAGS_SAMPLE_PRE_MPI_INIT |
+                 MMU_MEMORY_FLAGS_SAMPLE_NODE;
     }
     /* only the neighborhood delegate will collect node usage */
-    if (mmu_process_is_hood_delegate(p)) {
+    else if (mmu_process_is_hood_delegate(p)) {
         flags |= MMU_MEMORY_FLAGS_SAMPLE_NODE;
     }
     /* others will accumulate bogus data.  the general idea is to avoid a
@@ -604,6 +587,7 @@ get_type_prefix_str(mmu_memory_list_type_t type)
 
     switch (type) {
         case (MMU_MEMORY_SELF_PRE_INIT):
+        case (MMU_MEMORY_NODE_PRE_INIT):
             return pre_init_str;
         case (MMU_MEMORY_SELF_POST_INIT):
         case (MMU_MEMORY_NODE_POST_INIT):

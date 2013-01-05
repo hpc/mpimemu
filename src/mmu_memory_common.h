@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012      Los Alamos National Security, LLC.
+ * Copyright (c) 2012-2013 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -66,6 +66,7 @@ typedef uint16_t mmu_memory_flags_t;
 typedef enum {
     MMU_MEMORY_SELF_PRE_INIT = 0,
     MMU_MEMORY_SELF_POST_INIT,
+    MMU_MEMORY_NODE_PRE_INIT,
     MMU_MEMORY_NODE_POST_INIT,
     MMU_MEMORY_LAST
 } mmu_memory_list_type_t;

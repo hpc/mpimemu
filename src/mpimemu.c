@@ -165,9 +165,9 @@ main(int argc,
         goto out;
     }
 
-    /* /// collect pre-mpi_init samples /// */
-    if (MMU_SUCCESS != (rc = mmu_process_sample_memory_usage_self(process))) {
-        bad_func = "mmu_process_get_memory_usage_self";
+    /* /// collect pre-mpi_init samples - both self and node /// */
+    if (MMU_SUCCESS != (rc = mmu_process_sample_memory_usage_all(process))) {
+        bad_func = "mmu_process_sample_memory_usage_all";
         goto out;
     }
 
