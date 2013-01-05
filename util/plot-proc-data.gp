@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2010-2011 Los Alamos National Security, LLC.
+# Copyright (c) 2010-2013 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -44,5 +44,5 @@ set ylabel "Memory Usage (kB)"
 #'./proc-mem-usage.csv' using 1:21 with lines title 'VmPTE'
 
 plot \
-'./proc_mem_usage.csv' using 1:6  with lines title 'Pre\_MPI\_Init\_VmRSS', \
-'./proc_mem_usage.csv' using 1:16 with lines title 'VmRSS'
+'./proc-mem-usage.csv' using 1:6  with lines title 'Pre\_MPI\_Init\_VmRSS', \
+'./proc-mem-usage.csv' using 1:16 with lines title 'VmRSS'
