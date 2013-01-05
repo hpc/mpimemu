@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ###############################################################################
-# Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+# Copyright (c) 2010-2013 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -32,7 +32,14 @@ my $SCRIPT_VER = '0.1';
 my $node_base_fn = "node-mem-usage";
 my $proc_base_fn = "proc-mem-usage";
 
-my @node_mem_keys = (
+my @pre_init_node_mem_keys = (
+    '^Pre-Init MemUsed',
+    '^Pre-Init Cached',
+    '^Pre-Init Active',
+    '^Pre-Init Inactive'
+);
+
+my @post_init_node_mem_keys = (
     '^Post-Init MemUsed',
     '^Post-Init Cached',
     '^Post-Init Active',
@@ -159,7 +166,7 @@ sub main
     ### construct csv headers ###
     my $node_data_str = "Number of PEs";
 
-    foreach my $key (@node_mem_keys) {
+    foreach my $key (@pre_init_node_mem_keys, @post_init_node_mem_keys) {
         $node_data_str .= ", " . get_key_name($key);
     }
     $node_data_str .= "\n";
@@ -186,7 +193,13 @@ sub main
         my @data = <MEM_USAGE_FILE>;
 
         $node_data_str .= "$file";
-        foreach my $key (@node_mem_keys) {
+        foreach my $key (@pre_init_node_mem_keys) {
+            my @line = grep(/$key/, @data);
+            my @val = split(', ', $line[0]);
+            chomp(@val);
+            $node_data_str .= ", " . $val[-1];
+        }
+        foreach my $key (@post_init_node_mem_keys) {
             my @line = grep(/$key/, @data);
             my @val = split(', ', $line[0]);
             chomp(@val);
@@ -202,7 +215,6 @@ sub main
             chomp(@val);
             $proc_data_str .= ", " . $val[-1];
         }
-
         # get post mpi_init proc memory usage data
         foreach my $key (@post_init_proc_mem_keys) {
             my @line = grep(/$key/, @data);

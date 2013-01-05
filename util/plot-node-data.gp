@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2010-2011 Los Alamos National Security, LLC.
+# Copyright (c) 2010-2013 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -27,11 +27,17 @@ set xlabel "Number of MPI Tasks"
 set ylabel "Memory Usage (kB)"
 
 plot \
-'./node-mem-usage.csv' using 1:2 with linespoints title 'ave memused', \
-'./node-mem-usage.csv' using 1:3 with linespoints title 'ave cached', \
-'./node-mem-usage.csv' using 1:4 with linespoints title 'ave active', \
-'./node-mem-usage.csv' using 1:5 with linespoints title 'ave inactive', \
+'./node-mem-usage.csv' using 1:2 with linespoints title 'pre ave memused', \
+'./node-mem-usage.csv' using 1:3 with linespoints title 'pre ave cached', \
+'./node-mem-usage.csv' using 1:4 with linespoints title 'pre ave active', \
+'./node-mem-usage.csv' using 1:5 with linespoints title 'pre ave inactive', \
+'./node-mem-usage.csv' using 1:6 with linespoints title 'ave memused', \
+'./node-mem-usage.csv' using 1:7 with linespoints title 'ave cached', \
+'./node-mem-usage.csv' using 1:8 with linespoints title 'ave active', \
+'./node-mem-usage.csv' using 1:9 with linespoints title 'ave inactive', \
 './node-mem-usage.csv' using 1:(column(2) - column(3)) with \
+linespoints title 'ave mem used (pre ave memused - pre ave cached)', \
+'./node-mem-usage.csv' using 1:(column(6) - column(7)) with \
 linespoints title 'ave mem used (ave memused - ave cached)'
 
 # NOTES
