@@ -27,7 +27,7 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-mkstats';
-my $SCRIPT_VER = '0.1';
+my $SCRIPT_VER = '0.2';
 
 my $node_base_fn = "node-mem-usage";
 my $proc_base_fn = "proc-mem-usage";
@@ -100,10 +100,12 @@ sub version
 ################################################################################
 sub get_key_name
 {
-    my ($name) = @_;
+    my ($name, $with_unit) = @_;
     # remove '^'
     $name =~ s/^\^//;
-    $name .= " (kB)";
+    if ($with_unit) {
+        $name .= " (kB)";
+    }
     return $name;
 }
 
@@ -125,6 +127,39 @@ sub get_filename
     }
 
     return $filepath;
+}
+
+################################################################################
+sub get_data_string(\@ $)
+{
+    my ($key_tab_ref, $file_name) = @_;
+    my $data_string = '';
+    my @key_tab = @$key_tab_ref;
+
+    open(MEM_USAGE_FILE, "<", $file_name) or die $!;
+    my @data = <MEM_USAGE_FILE>;
+
+    foreach my $key (@key_tab) {
+        my $no_data = 0;
+        my @line = grep(/$key/, @data);
+        # make sure our grep is successful
+        if (not @line) {
+            print STDERR "Could not find \'" .
+                get_key_name($key, 0) . "\' in " .
+                "$file_name -- Assuming \'0.0\'\n";
+            $no_data = 1;
+        }
+        if ($no_data) {
+            $data_string .= ", " . "0.0";
+        }
+        else {
+            my @val = split(', ', $line[0]);
+            chomp(@val);
+            $data_string .= ", " . $val[-1];
+        }
+    }
+    close(MEM_USAGE_FILE) or die $!;
+    return $data_string;
 }
 
 ################################################################################
@@ -167,14 +202,14 @@ sub main
     my $node_data_str = "Number of PEs";
 
     foreach my $key (@pre_init_node_mem_keys, @post_init_node_mem_keys) {
-        $node_data_str .= ", " . get_key_name($key);
+        $node_data_str .= ", " . get_key_name($key, 1);
     }
     $node_data_str .= "\n";
 
     my $proc_data_str = "Number of PEs";
 
     foreach my $key (@pre_init_proc_mem_keys, @post_init_proc_mem_keys) {
-        $proc_data_str .= ", " . get_key_name($key);
+        $proc_data_str .= ", " . get_key_name($key, 1);
     }
     $proc_data_str .= "\n";
 
@@ -182,6 +217,12 @@ sub main
     # only care about file names that are one or more digits.
     # file name is numpe.
     my @uns_data_files = grep(/\d+$/, readdir(DIR));
+    # if we don't have any data, then bail.
+    if (not @uns_data_files) {
+        closedir(DIR);
+        die "Cannot find data files in: $data_dir -- Terminating.\n";
+    }
+    # at this point, we should have at least one valid data file.
     my @data_files = sort { $a <=> $b } @uns_data_files;
 
     # get min an max PEs
@@ -189,42 +230,20 @@ sub main
     $maxpe = $data_files[-1];
 
     foreach my $file (@data_files) {
-        open(MEM_USAGE_FILE, "<", "$data_dir/$file") or die $!;
-        my @data = <MEM_USAGE_FILE>;
-
+        my $cur_file = catfile($data_dir, $file);
+        my $tmp_str = undef;
         $node_data_str .= "$file";
-        foreach my $key (@pre_init_node_mem_keys) {
-            my @line = grep(/$key/, @data);
-            my @val = split(', ', $line[0]);
-            chomp(@val);
-            $node_data_str .= ", " . $val[-1];
-        }
-        foreach my $key (@post_init_node_mem_keys) {
-            my @line = grep(/$key/, @data);
-            my @val = split(', ', $line[0]);
-            chomp(@val);
-            $node_data_str .= ", " . $val[-1];
-        }
+
+        ### node data ###
+        $node_data_str .= get_data_string(@pre_init_node_mem_keys, $cur_file);
+        $node_data_str .= get_data_string(@post_init_node_mem_keys, $cur_file);
         $node_data_str .= "\n";
 
-        # get pre mpi_init proc memory usage data
+        ### proc data ###
         $proc_data_str .= "$file";
-        foreach my $key (@pre_init_proc_mem_keys) {
-            my @line = grep(/$key/, @data);
-            my @val = split(', ', $line[0]);
-            chomp(@val);
-            $proc_data_str .= ", " . $val[-1];
-        }
-        # get post mpi_init proc memory usage data
-        foreach my $key (@post_init_proc_mem_keys) {
-            my @line = grep(/$key/, @data);
-            my @val = split(', ', $line[0]);
-            chomp(@val);
-            $proc_data_str .= ", " . $val[-1];
-        }
+        $proc_data_str .= get_data_string(@pre_init_proc_mem_keys, $cur_file);
+        $proc_data_str .= get_data_string(@post_init_proc_mem_keys, $cur_file);
         $proc_data_str .= "\n";
-
-        close(MEM_USAGE_FILE) or die $!;
     }
     closedir(DIR);
 

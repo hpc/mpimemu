@@ -1,3 +1,4 @@
 Add plot helper
 Add proper fp equality checks
 Add version checks for autotools
+Make mpimemu write a data file and print to stdout if env var is set.
