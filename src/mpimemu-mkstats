@@ -146,7 +146,7 @@ sub get_data_string(\@ $)
         if (not @line) {
             print STDERR "Could not find \'" .
                 get_key_name($key, 0) . "\' in " .
-                "$file_name -- Assuming \'0.0\'\n";
+                "$file_name -- Assuming \'0.0\'.\n";
             $no_data = 1;
         }
         if ($no_data) {
