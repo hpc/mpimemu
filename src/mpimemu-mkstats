@@ -140,23 +140,18 @@ sub get_data_string(\@ $)
     my @data = <MEM_USAGE_FILE>;
 
     foreach my $key (@key_tab) {
-        my $no_data = 0;
         my @line = grep(/$key/, @data);
         # make sure our grep is successful
         if (not @line) {
+            close(MEM_USAGE_FILE) or die $!;
             print STDERR "Could not find \'" .
-                get_key_name($key, 0) . "\' in " .
-                "$file_name -- Assuming \'0.0\'.\n";
-            $no_data = 1;
+                         get_key_name($key, 0) . "\' in " .
+                         "$file_name -- Skipping file.\n";
+            return "";
         }
-        if ($no_data) {
-            $data_string .= ", " . "0.0";
-        }
-        else {
-            my @val = split(', ', $line[0]);
-            chomp(@val);
-            $data_string .= ", " . $val[-1];
-        }
+        my @val = split(', ', $line[0]);
+        chomp(@val);
+        $data_string .= ", " . $val[-1];
     }
     close(MEM_USAGE_FILE) or die $!;
     return $data_string;
@@ -231,19 +226,29 @@ sub main
 
     foreach my $file (@data_files) {
         my $cur_file = catfile($data_dir, $file);
-        my $tmp_str = undef;
-        $node_data_str .= "$file";
+        my @test_strs = ('', '');
 
         ### node data ###
-        $node_data_str .= get_data_string(@pre_init_node_mem_keys, $cur_file);
-        $node_data_str .= get_data_string(@post_init_node_mem_keys, $cur_file);
-        $node_data_str .= "\n";
+        $test_strs[0] = get_data_string(@pre_init_node_mem_keys, $cur_file);
+        $test_strs[1] = get_data_string(@post_init_node_mem_keys, $cur_file);
+
+        if (not ($test_strs[0] eq "" or $test_strs[1] eq "")) {
+            $node_data_str .= "$file";
+            $node_data_str .= $test_strs[0];
+            $node_data_str .= $test_strs[1];
+            $node_data_str .= "\n";
+        }
 
         ### proc data ###
-        $proc_data_str .= "$file";
-        $proc_data_str .= get_data_string(@pre_init_proc_mem_keys, $cur_file);
-        $proc_data_str .= get_data_string(@post_init_proc_mem_keys, $cur_file);
-        $proc_data_str .= "\n";
+        $test_strs[0] = get_data_string(@pre_init_proc_mem_keys, $cur_file);
+        $test_strs[1] = get_data_string(@post_init_proc_mem_keys, $cur_file);
+
+        if (not ($test_strs[0] eq "" or $test_strs[1] eq "")) {
+            $proc_data_str .= "$file";
+            $proc_data_str .= $test_strs[0];
+            $proc_data_str .= $test_strs[1];
+            $proc_data_str .= "\n";
+        }
     }
     closedir(DIR);
 
