@@ -15,7 +15,7 @@
 # Author: Samuel K. Gutierrez
 
 set terminal postscript enhanced color
-set output '| ps2pdf - proc_memory_usage.pdf'
+set output '| ps2pdf - proc-mem-usage.pdf'
 
 set title "Average Process Memory Usage"
 set xlabel "Number of PEs"

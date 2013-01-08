@@ -14,15 +14,12 @@
 
 # Author: Samuel K. Gutierrez
 
-# plots mpi_mem_usage node memory usage .csv files
-
-title_v=\
-"TITLE"
+# plots mpimemu node memory usage .csv files
 
 set terminal postscript enhanced color
-set output '| ps2pdf - NAME.pdf'
+set output '| ps2pdf - node-mem-usage.pdf'
 
-set title title_v
+set title "Average Node Memory Usage"
 set xlabel "Number of MPI Tasks"
 set ylabel "Memory Usage (kB)"
 

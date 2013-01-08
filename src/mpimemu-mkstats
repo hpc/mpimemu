@@ -112,17 +112,16 @@ sub get_key_name
 ################################################################################
 sub get_filename
 {
-    my ($minpe, $maxpe, $basedir, $base_filename) = @_;
+    my ($minpe, $maxpe, $basedir, $base_filename, $ext) = @_;
 
-    my $csv_ext = '.csv';
     my $csv_numpe_range_str = $minpe . "-" . $maxpe . 'pes';
     my $date = strftime('%m%d%Y', localtime);
     my $filename = $date . '-' . $base_filename . '-' . $csv_numpe_range_str;
-    my $filepath = catfile($basedir, $filename . $csv_ext);
+    my $filepath = catfile($basedir, $filename . $ext);
     my $index = 1;
 
     while (-e $filepath) {
-        $filepath = catfile($basedir, $filename . "-$index" . $csv_ext);
+        $filepath = catfile($basedir, $filename . "-$index" . $ext);
         $index++;
     }
 
@@ -144,7 +143,7 @@ sub get_data_string(\@ $)
         # make sure our grep is successful
         if (not @line) {
             close(MEM_USAGE_FILE) or die $!;
-            print STDERR "Could not find \'" .
+            print STDERR "  WARNING: Could not find \'" .
                          get_key_name($key, 0) . "\' in " .
                          "$file_name -- Skipping file.\n";
             return "";
@@ -224,6 +223,8 @@ sub main
     $minpe = $data_files[0];
     $maxpe = $data_files[-1];
 
+    print "- Generating CSV Report...\n";
+
     foreach my $file (@data_files) {
         my $cur_file = catfile($data_dir, $file);
         my @test_strs = ('', '');
@@ -252,14 +253,20 @@ sub main
     }
     closedir(DIR);
 
-    open(NODE_MEM_USAGE_CSV, ">", get_filename($minpe, $maxpe, $out_dir,
-                                               $node_base_fn)) or die $!;
-    open(PROC_MEM_USAGE_CSV, ">", get_filename($minpe, $maxpe, $out_dir,
-                                               $proc_base_fn)) or die $!;
+    open(NODE_MEM_USAGE_CSV, ">",
+         get_filename($minpe, $maxpe, $out_dir,
+                      $node_base_fn, '.csv')) or die $!;
+    open(PROC_MEM_USAGE_CSV, ">",
+         get_filename($minpe, $maxpe, $out_dir,
+                      $proc_base_fn, '.csv')) or die $!;
     print NODE_MEM_USAGE_CSV $node_data_str;
     print PROC_MEM_USAGE_CSV $proc_data_str;
     close(NODE_MEM_USAGE_CSV) or die $1;
     close(PROC_MEM_USAGE_CSV) or die $1;
+
+    print "- Done Generating CSV Report...\n";
+    print "- Written to: $out_dir\n";
+
     return 0;
 }
 
