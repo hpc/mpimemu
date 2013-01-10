@@ -165,6 +165,9 @@ MPI library usage. Generally it is a good idea to start your scaling runs at 1
 MPI task to get a general sense about "close-to-base" memory usage (i.e base
 system usage).
 
+mpimemu-plot presents MPI memory usage as (MemUsed - Pre Init MemUsed). Please
+feel free to contact me if you have a better metric.
+
 ## FAQ
 
 Why is configure failing with:
