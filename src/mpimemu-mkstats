@@ -36,14 +36,16 @@ my @pre_init_node_mem_keys = (
     '^Pre-Init MemUsed',
     '^Pre-Init Cached',
     '^Pre-Init Active',
-    '^Pre-Init Inactive'
+    '^Pre-Init Inactive',
+    '^Pre-Init MemTotal'
 );
 
 my @post_init_node_mem_keys = (
     '^Post-Init MemUsed',
     '^Post-Init Cached',
     '^Post-Init Active',
-    '^Post-Init Inactive'
+    '^Post-Init Inactive',
+    '^Post-Init MemTotal'
 );
 
 my @pre_init_proc_mem_keys = (

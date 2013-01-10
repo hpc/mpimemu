@@ -105,18 +105,18 @@ set xlabel "Number of MPI Tasks"
 set ylabel "Memory Usage (kB)"
 
 plot \\
-'$ffile' using 1:2 with linespoints title 'pre init ave memused', \\
-'$ffile' using 1:3 with linespoints title 'pre init ave cached', \\
-'$ffile' using 1:4 with linespoints title 'pre init ave active', \\
-'$ffile' using 1:5 with linespoints title 'pre init ave inactive', \\
-'$ffile' using 1:6 with linespoints title 'ave memused', \\
-'$ffile' using 1:7 with linespoints title 'ave cached', \\
-'$ffile' using 1:8 with linespoints title 'ave active', \\
-'$ffile' using 1:9 with linespoints title 'ave inactive', \\
+'$ffile' using 1:2 with linespoints title 'Pre Init Ave. MemUsed', \\
+'$ffile' using 1:3 with linespoints title 'Pre Init Ave. Cached', \\
+'$ffile' using 1:4 with linespoints title 'Pre Init Ave. Active', \\
+'$ffile' using 1:5 with linespoints title 'Pre Init Ave. Inactive', \\
+'$ffile' using 1:6 with linespoints title 'Ave. Memused', \\
+'$ffile' using 1:7 with linespoints title 'Ave. Cached', \\
+'$ffile' using 1:8 with linespoints title 'Ave. Active', \\
+'$ffile' using 1:9 with linespoints title 'Ave. Inactive', \\
 '$ffile' using 1:(column(2) - column(3)) with linespoints title \\
-'ave mem used (pre init ave memused - pre init ave cached)', \\
+'Ave. Memory Used (Pre Init Ave. MemUsed - Pre Init Ave. Cached)', \\
 '$ffile' using 1:(column(6) - column(7)) with \\
-linespoints title 'ave mem used (ave memused - ave cached)'
+linespoints title 'Ave. MemUsed (Ave. MemUsed - Ave. Cached)'
 __GPSTR__
 
     open(GP, '|-', 'gnuplot') or die "cannot open pipe to gnuplot: $!";
@@ -142,7 +142,7 @@ set xlabel "Number of PEs"
 set ylabel "Memory Usage (kB)"
 
 plot \\
-'$ffile' using 1:6  with lines title 'pre init VmRSS', \\
+'$ffile' using 1:6  with lines title 'Pre Init VmRSS', \\
 '$ffile' using 1:16 with lines title 'VmRSS'
 __GPSTR__
 
@@ -240,7 +240,7 @@ sub main
         plot_if_valid($in_dir, $out_dir, $file);
     }
 
-    print "- Done Generating CSV Report...\n";
+    print "- Done Generating PDF(s)...\n";
     print "- Plot written to: $out_dir\n";
 
     return 0;
