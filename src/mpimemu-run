@@ -20,7 +20,7 @@ use strict;
 use warnings;
 
 use Switch;
-use Cwd qw(abs_path);
+use Cwd qw(abs_path getcwd);
 use File::Spec::Functions;
 use File::Basename;
 use Text::Wrap;
@@ -168,7 +168,7 @@ sub get_setup
                 }
                 # if not, set to default value
                 else {
-                    $env_hash{$env} = $ENV{'HOME'};
+                    $env_hash{$env} = getcwd;
                 }
             }
             case 'MPIMEMU_BIN_PATH' {

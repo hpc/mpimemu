@@ -27,7 +27,7 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-mkstats';
-my $SCRIPT_VER = '0.2';
+my $SCRIPT_VER = '0.3';
 
 my $node_base_fn = "node-mem-usage";
 my $proc_base_fn = "proc-mem-usage";
@@ -216,7 +216,7 @@ sub main
     opendir(DIR, $data_dir) or die "can't open $data_dir: $!";
     # only care about file names that are one or more digits.
     # file name is numpe.
-    my @uns_data_files = grep(/\d+$/, readdir(DIR));
+    my @uns_data_files = grep(/^\d+$/, readdir(DIR));
     # if we don't have any data, then bail.
     if (not @uns_data_files) {
         closedir(DIR);
