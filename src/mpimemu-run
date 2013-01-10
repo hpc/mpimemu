@@ -25,7 +25,6 @@ use File::Spec::Functions;
 use File::Basename;
 use Text::Wrap;
 use POSIX qw(strftime);
-use Time::HiRes qw(gettimeofday tv_interval clock_gettime clock stat);
 
 my $SCRIPT_VER = '0.1';
 my $MPIMEMU_NAME = 'mpimemu';
@@ -292,12 +291,8 @@ sub run
     my $datadir = make_datadir($setup{'MPIMEMU_DATA_DIR_PREFIX'});
     my $num_runs = 0;
     my @numpes = ();
-    my $t0 = undef;
-    my $elapsed = undef;
 
     @numpes = get_numpes($starti, $numpefun, $maxnumpe);
-    #start timer
-    $t0 = [gettimeofday];
     for my $numpe (@numpes) {
         my $cmd = get_real_run_cmd($setup{'MPIMEMU_RUN_CMD'}, $numpe,
                                    $setup{'MPIMEMU_PPN'},
@@ -325,8 +320,7 @@ sub run
         $num_runs++;
         sleep(1);
     }
-    $elapsed = tv_interval($t0);
-    print "\n# done with $num_runs run(s) in $elapsed second(s).\n";
+    print "\n# done with $num_runs run(s).\n";
     print "# data written to: $datadir\n\n";
 }
 
