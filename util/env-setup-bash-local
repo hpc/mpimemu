@@ -14,7 +14,7 @@
 # liability or responsibility for the use of this software.
 ################################################################################
 
-# for one machine tests
+# for one machine tests (primarily for development testing).
 
 if [ -z "$PS1" ]; then
     echo "cannot continue: please source $0, don't run it."

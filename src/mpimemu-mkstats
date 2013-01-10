@@ -193,14 +193,18 @@ sub main
     ### done handling options ###
 
     ### construct csv headers ###
-    my $node_data_str = "Number of PEs";
+    # if the TYPE metadata string ever changes, please also update mpimemu-plot
+    my $node_data_str = "# TYPE: node\n";
+    $node_data_str .= "Number of PEs";
 
     foreach my $key (@pre_init_node_mem_keys, @post_init_node_mem_keys) {
         $node_data_str .= ", " . get_key_name($key, 1);
     }
     $node_data_str .= "\n";
 
-    my $proc_data_str = "Number of PEs";
+    # if the TYPE metadata string ever changes, please also update mpimemu-plot
+    my $proc_data_str = "# TYPE: proc\n";
+    $proc_data_str .= "Number of PEs";
 
     foreach my $key (@pre_init_proc_mem_keys, @post_init_proc_mem_keys) {
         $proc_data_str .= ", " . get_key_name($key, 1);
