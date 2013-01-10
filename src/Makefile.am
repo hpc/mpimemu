@@ -29,4 +29,5 @@ mpimemu.c
 
 dist_bin_SCRIPTS = \
 mpimemu-run \
-mpimemu-mkstats
+mpimemu-mkstats \
+mpimemu-plot
