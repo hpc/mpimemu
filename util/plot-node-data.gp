@@ -39,4 +39,6 @@ linespoints title 'ave mem used (ave memused - ave cached)'
 
 # NOTES
 # memory usage from the user's standpoint is best represented by:
-# memused - cached
+# memused - cached, but if the system has a disk that it can swap to, then
+# things get more complicated. at least for our systems, we don't have to worry
+# about that.

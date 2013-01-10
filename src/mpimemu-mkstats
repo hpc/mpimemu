@@ -229,7 +229,7 @@ sub main
     $minpe = $data_files[0];
     $maxpe = $data_files[-1];
 
-    print "- Generating CSV Report...\n";
+    print "- Generating CSV Reports...\n";
 
     foreach my $file (@data_files) {
         my $cur_file = catfile($data_dir, $file);
@@ -270,7 +270,7 @@ sub main
     close(NODE_MEM_USAGE_CSV) or die $1;
     close(PROC_MEM_USAGE_CSV) or die $1;
 
-    print "- Done Generating CSV Report...\n";
+    print "- Done Generating CSV Reports...\n";
     print "- Written to: $out_dir\n";
 
     return 0;
