@@ -153,8 +153,11 @@ information, run mpimemu-mkstats -h.
 ## Interpreting the Data
 ########################################
 Take idle system memory usage into consideration (e.g system image size).
-Gives a general sense of memory usage scaling, not necessarily MPI library
-usage. TODO -- need to automagically subtract that stuff...
+mpimemu can provide a general sense of memory usage scaling, but it is important
+to note that not all the memory being consumed on a compute resource is due to
+MPI library usage. Generally it is a good idea to start your scaling runs at 1
+MPI task to get a general sense about "close-to-base" memory usage (i.e base
+system usage).
 
 ## FAQ
 

@@ -6,6 +6,10 @@ Please see README for mpimemu environment details.
 
 ################################################################################
 
+## Latest Distributions
+########################################
+http://hpc.github.com/mpimemu
+
 Configure and build mpimemu.
 
 Modify util/env-setup-bash to meet your specific needs.
