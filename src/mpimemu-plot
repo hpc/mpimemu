@@ -28,7 +28,7 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-plot';
-my $SCRIPT_VER = '0.2';
+my $SCRIPT_VER = '0.3';
 
 ################################################################################
 sub usage
@@ -56,13 +56,15 @@ sub version
 }
 
 ################################################################################
-sub have_gp
+sub have_app
 {
-    my $gp = undef;
+    my ($appname) = @_;
 
-    $gp = `which gnuplot 2>/dev/null`;
+    my $app = undef;
 
-    if (!$gp) {
+    $app = `which $appname 2>/dev/null`;
+
+    if (!$app) {
         return 0;
     }
     else {
@@ -218,8 +220,11 @@ sub main
     }
     ### done handling options ###
 
-    if (!have_gp()) {
+    if (!have_app('gnuplot')) {
         die "gnuplot not found in PATH. Cannot continue\n";
+    }
+    if (!have_app('xps2pdf')) {
+        die "ps2pdf not found in PATH. Cannot continue\n";
     }
 
     opendir(DIR, $in_dir) or die "can't open $in_dir: $!";
