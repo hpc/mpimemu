@@ -38,3 +38,7 @@ export MPIMEMU_SAMPS_PER_S="10"
 export MPIMEMU_SAMP_DURATION="10"
 # disables synthetic mpi communication workload during data collection
 #export MPIMEMU_DISABLE_WORKLOAD=1
+
+echo "### mpimemu-run Setup"
+env | grep MPIMEMU
+echo "### mpimemu-run Setup"

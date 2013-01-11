@@ -51,3 +51,7 @@ elif [[ "$mpilib" == "openmpi" ]]; then
 else
     echo "unsupported mpi lib requested: $mpilib"
 fi
+
+echo "### mpimemu-run Setup"
+env | grep MPIMEMU
+echo "### mpimemu-run Setup"
