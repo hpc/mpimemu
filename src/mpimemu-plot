@@ -223,7 +223,7 @@ sub main
     if (!have_app('gnuplot')) {
         die "gnuplot not found in PATH. Cannot continue\n";
     }
-    if (!have_app('xps2pdf')) {
+    if (!have_app('ps2pdf')) {
         die "ps2pdf not found in PATH. Cannot continue\n";
     }
 
