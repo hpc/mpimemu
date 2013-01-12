@@ -1,3 +1,7 @@
+2013-01-11 Samuel K. Gutierrez
+	* tons of changes - a complete redo.
+	* now at version 1.0-rc4
+
 2011-10-05 Samuel K. Gutierrez
 	* changed application name from "mpi_mem_usage" to "mpimemu"
 	* now using autoconf and automake
