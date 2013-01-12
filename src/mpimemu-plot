@@ -28,7 +28,7 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-plot';
-my $SCRIPT_VER = '0.3';
+my $SCRIPT_VER = '0.4';
 
 ################################################################################
 sub usage
