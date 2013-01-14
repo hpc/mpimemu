@@ -27,7 +27,7 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-mkstats';
-my $SCRIPT_VER = '0.3';
+my $SCRIPT_VER = '0.4';
 
 my $node_base_fn = "node-mem-usage";
 my $proc_base_fn = "proc-mem-usage";
@@ -37,6 +37,7 @@ my @pre_init_node_mem_keys = (
     '^Pre-Init Cached',
     '^Pre-Init Active',
     '^Pre-Init Inactive',
+    '^Pre-Init Buffers',
     '^Pre-Init MemTotal'
 );
 
@@ -45,6 +46,7 @@ my @post_init_node_mem_keys = (
     '^Post-Init Cached',
     '^Post-Init Active',
     '^Post-Init Inactive',
+    '^Post-Init Buffers',
     '^Post-Init MemTotal'
 );
 
