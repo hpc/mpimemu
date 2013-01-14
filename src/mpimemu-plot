@@ -25,7 +25,6 @@ use Pod::Usage;
 use Cwd;
 use File::Basename;
 use File::Spec::Functions;
-use POSIX qw(strftime);
 
 my $SCRIPT_NAME = 'mpimemu-plot';
 my $SCRIPT_VER = '0.4';

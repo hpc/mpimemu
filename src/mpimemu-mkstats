@@ -114,12 +114,45 @@ sub get_key_name
 }
 
 ################################################################################
+sub get_cur_date_str
+{
+    my $date = strftime('%Y%m%d', localtime);
+    return $date;
+}
+
+################################################################################
+sub get_rundate
+{
+    # expected mpimemu output: ### date-time: 20130110-161823
+    my ($file) = @_;
+    my @filec = undef;
+    my @date_grep = undef;
+    my $date_str = "";
+
+    open(FILE, "<", $file) or die $!;
+    @filec = <FILE>;
+    @date_grep = grep(/date-time:/, @filec);
+    if (@date_grep) {
+        if ($date_grep[0] =~ /(\d{8})/) {
+            $date_str = $1;
+        }
+    }
+    close(FILE) or die $!;
+
+    if ($date_str eq "") {
+        print STDERR "  WARNING: Could not determine run date. Using current.\n";
+        $date_str = get_cur_date_str();
+    }
+
+    return $date_str;
+}
+
+################################################################################
 sub get_filename
 {
-    my ($minpe, $maxpe, $basedir, $base_filename, $ext) = @_;
+    my ($minpe, $maxpe, $basedir, $base_filename, $date, $ext) = @_;
 
     my $csv_numpe_range_str = $minpe . "-" . $maxpe . 'pes';
-    my $date = strftime('%m%d%Y', localtime);
     my $filename = $date . '-' . $base_filename . '-' . $csv_numpe_range_str;
     my $filepath = catfile($basedir, $filename . $ext);
     my $index = 1;
@@ -170,6 +203,9 @@ sub main
     # min and max number of PEs that we are going to process
     my $minpe = 0;
     my $maxpe = 0;
+    # the date string of run we are processing
+    my $date = undef;
+    my $found_date = 0;
 
     ### parse options ###
     GetOptions(
@@ -242,6 +278,11 @@ sub main
         $test_strs[1] = get_data_string(@post_init_node_mem_keys, $cur_file);
 
         if (not ($test_strs[0] eq "" or $test_strs[1] eq "")) {
+            # looks like valid data, so try to get the date string
+            if (!$found_date) {
+                $date = get_rundate($cur_file);
+                $found_date = 1;
+            }
             $node_data_str .= "$file";
             $node_data_str .= $test_strs[0];
             $node_data_str .= $test_strs[1];
@@ -263,10 +304,10 @@ sub main
 
     open(NODE_MEM_USAGE_CSV, ">",
          get_filename($minpe, $maxpe, $out_dir,
-                      $node_base_fn, '.csv')) or die $!;
+                      $node_base_fn, $date, '.csv')) or die $!;
     open(PROC_MEM_USAGE_CSV, ">",
          get_filename($minpe, $maxpe, $out_dir,
-                      $proc_base_fn, '.csv')) or die $!;
+                      $proc_base_fn, $date, '.csv')) or die $!;
     print NODE_MEM_USAGE_CSV $node_data_str;
     print PROC_MEM_USAGE_CSV $proc_data_str;
     close(NODE_MEM_USAGE_CSV) or die $1;
