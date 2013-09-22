@@ -53,7 +53,7 @@ mpimemu-run behaves.
 
 o Required Environment Variables
 
-- MPIMEMU_MAX_PES: Specifies the maximum number of MPI ranks that will be
+- MPIMEMU_MAX_PES: Specifies the maximum number of MPI processes that will be
                    launched.
 
 - MPIMEMU_RUN_CMD: Specifies a "run template" that will be used to launch
@@ -100,7 +100,7 @@ o Optional Environment Variables
                        the specified value, while MPIMEMU_NUMPE_FUN(X) <=
                        MPIMEMU_MAX_PES.
 
-- MPIMEMU_PPN: Specifies the number of MPI ranks per node.
+- MPIMEMU_PPN: Specifies the number of MPI processes per node.
 
 - MPIMEMU_DATA_DIR_PREFIX: Specifies the base directory where mpimemu data is
                            stored.
