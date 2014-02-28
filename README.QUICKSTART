@@ -23,10 +23,10 @@ Run mpimemu-run, found in the src directory.
 
 Run mpimemu-mkstats -i [/path/to/generated/data]
 
-Plot generated CSV data with your favorite utility of use mpimemu-plot.
+Plot generated CSV data with your favorite utility or use mpimemu-plot.
 
 ################################################################################
-Copyright (c) 2013      Los Alamos National Security, LLC.
+Copyright (c) 2013-2014 Los Alamos National Security, LLC.
                         All rights reserved.
 
 This program was prepared by Los Alamos National Security, LLC at Los Alamos
