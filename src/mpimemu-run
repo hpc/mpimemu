@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ###############################################################################
-# Copyright (c) 2012-2013 Los Alamos National Security, LLC.
+# Copyright (c) 2012-2016 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -237,7 +237,7 @@ sub get_real_run_cmd
 sub get_numpes
 {
     my ($starti, $numpefun, $maxnumpe) = @_;
-    my $i = 0;
+    my $i = $starti;
     my $cur_numpe = 0;
     my @numpes = ();
     my $cur_math_expr = $numpefun;
