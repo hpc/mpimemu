@@ -260,11 +260,11 @@ sub get_numpes
         $cur_numpe = eval($cur_math_expr);
     }
     # remove 0 if present
-    if ($numpes[0] == 0) {
+    if (@numpes && $numpes[0] == 0) {
         splice(@numpes, 0, 1);
     }
     # make sure that we have maxnumpe in the array
-    if ($numpes[-1] != $maxnumpe) {
+    if ((! @numpes) || $numpes[-1] != $maxnumpe) {
         push(@numpes, $maxnumpe);
     }
     return @numpes;
