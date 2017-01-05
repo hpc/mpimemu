@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2012 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2017 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -90,6 +90,7 @@ get_herr_str(int h_err)
     return err_str;
 }
 
+#if MPI_VERSION < 3
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
 get_netnum(mmu_mpi_t *m,
@@ -194,64 +195,6 @@ out:
 
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
-world_root_verify_smp_size(const mmu_mpi_t *m)
-{
-    int *recv_buf = NULL;
-    int good_to_go = 1;
-    int rc = MPI_SUCCESS, mpirc;
-    int num_smp_ranks = m->num_smp_ranks;
-
-    /* even though there is no need for everyone to allocate memory here , we
-     * don't want this allocation to be reflected as a memory usage imbalance */
-    if (NULL == (recv_buf = calloc(m->num_ranks, sizeof(*recv_buf)))) {
-        MMU_OOR_COMPLAIN();
-        return MMU_FAILURE_OOR;
-    }
-    /* get everyone's number of smp ranks */
-    if (MPI_SUCCESS != (mpirc =
-        MPI_Gather(&num_smp_ranks, 1, MPI_INT, recv_buf, 1, MPI_INT, 0,
-                   MPI_COMM_WORLD))) {
-        fprintf(stderr, MMU_ERR_PREFIX"MPI_Gather failure: %d (%s)\n", mpirc,
-                get_mpi_err_str(mpirc));
-        rc = MMU_FAILURE_MPI;
-        goto out;
-    }
-    /* only the root will verify the results */
-    if (mmu_mpi_world_rank_zero(m)) {
-        int i, count;
-        bool count_set = false;
-        for (i = 0; i < m->num_ranks; ++i) {
-            if (!count_set) {
-                count = recv_buf[i];
-                count_set = true;
-                continue;
-            }
-            if (count != recv_buf[i]) {
-                good_to_go = 0;
-                break;
-            }
-        }
-    }
-    /* now the root will broadcast the outcome */
-    if (MPI_SUCCESS != (mpirc =
-        MPI_Bcast(&good_to_go, 1, MPI_INT, 0, MPI_COMM_WORLD))) {
-        fprintf(stderr, MMU_ERR_PREFIX"MPI_Bcast failure: %d (%s)\n", mpirc,
-                get_mpi_err_str(mpirc));
-        rc = MMU_FAILURE_MPI;
-        goto out;
-    }
-    if (1 != good_to_go) {
-        rc = MMU_FAILURE_PPN_DIFFERS;
-    }
-
-out:
-    if (NULL != recv_buf) free(recv_buf);
-
-    return rc;
-}
-
-/* ////////////////////////////////////////////////////////////////////////// */
-static int
 set_locality_info(mmu_mpi_t *m)
 {
     unsigned long int my_netnum = 0;
@@ -333,6 +276,95 @@ out:
     if (NULL != all_netnums) free(all_netnums);
 
     return rc;
+}
+
+#else /* MPI_VERSION < 3 */
+
+static int
+set_locality_info(mmu_mpi_t *m)
+{
+    char *bad_func = NULL;
+    int rc = MMU_SUCCESS, mpirc = MPI_ERR_UNKNOWN;
+    /* only smp rank 0 will contribue to the sum */
+    int num_nodes_contribution = 0;
+
+    if (NULL == m) return MMU_FAILURE_INVALID_ARG;
+
+    /* create smp (node) communicator that contains processes that are located
+     * on the same node */
+    if (MPI_SUCCESS != (mpirc =
+        MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &m->smp_comm))) {
+        bad_func = "MPI_Comm_split";
+        goto out;
+    }
+    m->free_smp_comm = true;
+    /* now we can set smp (local node) information */
+    if (MPI_SUCCESS != (mpirc = MPI_Comm_size(m->smp_comm, &m->num_smp_ranks))){
+        bad_func = "MPI_Comm_size";
+        goto out;
+    }
+    if (MPI_SUCCESS != (mpirc = MPI_Comm_rank(m->smp_comm, &m->smp_rank))) {
+        bad_func = "MPI_Comm_rank";
+        goto out;
+    }
+    /* now create the worker comm based on smp_rank */
+    if (MPI_SUCCESS != (mpirc = MPI_Comm_split(MPI_COMM_WORLD, m->smp_rank,
+                                               m->rank, &m->worker_comm))) {
+        bad_func = "MPI_Comm_split";
+        goto out;
+    }
+    m->free_worker_comm = true;
+    if (MPI_SUCCESS != (mpirc = MPI_Comm_size(m->worker_comm,
+                                              &m->num_workers))) {
+        bad_func = "MPI_Comm_size";
+        goto out;
+    }
+    if (MPI_SUCCESS != (mpirc = MPI_Comm_rank(m->worker_comm,
+                                              &m->worker_rank))) {
+        bad_func = "MPI_Comm_rank";
+        goto out;
+    }
+    /* calculate number of nodes in our allocation */
+    if (mmu_mpi_smp_rank_zero(m)) {
+        num_nodes_contribution = 1;
+    }
+    if (MPI_SUCCESS != (mpirc = MPI_Allreduce(&num_nodes_contribution,
+                                              &m->num_nodes, 1, MPI_INT,
+                                              MPI_SUM, MPI_COMM_WORLD))) {
+        bad_func = "MPI_Allreduce";
+        goto out;
+    }
+
+out:
+    if (MPI_SUCCESS != mpirc) {
+        fprintf(stderr, MMU_ERR_PREFIX"%s failure: %d (%s)\n", bad_func, mpirc,
+                get_mpi_err_str(mpirc));
+        rc = MMU_FAILURE_MPI;
+    }
+
+    return rc;
+}
+#endif
+
+/* ////////////////////////////////////////////////////////////////////////// */
+static int
+world_root_verify_smp_size(const mmu_mpi_t *m)
+{
+    int smp_size[2] = {m->num_smp_ranks, -m->num_smp_ranks};
+    int mpirc;
+
+    if (MPI_SUCCESS != (mpirc =
+        MPI_Allreduce (MPI_IN_PLACE, smp_size, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD))) {
+        fprintf(stderr, MMU_ERR_PREFIX"MPI_Allreduce failure: %d (%s)\n", mpirc,
+                get_mpi_err_str(mpirc));
+        return MMU_FAILURE_MPI;
+    }
+
+    if (smp_size[0] != -smp_size[1]) {
+        return MMU_FAILURE_PPN_DIFFERS;
+    }
+
+    return MMU_SUCCESS;
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
