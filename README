@@ -1,7 +1,7 @@
 ################################################################################
 
-This distribution contains the source code for mpimemu, a simple tool that helps
-approximate MPI library memory usage as a function of scale.
+This distribution contains the source code for mpimemu, a memory consumption
+benchmark for MPI implementations.
 
 ################################################################################
 
@@ -177,7 +177,7 @@ Try the following if using mpicc.
 ./configure CC=mpicc
 
 ################################################################################
-Copyright (c) 2011-2013 Los Alamos National Security, LLC.
+Copyright (c) 2011-2017 Los Alamos National Security, LLC.
                         All rights reserved.
 
 This program was prepared by Los Alamos National Security, LLC at Los Alamos
