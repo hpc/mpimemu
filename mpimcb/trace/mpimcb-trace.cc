@@ -3,19 +3,24 @@
  *                         All rights reserved.
  */
 
-#include <iostream>
+#include "mpimcb-mem-common.h"
+
 #include "mpi.h"
+
+#include <iostream>
 
 namespace {
 
-struct MPIContext {
+struct mmcb_mpi_context {
     int rank;
     int numpe;
 };
 
-MPIContext mpictx;
-
 } // namespace
+
+mmcb_mpi_context mpictx;
+
+extern int mmcb_malloc_hook_active;
 
 /**
  *
@@ -26,6 +31,8 @@ MPI_Init(
     char ***argv
 ) {
     int rc = PMPI_Init(argc, argv);
+
+    mmcb_malloc_hook_active = 1;
 
     PMPI_Comm_rank(MPI_COMM_WORLD, &mpictx.rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &mpictx.numpe);
@@ -39,5 +46,9 @@ MPI_Init(
 int
 MPI_Finalize(void)
 {
+    mmcb_malloc_hook_active = 0;
+    if (mpictx.rank == 0) {
+        dump();
+    }
     return PMPI_Finalize();
 }

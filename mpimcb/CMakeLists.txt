@@ -19,4 +19,19 @@ set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 
+# rpath everything.
+option(CMAKE_INSTALL_RPATH_USE_LINK_PATH "Add rpath for all dependencies." TRUE)
+
+function(emit_package_status name)
+  if (${name}_FOUND)
+    message(STATUS "Using ${name} found in ${${name}_DIR}.")
+  endif()
+endfunction()
+
+find_package(adept_utils REQUIRED)
+emit_package_status(adept_utils)
+
+find_package(callpath REQUIRED)
+emit_package_status(callpath)
+
 add_subdirectory(trace)

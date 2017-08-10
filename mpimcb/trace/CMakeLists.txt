@@ -10,6 +10,19 @@
 # Government nor LANS makes any warranty, express or implied, or assumes any
 # liability or responsibility for the use of this software.
 
-add_library(mpimcb-trace SHARED mpimcb-trace.cc)
+add_library(
+    mpimcb-trace SHARED
+    mpimcb-mem-common.h
+    mpimcb-mem-interposers.c
+    mpimcb-mem-hooks.cc
+    mpimcb-trace.cc
+)
+
+target_link_libraries(mpimcb-trace adept_utils callpath)
+
+include_directories(
+    ${callpath_INCLUDE_DIR}
+    ${adept_utils_INCLUDE_DIR}
+)
 # Remove the 'lib' prefix.
 set_target_properties(mpimcb-trace PROPERTIES PREFIX "")
