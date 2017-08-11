@@ -4,6 +4,7 @@
  */
 
 #include "mpimcb-mem-common.h"
+#include "mpimcb-mem-hook-state.h"
 
 #include "mpi.h"
 
@@ -18,9 +19,9 @@ struct mmcb_mpi_context {
 
 } // namespace
 
-mmcb_mpi_context mpictx;
+mmcb_mpi_context mmcb_mpictx;
 
-extern int mmcb_malloc_hook_active;
+mmcb_mem_hook_mgr_t mmcb_mem_hook_mgr;
 
 /**
  *
@@ -32,10 +33,10 @@ MPI_Init(
 ) {
     int rc = PMPI_Init(argc, argv);
 
-    mmcb_malloc_hook_active = 1;
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
 
-    PMPI_Comm_rank(MPI_COMM_WORLD, &mpictx.rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &mpictx.numpe);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &mmcb_mpictx.rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &mmcb_mpictx.numpe);
 
     return rc;
 }
@@ -46,8 +47,8 @@ MPI_Init(
 int
 MPI_Finalize(void)
 {
-    mmcb_malloc_hook_active = 0;
-    if (mpictx.rank == 0) {
+    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    if (mmcb_mpictx.rank == 0) {
         dump();
     }
     return PMPI_Finalize();

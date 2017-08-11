@@ -1,4 +1,5 @@
 #include "mpimcb-mem-common.h"
+#include "mpimcb-mem-hook-state.h"
 
 #include "CallpathRuntime.h"
 #include "Translator.h"
@@ -9,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int mmcb_malloc_hook_active = 0;
+extern mmcb_mem_hook_mgr_t mmcb_mem_hook_mgr;
 
 CallpathRuntime cprt;
 Translator trans;
@@ -19,12 +20,11 @@ std::vector<FrameInfo> finfos;
 /**
  *
  */
-extern "C" {
 void *
 mmcb_malloc_hook(size_t size)
 {
     // Deactivate hooks for logging.
-    mmcb_malloc_hook_active = 0;
+    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
 
     // Do logging.
     Callpath path = cprt.doStackwalk();
@@ -39,11 +39,10 @@ mmcb_malloc_hook(size_t size)
 
     void *result = malloc(size);
 
-    // reactivate hooks
-    mmcb_malloc_hook_active = 1;
+    // Reactivate hooks.
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
 
     return result;
-}
 }
 
 void
