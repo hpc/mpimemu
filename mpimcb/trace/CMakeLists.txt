@@ -11,14 +11,20 @@
 # liability or responsibility for the use of this software.
 
 add_library(
-    mpimcb-mem-hook-state SHARED
+    mpimcb-memory STATIC
+    mpimcb-memory.h
+    mpimcb-memory.cc
+)
+
+add_library(
+    mpimcb-mem-hook-state STATIC
     mpimcb-mem-hook-state.h
     mpimcb-mem-hook-state.c
 )
 
 add_library(
     mpimcb-trace SHARED
-    mpimcb-mem-common.h
+    mpimcb-mem-hooks.h
     mpimcb-mem-interposers.c
     mpimcb-mem-hooks.cc
     mpimcb-pmpi.cc
@@ -27,6 +33,7 @@ add_library(
 target_link_libraries(
     mpimcb-trace
     mpimcb-mem-hook-state
+    mpimcb-memory
     adept_utils
     callpath
 )

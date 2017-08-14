@@ -1,4 +1,9 @@
-#include "mpimcb-mem-common.h"
+/*
+ * Copyright (c)      2017 Los Alamos National Security, LLC.
+ *                         All rights reserved.
+ */
+
+#include "mpimcb-mem-hooks.h"
 #include "mpimcb-mem-hook-state.h"
 
 #include <stdlib.h>
@@ -15,7 +20,19 @@ void *
 malloc(size_t size)
 {
     if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_MALLOC)) {
-        return mmcb_malloc_hook(size);
+        return mmcb_mem_hooks_malloc_hook(size);
     }
     return __libc_malloc(size);
+}
+
+/**
+ *
+ */
+void
+free(void *ptr)
+{
+    if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_FREE)) {
+        return mmcb_mem_hooks_free_hook(ptr);
+    }
+    return __libc_free(ptr);
 }

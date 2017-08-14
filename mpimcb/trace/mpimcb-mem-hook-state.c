@@ -1,6 +1,11 @@
+/*
+ * Copyright (c)      2017 Los Alamos National Security, LLC.
+ *                         All rights reserved.
+ */
+
 #include "mpimcb-mem-hook-state.h"
 
-static void
+static inline void
 mem_hook_set_all(
     mmcb_mem_hook_mgr_t *mgr,
     bool state
