@@ -42,6 +42,16 @@ mmcb_mem_hooks_realloc_hook(
 /**
  *
  */
+int
+mmcb_mem_hooks_posix_memalign_hook(
+    void **memptr,
+    size_t alignment,
+    size_t size
+);
+
+/**
+ *
+ */
 void
 mmcb_mem_hooks_free_hook(
     void *ptr

@@ -85,8 +85,35 @@ mmcb_mem_hooks_realloc_hook(
     );
     // Reactivate hooks.
     mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
-
+    //
     return res;
+}
+
+/**
+ *
+ */
+int
+mmcb_mem_hooks_posix_memalign_hook(
+    void **memptr,
+    size_t alignment,
+    size_t size
+) {
+    // Deactivate hooks for logging.
+    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    // Do op.
+    int rc = posix_memalign(memptr, alignment, size);
+    // Do logging.
+    mmcb_mem.capture(
+        new mmcb_memory_op_entry(
+            MMCB_HOOK_POSIX_MEMALIGN,
+            uintptr_t(*memptr),
+            size
+        )
+    );
+    // Reactivate hooks.
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    //
+    return rc;
 }
 
 /**

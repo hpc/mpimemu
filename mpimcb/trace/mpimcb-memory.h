@@ -66,7 +66,7 @@ public:
         const uint8_t opid = ope->opid;
         //
         if (opid == MMCB_HOOK_REALLOC) {
-            capture_realloc(ope);
+            break_down_realloc(ope);
             return;
         }
         auto got = addr2entry.find(addr);
@@ -92,7 +92,7 @@ public:
      *
      */
     void
-    capture_realloc(
+    break_down_realloc(
         mmcb_memory_op_entry *const ope
     ) {
         const uintptr_t addr = ope->addr;
@@ -185,6 +185,7 @@ private:
         switch (opid) {
             case (MMCB_HOOK_MALLOC):
             case (MMCB_HOOK_CALLOC):
+            case (MMCB_HOOK_POSIX_MEMALIGN):
                 current_mem_allocd += size;
                 break;
             case (MMCB_HOOK_FREE):
