@@ -165,11 +165,7 @@ private:
      */
     double
     tomb(size_t inb) {
-#if 1
-        return double(inb);
-#else
         return (double(inb) / 1024.0 / 1024.0);
-#endif
     }
 
     /**
