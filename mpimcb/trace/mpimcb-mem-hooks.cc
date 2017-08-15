@@ -43,6 +43,55 @@ mmcb_mem_hooks_malloc_hook(
 /**
  *
  */
+void *
+mmcb_mem_hooks_calloc_hook(
+    size_t nmemb,
+    size_t size
+) {
+    // Deactivate hooks for logging.
+    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    // Do op.
+    void *res = calloc(nmemb, size);
+    // Do logging.
+    const size_t real_size = nmemb * size;
+    mmcb_mem.capture(
+        new mmcb_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
+    );
+    // Reactivate hooks.
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+
+    return res;
+}
+
+/**
+ *
+ */
+void *
+mmcb_mem_hooks_realloc_hook(
+    void *ptr,
+    size_t size
+) {
+    // Deactivate hooks for logging.
+    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    // Do op.
+    void *res = realloc(ptr, size);
+    // Do logging.
+    mmcb_mem.capture(
+        new mmcb_memory_op_entry(
+            MMCB_HOOK_REALLOC,
+            uintptr_t(res),
+            size,
+            uintptr_t(ptr))
+    );
+    // Reactivate hooks.
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+
+    return res;
+}
+
+/**
+ *
+ */
 void
 mmcb_mem_hooks_free_hook(
     void *ptr
@@ -53,7 +102,7 @@ mmcb_mem_hooks_free_hook(
     free(ptr);
     // Do logging.
     mmcb_mem.capture(
-        new mmcb_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr), 0)
+        new mmcb_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
     );
     // Reactivate hooks.
     mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);

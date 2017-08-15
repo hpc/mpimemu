@@ -36,11 +36,12 @@ MPI_Init(
 ) {
     //
     int rc = PMPI_Init(argc, argv);
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
     //
     // For tool purposes.
     PMPI_Comm_rank(MPI_COMM_WORLD, &mmcb_mpictx.rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &mmcb_mpictx.numpe);
+
+    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
     //
     return rc;
 }

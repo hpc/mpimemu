@@ -15,7 +15,10 @@ extern "C" {
 
 enum {
     MMCB_HOOK_MALLOC = 0,
+    MMCB_HOOK_CALLOC,
+    MMCB_HOOK_REALLOC,
     MMCB_HOOK_FREE,
+    MMCB_HOOK_NOOP,
     MMCB_HOOK_LAST
 };
 

@@ -17,10 +17,35 @@ extern "C" {
  *
  */
 void *
-mmcb_mem_hooks_malloc_hook(size_t size);
+mmcb_mem_hooks_malloc_hook(
+    size_t size
+);
 
+/**
+ *
+ */
+void *
+mmcb_mem_hooks_calloc_hook(
+    size_t nmemb,
+    size_t size
+);
+
+/**
+ *
+ */
+void *
+mmcb_mem_hooks_realloc_hook(
+    void *ptr,
+    size_t size
+);
+
+/**
+ *
+ */
 void
-mmcb_mem_hooks_free_hook(void *ptr);
+mmcb_mem_hooks_free_hook(
+    void *ptr
+);
 
 #ifdef __cplusplus
 }
