@@ -5,9 +5,6 @@
 
 #include "mpimcb-mem-hook-state.h"
 
-#include "CallpathRuntime.h"
-#include "Translator.h"
-
 #include <iostream>
 #include <cstdint>
 #include <unordered_map>
@@ -39,6 +36,7 @@ struct mmcb_memory_op_entry {
 
 struct mmcb_memory {
 private:
+    uint64_t n_mem_ops_recorded = 0;
     //
     size_t current_mem_allocd = 0;
     //
@@ -152,6 +150,8 @@ public:
     void
     report(void) {
         using namespace std;
+        cout << "Number of Memory Operations Recorded: "
+             << n_mem_ops_recorded << endl;
 
         cout << "High Memory Usage Watermark: "
              << tomb(high_mem_usage_mark)
@@ -195,16 +195,22 @@ private:
                 // other operations, so it will never reach this code path.
                 assert(false && "Invalid opid");
         }
-        update_high_mem_usage_mark();
+        update_mem_stats();
     }
 
     /**
      *
      */
     void
-    update_high_mem_usage_mark(void) {
+    update_mem_stats(void) {
         if (current_mem_allocd > high_mem_usage_mark) {
             high_mem_usage_mark = current_mem_allocd;
         }
+        //
+        n_mem_ops_recorded++;
     }
+
+    /**
+     *
+     */
 };

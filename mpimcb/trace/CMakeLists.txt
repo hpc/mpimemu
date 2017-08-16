@@ -34,8 +34,9 @@ target_link_libraries(
     mpimcb-trace
     mpimcb-mem-hook-state
     mpimcb-memory
-    adept_utils
-    callpath
+#   adept_utils
+#   callpath
+    ${CMAKE_DL_LIBS}
 )
 
 include_directories(

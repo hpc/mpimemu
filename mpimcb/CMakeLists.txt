@@ -29,11 +29,11 @@ function(emit_package_status name)
   endif()
 endfunction()
 
-find_package(adept_utils REQUIRED)
-emit_package_status(adept_utils)
-
-find_package(callpath REQUIRED)
-emit_package_status(callpath)
+#find_package(adept_utils REQUIRED)
+#emit_package_status(adept_utils)
+#
+#find_package(callpath REQUIRED)
+#emit_package_status(callpath)
 
 add_subdirectory(trace)
 add_subdirectory(test)

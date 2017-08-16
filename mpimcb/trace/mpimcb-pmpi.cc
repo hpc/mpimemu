@@ -9,8 +9,6 @@
 
 #include "mpi.h"
 
-#include <iostream>
-
 namespace {
 
 struct mmcb_mpi_context {
@@ -47,6 +45,8 @@ MPI_Init(
     // For tool purposes, so don't track.
     PMPI_Comm_rank(MPI_COMM_WORLD, &mmcb_mpictx.rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &mmcb_mpictx.numpe);
+    // Sync.
+    PMPI_Barrier(MPI_COMM_WORLD);
     //
     return rc;
 }
@@ -268,8 +268,11 @@ MPI_Finalize(void)
 {
     mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
     //
+    PMPI_Barrier(MPI_COMM_WORLD);
+    //
     if (mmcb_mpictx.rank == 0) {
         mmcb_mem.report();
     }
+    //
     return PMPI_Finalize();
 }

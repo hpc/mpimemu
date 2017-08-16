@@ -7,9 +7,6 @@
 #include "mpimcb-mem-hook-state.h"
 #include "mpimcb-memory.h"
 
-#include "CallpathRuntime.h"
-#include "Translator.h"
-
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
