@@ -3,12 +3,19 @@
  *                         All rights reserved.
  */
 
+#pragma once
+
 #include "mpimcb-mem-hook-state.h"
 
 #include <iostream>
 #include <cstdint>
 #include <unordered_map>
+#include <deque>
 #include <cassert>
+#include <cstdlib>
+#include <cstdio>
+
+#include <limits.h>
 
 struct mmcb_memory_op_entry {
     // Memory opteration ID.
@@ -36,13 +43,21 @@ struct mmcb_memory_op_entry {
 
 struct mmcb_memory {
 private:
+    //
+    size_t mem_allocd_sample_freq = 1;
+    //
     uint64_t n_mem_ops_recorded = 0;
+    //
+    uint64_t n_mem_allocs = 0;
+    //
+    uint64_t n_mem_frees = 0;
     //
     size_t current_mem_allocd = 0;
     //
     size_t high_mem_usage_mark = 0;
     //
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
+    std::deque<size_t> mem_allocd_samples;
 
 public:
     /**
@@ -148,14 +163,70 @@ public:
      *
      */
     void
-    report(void) {
+    report(
+        int id,
+        bool emit_report
+    ) {
         using namespace std;
-        cout << "Number of Memory Operations Recorded: "
-             << n_mem_ops_recorded << endl;
+        //
+        setbuf(stdout, NULL);
+        //
+        if (id == 0) {
+            printf("\n#########################################################"
+                   "\n# MPI Memory Consumption Benchmark Complete #############"
+                   "\n#########################################################"
+                   "\n");
+        }
+        //
+        if (!emit_report) return;
+        char *output_dir = getenv("MMCB_REPORT_OUTPUT_PATH");
+        // Not set, so output to pwd.
+        if (!output_dir) {
+            output_dir = getenv("PWD");
+        }
+        if (!output_dir) {
+            fprintf(stderr, "Error saving report.\n");
+            return;
+        }
 
-        cout << "High Memory Usage Watermark: "
-             << tomb(high_mem_usage_mark)
-             << " MB" << endl;
+        char report_name[PATH_MAX];
+        snprintf(
+            report_name, sizeof(report_name) - 1, "%s/%d.%s",
+            output_dir, id, "mmcb"
+        );
+
+        FILE *reportf = fopen(report_name, "w+");
+        if (!reportf) {
+            fprintf(stderr, "Error saving report to %s.\n", report_name);
+            return;
+        }
+
+        fprintf(reportf, "# Begin Report\n");
+
+        fprintf(reportf, "# Number of Memory Operations Recorded: %llu\n",
+                (unsigned long long)n_mem_ops_recorded);
+
+        fprintf(reportf, "# Number of Allocations Recorded: %llu\n",
+                (unsigned long long)n_mem_allocs);
+
+        fprintf(reportf, "# Number of Frees Recorded: %llu\n",
+                (unsigned long long)n_mem_frees);
+
+        fprintf(reportf, "# High Memory Usage Watermark (MB): %lf\n",
+                tomb(high_mem_usage_mark));
+
+        fprintf(reportf, "# Memory Usage (B) Over Time (Logical):\n");
+        for (auto &i : mem_allocd_samples) {
+            fprintf(reportf, "%llu\n", (unsigned long long)i);
+        }
+
+        fprintf(reportf, "# End Report\n");
+
+        fclose(reportf);
+        
+        if (id == 0) {
+            printf("# Report written to %s\n", output_dir);
+        }
     }
 
 private:
@@ -182,9 +253,11 @@ private:
             case (MMCB_HOOK_MALLOC):
             case (MMCB_HOOK_CALLOC):
             case (MMCB_HOOK_POSIX_MEMALIGN):
+                n_mem_allocs++;
                 current_mem_allocd += size;
                 break;
             case (MMCB_HOOK_FREE):
+                n_mem_frees++;
                 current_mem_allocd -= size;
                 break;
             case (MMCB_HOOK_NOOP):
@@ -207,7 +280,9 @@ private:
             high_mem_usage_mark = current_mem_allocd;
         }
         //
-        n_mem_ops_recorded++;
+        if (n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
+            mem_allocd_samples.push_back(current_mem_allocd);
+        }
     }
 
     /**

@@ -6,15 +6,20 @@
 #include "mpimcb-mem-hooks.h"
 #include "mpimcb-mem-hook-state.h"
 #include "mpimcb-memory.h"
+#include "mpimcb-rt.h"
 
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
 #include <deque>
 
-extern mmcb_mem_hook_mgr_t mmcb_mem_hook_mgr;
-
 extern mmcb_memory mmcb_mem;
+
+namespace {
+
+mmcb_rt *rt = nullptr; 
+
+}
 
 /**
  *
@@ -23,8 +28,9 @@ void *
 mmcb_mem_hooks_malloc_hook(
     size_t size
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = malloc(size);
     // Do logging.
@@ -32,7 +38,7 @@ mmcb_mem_hooks_malloc_hook(
         new mmcb_memory_op_entry(MMCB_HOOK_MALLOC, uintptr_t(res), size)
     );
     // Reactivate hooks.
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
 
     return res;
 }
@@ -45,8 +51,9 @@ mmcb_mem_hooks_calloc_hook(
     size_t nmemb,
     size_t size
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = calloc(nmemb, size);
     // Do logging.
@@ -55,11 +62,12 @@ mmcb_mem_hooks_calloc_hook(
         new mmcb_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
     );
     // Reactivate hooks.
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
 
     return res;
 }
 
+#if 0
 /**
  *
  */
@@ -81,7 +89,7 @@ mmcb_mem_hooks_realloc_hook(
             uintptr_t(ptr))
     );
     // Reactivate hooks.
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
     //
     return res;
 }
@@ -108,11 +116,12 @@ mmcb_mem_hooks_posix_memalign_hook(
         )
     );
     // Reactivate hooks.
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
     //
     return rc;
 }
 
+#endif
 /**
  *
  */
@@ -120,8 +129,9 @@ void
 mmcb_mem_hooks_free_hook(
     void *ptr
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // Do op.
     free(ptr);
     // Do logging.
@@ -129,5 +139,5 @@ mmcb_mem_hooks_free_hook(
         new mmcb_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
     );
     // Reactivate hooks.
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
 }

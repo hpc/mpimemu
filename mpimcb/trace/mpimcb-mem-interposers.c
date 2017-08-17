@@ -5,6 +5,7 @@
 
 #include "mpimcb-mem-hooks.h"
 #include "mpimcb-mem-hook-state.h"
+#include "mpimcb-rt.h"
 
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -14,15 +15,14 @@ extern void *__libc_calloc(size_t nmemb, size_t size);
 extern void *__libc_realloc(void *ptr, size_t size);
 extern void __libc_free(void *ptr);
 
-extern mmcb_mem_hook_mgr_t mmcb_mem_hook_mgr;
-
 /**
  *
  */
 void *
 malloc(size_t size)
 {
-    if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_MALLOC)) {
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MALLOC)) {
         return mmcb_mem_hooks_malloc_hook(size);
     }
     return __libc_malloc(size);
@@ -34,12 +34,14 @@ malloc(size_t size)
 void *
 calloc(size_t nmemb, size_t size)
 {
-    if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_CALLOC)) {
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_CALLOC)) {
         return mmcb_mem_hooks_calloc_hook(nmemb, size);
     }
     return __libc_calloc(nmemb, size);
 }
 
+#if 0
 /**
  *
  */
@@ -54,20 +56,22 @@ realloc(
     return __libc_realloc(ptr, size);
 }
 
+#endif
 /**
  *
  */
 void
 free(void *ptr)
 {
-    if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_FREE)) {
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_FREE)) {
         mmcb_mem_hooks_free_hook(ptr);
     }
     else {
         __libc_free(ptr);
     }
 }
-
+#if 0
 /**
  *
  */
@@ -91,3 +95,4 @@ posix_memalign(
     }
     return fun(memptr, alignment, size);
 }
+#endif

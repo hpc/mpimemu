@@ -11,15 +11,23 @@
 # liability or responsibility for the use of this software.
 
 add_library(
-    mpimcb-memory STATIC
-    mpimcb-memory.h
-    mpimcb-memory.cc
+    mpimcb-rt
+    mpimcb-rt.h
+    mpimcb-rt.cc
+    mpimcb-mem-hook-state.h
+    mpimcb-mem-hook-state.c
+)
+
+set_property(
+    TARGET
+    mpimcb-rt 
+    PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 add_library(
-    mpimcb-mem-hook-state STATIC
-    mpimcb-mem-hook-state.h
-    mpimcb-mem-hook-state.c
+    mpimcb-memory
+    mpimcb-memory.h
+    mpimcb-memory.cc
 )
 
 add_library(
@@ -32,10 +40,8 @@ add_library(
 
 target_link_libraries(
     mpimcb-trace
-    mpimcb-mem-hook-state
+    mpimcb-rt
     mpimcb-memory
-#   adept_utils
-#   callpath
     ${CMAKE_DL_LIBS}
 )
 

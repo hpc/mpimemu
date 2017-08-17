@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+###############################################################################
+# Copyright (c)      2017 Los Alamos National Security, LLC.
+#                         All rights reserved.
+###############################################################################
+
+import os
+import sys
+import matplotlib.pyplot as plt
+
+
+class Experiment:
+    def __init__(self, log_path):
+        self.log_path = log_path
+        self.log_files = self.get_log_files(log_path)
+        self.rank_stats = {}
+
+    def get_log_files(self, log_path):
+        (_, _, file_names) = os.walk(log_path).next()
+        return [f for f in file_names if f.endswith('mmcb')]
+
+    def crunch(self):
+        for log in sorted(self.log_files):
+            print('processing {}'.format(log))
+            rank = int(log.split('.')[0])
+            fpath = '{}/{}'.format(self.log_path, log)
+            with open(fpath, 'r') as f:
+                content = f.readlines()
+                content = [x.strip('\n') for x in content]
+                content = [int(x) for x in content
+                           if not x.strip().startswith("#")]
+                self.rank_stats[rank] = content
+
+
+class Plotter:
+    def __init__(self, out_fname, experiments_to_plot):
+        self.fname = out_fname
+        self.experiments = experiments_to_plot
+        self.markers = ['o',      '^',       's',       'D',       '8']
+        self.colors = ['#6384B1', '#98A942', '#999999', '#D79C43', '#111111']
+        self.numpes = set()
+        self.cg_time = set()
+        self.fig, self.ax = plt.subplots()
+        self.num_plots = 0
+        self.line_style = 'solid'
+
+    def plot(self):
+        print('plotting to {}'.format(self.fname))
+
+        lens = 0
+        for e in self.experiments:
+            for k, v in sorted(e.rank_stats.iteritems()):
+                self.add_plot(k, v)
+                lens = max(lens, len(v))
+        
+        plt.grid(False)
+        plt.axis('tight')
+
+        plt.title('Memory Usage')
+        self.ax.set_ylabel('Memory Usage (MB)', fontsize=16)
+        self.ax.set_xlabel('Time (Logical)', fontsize=16)
+
+        scalf = 1.05
+        plt.xlim(0, lens * 1.10) 
+        plt.ylim(min(self.cg_time) / scalf, (max(self.cg_time) * scalf))
+
+        #plt.xticks([i for i in self.numpes])
+
+        plt.legend(loc=2)
+
+        self.fig.savefig(self.fname,
+                         format='pdf',
+                         bbox_inches='tight',
+                         pad_inches=0.03)
+
+    def add_plot(self, rank, rank_stats):
+        y = [x/1024.0/1024.0 for x in rank_stats]
+        for i in y:
+            self.cg_time.add(i)
+        mlen = len(self.markers)
+        clen = len(self.colors)
+        #
+        mrker = self.markers[self.num_plots % mlen]
+        clr = self.colors[self.num_plots % clen]
+        lbl = 'Rank {}'.format(rank)
+        #
+        plt.plot(y, marker=None, color=clr, label=lbl,
+                 linestyle=self.line_style)
+        #
+        self.num_plots += 1
+
+
+def usage():
+    print('usage: plot-xhpcg-weak [DATADIR]...')
+
+
+def check_args(argv):
+    if len(argv) < 2:
+        usage()
+        exit(os.EX_USAGE)
+
+    for arg in argv[1:]:
+        if not os.path.isdir(arg):
+            print("'{}' is not a directory. Cannot continue.".format(arg))
+            usage()
+            exit(os.EX_USAGE)
+
+
+def process_experiments(data_dirs):
+    experiments = []
+    for data_dir in data_dirs:
+        print('processing files in {}'.format(data_dir))
+        e = Experiment(data_dir)
+        e.crunch()
+        experiments.append(e)
+    return experiments
+
+
+def get_usable_file_name(name, extension):
+    fidx = 1
+    cwd = os.getcwd()
+    target_fname = '{}/{}.{}'.format(cwd, name, extension)
+    while (os.path.isfile(target_fname)):
+        target_fname = '{}/{}-{}.{}'.format(cwd, name, fidx, extension)
+        fidx += 1
+
+    return target_fname
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    check_args(argv)
+    f_name = get_usable_file_name('mem-usage-over-time', 'pdf')
+    plotter = Plotter(f_name, process_experiments(argv[1:]))
+    plotter.plot()
+
+    return os.EX_OK
+
+
+if __name__ == "__main__":
+    sys.exit(main())

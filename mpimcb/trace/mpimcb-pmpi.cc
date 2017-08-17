@@ -3,6 +3,7 @@
  *                         All rights reserved.
  */
 
+#include "mpimcb-rt.h"
 #include "mpimcb-mem-hooks.h"
 #include "mpimcb-mem-hook-state.h"
 #include "mpimcb-memory.h"
@@ -11,16 +12,9 @@
 
 namespace {
 
-struct mmcb_mpi_context {
-    int rank;
-    int numpe;
-};
+mmcb_rt *rt = NULL; 
 
 } // namespace
-
-mmcb_mpi_context mmcb_mpictx;
-
-mmcb_mem_hook_mgr_t mmcb_mem_hook_mgr;
 
 mmcb_memory mmcb_mem;
 
@@ -38,15 +32,19 @@ MPI_Init(
     int *argc,
     char ***argv
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     //
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // For tool purposes, so don't track.
-    PMPI_Comm_rank(MPI_COMM_WORLD, &mmcb_mpictx.rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &mmcb_mpictx.numpe);
-    // Sync.
-    PMPI_Barrier(MPI_COMM_WORLD);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
+    rt->activate_all_mem_hooks();
+    if (rt->rank == 0) {
+        void *foo = malloc(12*1024*1024);
+    }
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -56,7 +54,6 @@ MPI_Init(
 // Point to Point
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
 /**
  *
  */
@@ -70,7 +67,9 @@ MPI_Irecv(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Irecv(
         buf,
         count,
@@ -80,7 +79,7 @@ MPI_Irecv(
         comm,
         request
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -97,7 +96,9 @@ MPI_Send(
     int tag,
     MPI_Comm comm
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Send(
         buf,
         count,
@@ -106,7 +107,37 @@ MPI_Send(
         tag,
         comm
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Isend(
+    const void *buf,
+    int count,
+    MPI_Datatype datatype,
+    int dest,
+    int tag,
+    MPI_Comm comm,
+    MPI_Request *request
+) {
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Isend(
+        buf,
+        count,
+        datatype,
+        dest,
+        tag,
+        comm,
+        request
+    );
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -119,12 +150,36 @@ MPI_Wait(
     MPI_Request *request,
     MPI_Status *status
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Wait(
         request,
         status
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Waitall(
+    int count,
+    MPI_Request array_of_requests[],
+    MPI_Status *array_of_statuses
+) {
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Waitall(
+        count,
+        array_of_requests,
+        array_of_statuses
+    );
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -143,12 +198,14 @@ MPI_Comm_size(
     MPI_Comm comm,
     int *size
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_size(
         comm,
         size
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -161,12 +218,14 @@ MPI_Comm_rank(
     MPI_Comm comm,
     int *rank
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_rank(
         comm,
         rank
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -178,11 +237,13 @@ int
 MPI_Barrier(
     MPI_Comm comm
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Barrier(
         comm
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -199,7 +260,9 @@ MPI_Allreduce(
     MPI_Op op,
     MPI_Comm comm
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Allreduce(
         sendbuf,
         recvbuf,
@@ -208,7 +271,7 @@ MPI_Allreduce(
         op,
         comm
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -224,7 +287,9 @@ MPI_Bcast(
     int root,
     MPI_Comm comm
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Bcast(
         buffer,
         count,
@@ -232,7 +297,37 @@ MPI_Bcast(
         root,
         comm
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Reduce(
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
+    MPI_Comm comm
+) {
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Reduce(
+        sendbuf,
+        recvbuf,
+        count,
+        datatype,
+        op,
+        root,
+        comm
+    );
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -245,12 +340,14 @@ MPI_Abort(
     MPI_Comm comm,
     int errorcode
 ) {
-    mmcb_mem_hook_mgr_activate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
     int rc = PMPI_Abort(
         comm,
         errorcode
     );
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
@@ -266,13 +363,12 @@ MPI_Abort(
 int
 MPI_Finalize(void)
 {
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt = mmcb_rt::the_mmcb_rt();
+    rt->deactivate_all_mem_hooks();
     //
     PMPI_Barrier(MPI_COMM_WORLD);
     //
-    if (mmcb_mpictx.rank == 0) {
-        mmcb_mem.report();
-    }
+    mmcb_mem.report(rt->rank, true);
     //
     return PMPI_Finalize();
 }
