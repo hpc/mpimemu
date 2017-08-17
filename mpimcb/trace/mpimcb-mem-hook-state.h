@@ -51,7 +51,7 @@ mmcb_mem_hook_mgr_deactivate_all(
 uint8_t
 mmcb_mem_hook_mgr_hook_active(
     mmcb_mem_hook_mgr_t *mgr,
-    int hook_id
+    uint8_t hook_id
 );
 
 #ifdef __cplusplus

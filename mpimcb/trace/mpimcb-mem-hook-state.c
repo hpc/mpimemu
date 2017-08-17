@@ -4,6 +4,7 @@
  */
 
 #include "mpimcb-mem-hook-state.h"
+
 #include <assert.h>
 
 static inline void
@@ -12,7 +13,7 @@ mem_hook_set_all(
     uint8_t state
 ) {
     assert(mgr);
-    for (int i = 0; i < MMCB_HOOK_LAST; ++i) {
+    for (uint8_t i = 0; i < MMCB_HOOK_LAST; ++i) {
         mgr->mmcb_mem_hook_state_tab[i].active = state;
     }
 }
@@ -36,7 +37,7 @@ mmcb_mem_hook_mgr_deactivate_all(
 uint8_t
 mmcb_mem_hook_mgr_hook_active(
     mmcb_mem_hook_mgr_t *mgr,
-    int hook_id
+    uint8_t hook_id
 ) {
     assert(mgr);
     assert(hook_id < MMCB_HOOK_LAST);

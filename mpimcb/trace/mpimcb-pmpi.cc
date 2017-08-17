@@ -4,15 +4,13 @@
  */
 
 #include "mpimcb-rt.h"
-#include "mpimcb-mem-hooks.h"
-#include "mpimcb-mem-hook-state.h"
 #include "mpimcb-memory.h"
 
 #include "mpi.h"
 
 namespace {
 
-mmcb_rt *rt = NULL; 
+mmcb_rt *rt = nullptr;
 
 } // namespace
 
