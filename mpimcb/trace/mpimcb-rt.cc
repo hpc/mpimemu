@@ -8,7 +8,7 @@
  */
 mmcb_rt::mmcb_rt(void)
 {
-    mmcb_mem_hook_mgr_deactivate_all(&mhmgr);
+    deactivate_all_mem_hooks();
 }
 
 /**

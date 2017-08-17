@@ -10,6 +10,11 @@ private:
     mmcb_rt(void);
     //
     ~mmcb_rt(void);
+    //
+    mmcb_rt(const mmcb_rt &that) = delete;
+    //
+    mmcb_rt &
+    operator=(const mmcb_rt &) = delete;
 
 public:
     int rank = 0;
@@ -17,11 +22,6 @@ public:
     //
     static mmcb_rt *
     the_mmcb_rt(void);
-    //
-    mmcb_rt(const mmcb_rt &that) = delete;
-    //
-    mmcb_rt &
-    operator=(const mmcb_rt &) = delete;
     //
     mmcb_mem_hook_mgr_t *
     get_mem_hook_mgr(void);

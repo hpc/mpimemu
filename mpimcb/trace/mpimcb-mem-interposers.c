@@ -4,7 +4,6 @@
  */
 
 #include "mpimcb-mem-hooks.h"
-#include "mpimcb-mem-hook-state.h"
 #include "mpimcb-rt.h"
 
 #include <stdlib.h>

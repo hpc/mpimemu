@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <stdlib.h>
-#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -24,7 +22,7 @@ enum {
 };
 
 typedef struct mmcb_mem_hook_state_t {
-    bool active;
+    uint8_t active;
 } mmcb_mem_hook_state_t;
 
 typedef struct mmcb_mem_hook_mgr_t {
@@ -50,7 +48,7 @@ mmcb_mem_hook_mgr_deactivate_all(
 /**
  *
  */
-bool
+uint8_t
 mmcb_mem_hook_mgr_hook_active(
     mmcb_mem_hook_mgr_t *mgr,
     int hook_id
