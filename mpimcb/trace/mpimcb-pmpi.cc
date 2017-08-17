@@ -4,7 +4,7 @@
  */
 
 #include "mpimcb-rt.h"
-#include "mpimcb-memory.h"
+#include "mpimcb-mem-stat-mgr.h"
 
 #include "mpi.h"
 

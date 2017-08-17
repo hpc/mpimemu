@@ -4,14 +4,11 @@
  */
 
 #include "mpimcb-mem-hooks.h"
-#include "mpimcb-mem-hook-state.h"
-#include "mpimcb-memory.h"
-#include "mpimcb-rt.h"
 
-#include <iostream>
+#include "mpimcb-rt.h"
+#include "mpimcb-mem-stat-mgr.h"
+
 #include <cstdlib>
-#include <cstdio>
-#include <deque>
 
 extern mmcb_memory mmcb_mem;
 

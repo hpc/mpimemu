@@ -17,7 +17,8 @@
 
 #include <limits.h>
 
-struct mmcb_memory_op_entry {
+class mmcb_memory_op_entry {
+public:
     // Memory opteration ID.
     uint8_t opid;
     // Address associated with memory operation.
@@ -41,7 +42,7 @@ struct mmcb_memory_op_entry {
       , old_addr(old_addr) { }
 };
 
-struct mmcb_memory {
+class mmcb_memory {
 private:
     //
     size_t mem_allocd_sample_freq = 1;
