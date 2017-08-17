@@ -14,7 +14,6 @@ mmcb_rt *rt = nullptr;
 
 } // namespace
 
-mmcb_memory mmcb_mem;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +365,7 @@ MPI_Finalize(void)
     //
     PMPI_Barrier(MPI_COMM_WORLD);
     //
-    mmcb_mem.report(rt->rank, true);
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->report(rt->rank, true);
     //
     return PMPI_Finalize();
 }

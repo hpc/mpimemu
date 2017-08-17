@@ -25,7 +25,7 @@ public:
     uintptr_t addr;
     // If applicable, size associated with memory operation.
     size_t size;
-    // If applicable, 'old' address associated with memory operation. 
+    // If applicable, 'old' address associated with memory operation.
     uintptr_t old_addr;
 
     /**
@@ -42,7 +42,7 @@ public:
       , old_addr(old_addr) { }
 };
 
-class mmcb_memory {
+class mmcb_mem_stat_mgr {
 private:
     //
     size_t mem_allocd_sample_freq = 1;
@@ -58,15 +58,25 @@ private:
     size_t high_mem_usage_mark = 0;
     //
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
+    //
     std::deque<size_t> mem_allocd_samples;
+    //
+    mmcb_mem_stat_mgr(void) = default;
+    //
+    ~mmcb_mem_stat_mgr(void) = default;
+    //
+    mmcb_mem_stat_mgr(const mmcb_mem_stat_mgr &that) = delete;
+    //
+    mmcb_mem_stat_mgr &
+    operator=(const mmcb_mem_stat_mgr &) = delete;
 
 public:
+
     /**
      *
      */
-    ~mmcb_memory(void) {
-        // TODO
-    }
+    static mmcb_mem_stat_mgr *
+    the_mmcb_mem_stat_mgr(void);
 
     /**
      *
@@ -100,64 +110,6 @@ public:
         if (rm_ope) {
             addr2entry.erase(got);
         }
-    }
-
-    /**
-     *
-     */
-    void
-    break_down_realloc(
-        mmcb_memory_op_entry *const ope
-    ) {
-        const uintptr_t addr = ope->addr;
-        const uintptr_t old_addr = ope->old_addr;
-        const size_t size = ope->size;
-        // Returned NULL, so old_addr was unchanged.
-        if (!addr) {
-            // Nothing to do.
-            ope->opid = MMCB_HOOK_NOOP;
-        }
-        // Acts like free.
-        else if (size == 0 && old_addr) {
-            auto got = addr2entry.find(old_addr);
-            if (got != addr2entry.end()) {
-                ope->opid = MMCB_HOOK_FREE;
-                // Will be looked up in terms of addr, so update.
-                ope->addr = old_addr;
-            }
-            // Probably an application bug, so do nothing.
-            else {
-                ope->opid = MMCB_HOOK_NOOP;
-            }
-        }
-        // Acts like malloc.
-        else if (!old_addr) {
-            ope->opid = MMCB_HOOK_MALLOC;
-        }
-        // Area pointed to was moved.
-        else if (old_addr != addr) {
-            // New region was first created.
-            ope->opid = MMCB_HOOK_MALLOC; 
-            capture(ope);
-            // Old region was freed.
-            ope->opid = MMCB_HOOK_FREE;
-            // Will be looked up in terms of addr, so update.
-            ope->addr = old_addr;
-            // The final capture will be done below.
-        }
-        // Area pointed to was not moved, but perhaps some other shuffling was
-        // done.
-        else {
-            // I'm not sure if this is the best way to capture this... Ideas..?
-            // First remove old entry. old_addr and addr should be equal.
-            // This first bit should decrement memory usage by the old size.
-            ope->opid = MMCB_HOOK_FREE;
-            capture(ope);
-            // Now increment memory usage by the new size.
-            ope->opid = MMCB_HOOK_MALLOC;
-            ope->size = size;
-        }
-        capture(ope);
     }
 
     /**
@@ -224,13 +176,71 @@ public:
         fprintf(reportf, "# End Report\n");
 
         fclose(reportf);
-        
+
         if (id == 0) {
             printf("# Report written to %s\n", output_dir);
         }
     }
 
 private:
+
+    /**
+     *
+     */
+    void
+    break_down_realloc(
+        mmcb_memory_op_entry *const ope
+    ) {
+        const uintptr_t addr = ope->addr;
+        const uintptr_t old_addr = ope->old_addr;
+        const size_t size = ope->size;
+        // Returned NULL, so old_addr was unchanged.
+        if (!addr) {
+            // Nothing to do.
+            ope->opid = MMCB_HOOK_NOOP;
+        }
+        // Acts like free.
+        else if (size == 0 && old_addr) {
+            auto got = addr2entry.find(old_addr);
+            if (got != addr2entry.end()) {
+                ope->opid = MMCB_HOOK_FREE;
+                // Will be looked up in terms of addr, so update.
+                ope->addr = old_addr;
+            }
+            // Probably an application bug, so do nothing.
+            else {
+                ope->opid = MMCB_HOOK_NOOP;
+            }
+        }
+        // Acts like malloc.
+        else if (!old_addr) {
+            ope->opid = MMCB_HOOK_MALLOC;
+        }
+        // Area pointed to was moved.
+        else if (old_addr != addr) {
+            // New region was first created.
+            ope->opid = MMCB_HOOK_MALLOC;
+            capture(ope);
+            // Old region was freed.
+            ope->opid = MMCB_HOOK_FREE;
+            // Will be looked up in terms of addr, so update.
+            ope->addr = old_addr;
+            // The final capture will be done below.
+        }
+        // Area pointed to was not moved, but perhaps some other shuffling was
+        // done.
+        else {
+            // I'm not sure if this is the best way to capture this... Ideas..?
+            // First remove old entry. old_addr and addr should be equal.
+            // This first bit should decrement memory usage by the old size.
+            ope->opid = MMCB_HOOK_FREE;
+            capture(ope);
+            // Now increment memory usage by the new size.
+            ope->opid = MMCB_HOOK_MALLOC;
+            ope->size = size;
+        }
+        capture(ope);
+    }
 
     /**
      *
@@ -285,8 +295,4 @@ private:
             mem_allocd_samples.push_back(current_mem_allocd);
         }
     }
-
-    /**
-     *
-     */
 };

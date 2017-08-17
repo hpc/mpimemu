@@ -10,8 +10,6 @@
 
 #include <cstdlib>
 
-extern mmcb_memory mmcb_mem;
-
 namespace {
 
 mmcb_rt *rt = nullptr; 
@@ -31,7 +29,7 @@ mmcb_mem_hooks_malloc_hook(
     // Do op.
     void *res = malloc(size);
     // Do logging.
-    mmcb_mem.capture(
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
         new mmcb_memory_op_entry(MMCB_HOOK_MALLOC, uintptr_t(res), size)
     );
     // Reactivate hooks.
@@ -55,7 +53,7 @@ mmcb_mem_hooks_calloc_hook(
     void *res = calloc(nmemb, size);
     // Do logging.
     const size_t real_size = nmemb * size;
-    mmcb_mem.capture(
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
         new mmcb_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
     );
     // Reactivate hooks.
@@ -78,7 +76,7 @@ mmcb_mem_hooks_realloc_hook(
     // Do op.
     void *res = realloc(ptr, size);
     // Do logging.
-    mmcb_mem.capture(
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
         new mmcb_memory_op_entry(
             MMCB_HOOK_REALLOC,
             uintptr_t(res),
@@ -105,7 +103,7 @@ mmcb_mem_hooks_posix_memalign_hook(
     // Do op.
     int rc = posix_memalign(memptr, alignment, size);
     // Do logging.
-    mmcb_mem.capture(
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
         new mmcb_memory_op_entry(
             MMCB_HOOK_POSIX_MEMALIGN,
             uintptr_t(*memptr),
@@ -132,7 +130,7 @@ mmcb_mem_hooks_free_hook(
     // Do op.
     free(ptr);
     // Do logging.
-    mmcb_mem.capture(
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
         new mmcb_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
     );
     // Reactivate hooks.
