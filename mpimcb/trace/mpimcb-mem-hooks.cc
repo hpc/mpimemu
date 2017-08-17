@@ -62,7 +62,6 @@ mmcb_mem_hooks_calloc_hook(
     return res;
 }
 
-#if 0
 /**
  *
  */
@@ -71,8 +70,9 @@ mmcb_mem_hooks_realloc_hook(
     void *ptr,
     size_t size
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = realloc(ptr, size);
     // Do logging.
@@ -98,8 +98,9 @@ mmcb_mem_hooks_posix_memalign_hook(
     size_t alignment,
     size_t size
 ) {
+    rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
-    mmcb_mem_hook_mgr_deactivate_all(&mmcb_mem_hook_mgr);
+    rt->deactivate_all_mem_hooks();
     // Do op.
     int rc = posix_memalign(memptr, alignment, size);
     // Do logging.
@@ -116,7 +117,6 @@ mmcb_mem_hooks_posix_memalign_hook(
     return rc;
 }
 
-#endif
 /**
  *
  */

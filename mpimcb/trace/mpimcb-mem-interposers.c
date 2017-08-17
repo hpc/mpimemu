@@ -40,7 +40,6 @@ calloc(size_t nmemb, size_t size)
     return __libc_calloc(nmemb, size);
 }
 
-#if 0
 /**
  *
  */
@@ -49,13 +48,13 @@ realloc(
     void *ptr,
     size_t size
 ) {
-    if (mmcb_mem_hook_mgr_hook_active(&mmcb_mem_hook_mgr, MMCB_HOOK_REALLOC)) {
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_REALLOC)) {
         return mmcb_mem_hooks_realloc_hook(ptr, size);
     }
     return __libc_realloc(ptr, size);
 }
 
-#endif
 /**
  *
  */
@@ -70,7 +69,7 @@ free(void *ptr)
         __libc_free(ptr);
     }
 }
-#if 0
+
 /**
  *
  */
@@ -83,10 +82,8 @@ posix_memalign(
     typedef int (*op_fn_t)(void **, size_t, size_t);
     static op_fn_t fun = NULL;
     //
-    if (mmcb_mem_hook_mgr_hook_active(
-            &mmcb_mem_hook_mgr,
-            MMCB_HOOK_POSIX_MEMALIGN
-    )) {
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_POSIX_MEMALIGN)) {
         return mmcb_mem_hooks_posix_memalign_hook(memptr, alignment, size);
     }
     if (!fun) {
@@ -94,4 +91,3 @@ posix_memalign(
     }
     return fun(memptr, alignment, size);
 }
-#endif
