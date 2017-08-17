@@ -100,7 +100,8 @@ public:
         }
         // Existing entry.
         else {
-            if (MMCB_HOOK_FREE == opid) {
+            if (MMCB_HOOK_FREE == opid ||
+                MMCB_HOOK_MUNMAP == opid) {
                 ope->size = got->second->size;
                 rm_ope = true;
             }
@@ -264,10 +265,12 @@ private:
             case (MMCB_HOOK_MALLOC):
             case (MMCB_HOOK_CALLOC):
             case (MMCB_HOOK_POSIX_MEMALIGN):
+            case (MMCB_HOOK_MMAP):
                 n_mem_allocs++;
                 current_mem_allocd += size;
                 break;
             case (MMCB_HOOK_FREE):
+            case (MMCB_HOOK_MUNMAP):
                 n_mem_frees++;
                 current_mem_allocd -= size;
                 break;

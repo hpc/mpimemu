@@ -91,3 +91,51 @@ posix_memalign(
     }
     return fun(memptr, alignment, size);
 }
+
+/**
+ *
+ */
+void *
+mmap(
+    void *addr,
+    size_t length,
+    int prot,
+    int flags,
+    int fd,
+    off_t offset
+) {
+    typedef void *(*op_fn_t)(void *, size_t, int, int, int, off_t);
+    static op_fn_t fun = NULL;
+    //
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MMAP)) {
+        return mmcb_mem_hooks_mmap_hook(
+                   addr, length, prot, flags, fd, offset
+               );
+    }
+    if (!fun) {
+        fun = (op_fn_t)dlsym(RTLD_NEXT, "mmap");
+    }
+    return fun(addr, length, prot, flags, fd, offset);
+}
+
+/**
+ *
+ */
+int
+munmap(
+    void *addr,
+    size_t length
+) {
+    typedef int (*op_fn_t)(void *, size_t);
+    static op_fn_t fun = NULL;
+    //
+    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
+    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MUNMAP)) {
+        return mmcb_mem_hooks_munmap_hook(addr, length);
+    }
+    if (!fun) {
+        fun = (op_fn_t)dlsym(RTLD_NEXT, "munmap");
+    }
+    return fun(addr, length);
+}

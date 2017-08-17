@@ -51,9 +51,31 @@ mmcb_mem_hooks_posix_memalign_hook(
 /**
  *
  */
+void *
+mmcb_mem_hooks_mmap_hook(
+    void *addr,
+    size_t length,
+    int prot,
+    int flags,
+    int fd,
+    off_t offset
+);
+
+/**
+ *
+ */
 void
 mmcb_mem_hooks_free_hook(
     void *ptr
+);
+
+/**
+ *
+ */
+int
+mmcb_mem_hooks_munmap_hook(
+    void *addr,
+    size_t length
 );
 
 #ifdef __cplusplus
