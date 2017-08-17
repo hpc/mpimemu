@@ -8,13 +8,6 @@
 
 #include "mpi.h"
 
-namespace {
-
-mmcb_rt *rt = nullptr;
-
-} // namespace
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Init
@@ -29,7 +22,7 @@ MPI_Init(
     int *argc,
     char ***argv
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);
@@ -37,9 +30,10 @@ MPI_Init(
     // For tool purposes, so don't track.
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
+    // TODO RM
     rt->activate_all_mem_hooks();
     if (rt->rank == 0) {
-        void *foo = malloc(12*1024*1024);
+        void *foo = calloc(12, 1024*1024);
     }
     rt->deactivate_all_mem_hooks();
     //
@@ -64,7 +58,7 @@ MPI_Irecv(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Irecv(
@@ -93,7 +87,7 @@ MPI_Send(
     int tag,
     MPI_Comm comm
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Send(
@@ -122,7 +116,7 @@ MPI_Isend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Isend(
@@ -147,7 +141,7 @@ MPI_Wait(
     MPI_Request *request,
     MPI_Status *status
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Wait(
@@ -168,7 +162,7 @@ MPI_Waitall(
     MPI_Request array_of_requests[],
     MPI_Status *array_of_statuses
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Waitall(
@@ -195,7 +189,7 @@ MPI_Comm_size(
     MPI_Comm comm,
     int *size
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_size(
@@ -215,7 +209,7 @@ MPI_Comm_rank(
     MPI_Comm comm,
     int *rank
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_rank(
@@ -234,7 +228,7 @@ int
 MPI_Barrier(
     MPI_Comm comm
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Barrier(
@@ -257,7 +251,7 @@ MPI_Allreduce(
     MPI_Op op,
     MPI_Comm comm
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Allreduce(
@@ -284,7 +278,7 @@ MPI_Bcast(
     int root,
     MPI_Comm comm
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Bcast(
@@ -312,7 +306,7 @@ MPI_Reduce(
     int root,
     MPI_Comm comm
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Reduce(
@@ -337,7 +331,7 @@ MPI_Abort(
     MPI_Comm comm,
     int errorcode
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Abort(
@@ -360,7 +354,7 @@ MPI_Abort(
 int
 MPI_Finalize(void)
 {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     rt->deactivate_all_mem_hooks();
     //
     PMPI_Barrier(MPI_COMM_WORLD);

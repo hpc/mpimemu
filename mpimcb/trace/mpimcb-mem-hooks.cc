@@ -10,12 +10,6 @@
 
 #include <cstdlib>
 
-namespace {
-
-mmcb_rt *rt = nullptr; 
-
-}
-
 /**
  *
  */
@@ -23,7 +17,7 @@ void *
 mmcb_mem_hooks_malloc_hook(
     size_t size
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
@@ -46,7 +40,7 @@ mmcb_mem_hooks_calloc_hook(
     size_t nmemb,
     size_t size
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
@@ -70,7 +64,7 @@ mmcb_mem_hooks_realloc_hook(
     void *ptr,
     size_t size
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
@@ -98,7 +92,7 @@ mmcb_mem_hooks_posix_memalign_hook(
     size_t alignment,
     size_t size
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
@@ -124,7 +118,7 @@ void
 mmcb_mem_hooks_free_hook(
     void *ptr
 ) {
-    rt = mmcb_rt::the_mmcb_rt();
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
