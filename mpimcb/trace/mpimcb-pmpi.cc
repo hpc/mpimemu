@@ -30,12 +30,6 @@ MPI_Init(
     // For tool purposes, so don't track.
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
-    // TODO RM
-    rt->activate_all_mem_hooks();
-    if (rt->rank == 0) {
-        void *foo = calloc(12, 1024*1024);
-    }
-    rt->deactivate_all_mem_hooks();
     //
     return rc;
 }
