@@ -46,6 +46,7 @@ public:
 };
 
 class mmcb_proc_maps_entry {
+public:
     // Address start.
     uintptr_t addr_start;
     // Address end.
@@ -54,6 +55,142 @@ class mmcb_proc_maps_entry {
     bool reg_shared;
     // Path to backing store, if backed by a file.
     char path[PATH_MAX];
+
+    /**
+     *
+     */
+    mmcb_proc_maps_entry(void) {
+        addr_start = 0;
+        addr_end   = 0;
+        reg_shared = false;
+        memset(path, '\0', sizeof(path));
+    }
+};
+
+class mmcb_proc_maps_parser {
+    //
+    enum {
+        MMCB_PROC_MAPS_ADDR = 0,
+        MMCB_PROC_MAPS_PERMS,
+        MMCB_PROC_MAPS_OFFSET,
+        MMCB_PROC_MAPS_DEV,
+        MMCB_PROC_MAPS_INODE,
+        MMCB_PROC_MAPS_PATH_NAME,
+    };
+    //
+    static constexpr uint8_t n_tok = 6;
+    //
+    static constexpr int32_t max_entry_len = PATH_MAX;
+
+public:
+    /**
+     *
+     */
+    static void
+    get_proc_self_maps_entry(
+        uintptr_t target_addr,
+        mmcb_proc_maps_entry &res_entry
+    ) {
+        bool found_entry = false;
+        // Format
+        // address           perms offset  dev   inode   pathname
+        // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
+        FILE *mapsf = fopen("/proc/self/maps", "r");
+        if (!mapsf) {
+            perror("fopen /proc/self/maps");
+            exit(EXIT_FAILURE);
+        }
+        char cline_buff[2 * PATH_MAX];
+        // Iterate over it one line at a time.
+        while (fgets(cline_buff, sizeof(cline_buff) - 1, mapsf)) {
+            char *tokp = nullptr, *strp = cline_buff;
+            char toks[n_tok][PATH_MAX];
+            // Tokenize.
+            for (uint8_t i = 0;
+                 i < n_tok && (NULL != (tokp = strtok(strp, " ")));
+                 ++i
+            ) {
+                strp = nullptr;
+                strncpy(toks[i], tokp, sizeof(toks[i]) - 1);
+            }
+            // Look for target address.
+            uintptr_t addr_start = 0, addr_end = 0;
+            get_addr_start_end(toks[MMCB_PROC_MAPS_ADDR], addr_start, addr_end);
+            // If we found it, then process and return to caller.
+            if (target_addr == addr_start) {
+                found_entry = true;
+                //
+                res_entry.addr_start = addr_start;
+                res_entry.addr_end   = addr_end;
+                res_entry.reg_shared = entry_has_shared_perms(
+                    toks[MMCB_PROC_MAPS_PERMS]
+                );
+                // Stash path to file backing store only if shared.
+                if (res_entry.reg_shared) {
+                    strncpy(
+                        res_entry.path,
+                        toks[MMCB_PROC_MAPS_PATH_NAME],
+                        sizeof(res_entry.path) - 1
+                    );
+                }
+                // Found it, so bail.
+                break;
+            }
+        }
+        //
+        fclose(mapsf);
+        //
+        if (!found_entry) {
+            fprintf(stderr, "ERROR: missing /proc/self/maps entry!\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /**
+     *
+     */
+    static void
+    get_addr_start_end(
+        char addr_str_buff[max_entry_len],
+        uintptr_t &start,
+        uintptr_t &end
+    ) {
+        static const uint8_t n_addrs = 2;
+        char addr_strs[n_addrs][128];
+        char *strp = addr_str_buff;
+        char *tokp = nullptr;
+        // Tokenize.
+        for (uint8_t i = 0;
+             i < n_addrs && (NULL != (tokp = strtok(strp, "-")));
+             ++i
+        ) {
+            strp = nullptr;
+            strncpy(addr_strs[i], tokp, sizeof(addr_strs[i]) - 1);
+        }
+        // Convert hex strings to numerical values.
+        for (uint8_t i = 0; i < n_addrs; ++i) {
+            errno = 0;
+            const uintptr_t caddr = (uintptr_t)strtoull(addr_strs[i], NULL, 16);
+            int err = errno;
+            if (err != 0) {
+                perror("strtoull");
+                exit(EXIT_FAILURE);
+            }
+            //
+            if (i == 0) start = caddr;
+            else end = caddr;
+        }
+    }
+
+    /**
+     *
+     */
+    static bool
+    entry_has_shared_perms(
+        char perms_buff[max_entry_len]
+    ) {
+        return 's' == perms_buff[3];
+    }
 };
 
 class mmcb_mem_stat_mgr {
@@ -322,15 +459,6 @@ private:
         }
     }
 
-    enum {
-        MMCB_PROC_MAPS_ADDR = 0,
-        MMCB_PROC_MAPS_PERMS,
-        MMCB_PROC_MAPS_OFFSET,
-        MMCB_PROC_MAPS_DEV,
-        MMCB_PROC_MAPS_INODE,
-        MMCB_PROC_MAPS_PATH_NAME,
-    };
-
     /**
      *
      */
@@ -339,47 +467,6 @@ private:
         uintptr_t target_addr,
         mmcb_proc_maps_entry &res_entry
     ) {
-        // Format
-        // address           perms offset  dev   inode   pathname
-        // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
-        FILE *mapsf = fopen("/proc/self/maps", "r");
-        if (!mapsf) {
-            perror("fopen /proc/self/maps");
-            exit(EXIT_FAILURE);
-        }
-        char cline_buff[2 * PATH_MAX];
-        // Iterate over it one line at a time.
-        while (fgets(cline_buff, sizeof(cline_buff) - 1, mapsf)) {
-#if 0
-            char *pos = cline_buff;
-            // Starting address.
-            char *addrs_end = strchr(cline_buff, '-');
-            *addrs_end = '\0';
-            errno = 0;
-            const uintptr_t caddr = (uintptr_t)strtoull(pos, NULL, 16);
-            int err = errno;
-            if (err != 0) {
-                perror("strtoull");
-                exit(EXIT_FAILURE);
-            }
-            if (target_addr == caddr) {
-                addrs_end++;
-                printf("found it: %llu got %llu on %s\n", target_addr, caddr, addrs_end);
-                break;
-            }
-#endif
-            static const uint8_t n_tok = 6;
-            char *tokp = nullptr, *strp = cline_buff;
-            char toks[n_tok][PATH_MAX];
-            // Tokenize.
-            for (uint8_t i = 0;
-                 i < n_tok && (NULL != (tokp = strtok(strp, " ")));
-                 ++i
-            ) {
-                strp = nullptr;
-                strncpy(toks[i], tokp, sizeof(toks[i]) - 1);
-            }
-        }
-        fclose(mapsf);
+        mmcb_proc_maps_parser::get_proc_self_maps_entry(target_addr, res_entry);
     }
 };
