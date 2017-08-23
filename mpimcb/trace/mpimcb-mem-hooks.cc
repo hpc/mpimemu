@@ -9,6 +9,8 @@
 #include "mpimcb-mem-stat-mgr.h"
 
 #include <cstdlib>
+#include <thread>
+#include <mutex>
 
 #include <sys/mman.h>
 
@@ -19,6 +21,9 @@ void *
 mmcb_mem_hooks_malloc_hook(
     size_t size
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -42,6 +47,9 @@ mmcb_mem_hooks_calloc_hook(
     size_t nmemb,
     size_t size
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -66,6 +74,9 @@ mmcb_mem_hooks_realloc_hook(
     void *ptr,
     size_t size
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -94,6 +105,9 @@ mmcb_mem_hooks_posix_memalign_hook(
     size_t alignment,
     size_t size
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -125,6 +139,9 @@ mmcb_mem_hooks_mmap_hook(
     int fd,
     off_t offset
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -151,6 +168,9 @@ void
 mmcb_mem_hooks_free_hook(
     void *ptr
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
@@ -172,6 +192,9 @@ mmcb_mem_hooks_munmap_hook(
     void *addr,
     size_t length
 ) {
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
