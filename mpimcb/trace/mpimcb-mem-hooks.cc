@@ -14,6 +14,28 @@
 
 #include <sys/mman.h>
 
+namespace {
+static std::mutex mtx_malloc;
+static std::mutex mtx_calloc;
+static std::mutex mtx_realloc;
+static std::mutex mtx_posix_memalign;
+static std::mutex mtx_free;
+static std::mutex mtx_mmap;
+static std::mutex mtx_munmap;
+}
+
+#define LOCK_ALL                                                               \
+std::unique_lock<std::mutex> lock1(mtx_malloc,  std::defer_lock); \
+std::unique_lock<std::mutex> lock2(mtx_calloc,  std::defer_lock); \
+std::unique_lock<std::mutex> lock3(mtx_realloc, std::defer_lock); \
+std::unique_lock<std::mutex> lock4(mtx_posix_memalign, std::defer_lock); \
+std::unique_lock<std::mutex> lock5(mtx_free, std::defer_lock); \
+std::unique_lock<std::mutex> lock6(mtx_mmap, std::defer_lock); \
+std::unique_lock<std::mutex> lock7(mtx_munmap, std::defer_lock); \
+                                                                        \
+std::lock(lock1, lock2, lock3, lock4, lock5, lock6, lock7); \
+
+
 /**
  *
  */
@@ -21,8 +43,7 @@ void *
 mmcb_mem_hooks_malloc_hook(
     size_t size
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -47,8 +68,7 @@ mmcb_mem_hooks_calloc_hook(
     size_t nmemb,
     size_t size
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -74,8 +94,7 @@ mmcb_mem_hooks_realloc_hook(
     void *ptr,
     size_t size
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -105,8 +124,7 @@ mmcb_mem_hooks_posix_memalign_hook(
     size_t alignment,
     size_t size
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -139,8 +157,7 @@ mmcb_mem_hooks_mmap_hook(
     int fd,
     off_t offset
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -168,8 +185,7 @@ void
 mmcb_mem_hooks_free_hook(
     void *ptr
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
@@ -192,8 +208,7 @@ mmcb_mem_hooks_munmap_hook(
     void *addr,
     size_t length
 ) {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    LOCK_ALL
     //
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Deactivate hooks for logging.
