@@ -121,7 +121,7 @@ public:
                 found_entry = true;
                 //
                 res_entry.addr_start = addr_start;
-                res_entry.addr_end   = addr_end;
+                res_entry.addr_end = addr_end;
                 res_entry.reg_shared = entry_has_shared_perms(
                     toks[MMCB_PROC_MAPS_PERMS]
                 );
