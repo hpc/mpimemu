@@ -16,6 +16,9 @@
 #include <cstdio>
 
 #include <limits.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
 
 class mmcb_memory_op_entry {
 public:
@@ -42,6 +45,17 @@ public:
       , old_addr(old_addr) { }
 };
 
+class mmcb_proc_maps_entry {
+    // Address start.
+    uintptr_t addr_start;
+    // Address end.
+    uintptr_t addr_end;
+    // Whether or not the region permissions say it is shared.
+    bool reg_shared;
+    // Path to backing store, if backed by a file.
+    char path[PATH_MAX];
+};
+
 class mmcb_mem_stat_mgr {
 private:
     //
@@ -56,14 +70,19 @@ private:
     size_t current_mem_allocd = 0;
     //
     size_t high_mem_usage_mark = 0;
-    //
+    // Mapping between address and memory operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
-    //
+    // Array of collected memory allocated samples.
     std::deque<size_t> mem_allocd_samples;
     //
     mmcb_mem_stat_mgr(void) = default;
     //
-    ~mmcb_mem_stat_mgr(void) = default;
+    ~mmcb_mem_stat_mgr(void)
+    {
+        for (auto &i : addr2entry) {
+            delete i.second;
+        }
+    }
     //
     mmcb_mem_stat_mgr(const mmcb_mem_stat_mgr &that) = delete;
     //
@@ -97,6 +116,10 @@ public:
         // New entry.
         if (got == addr2entry.end()) {
             addr2entry.insert(std::make_pair(addr, ope));
+            if (opid == MMCB_HOOK_MMAP) {
+                mmcb_proc_maps_entry maps_entry;
+                get_proc_self_maps_entry(addr, maps_entry);
+            }
         }
         // Existing entry.
         else {
@@ -297,5 +320,66 @@ private:
         if (n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
             mem_allocd_samples.push_back(current_mem_allocd);
         }
+    }
+
+    enum {
+        MMCB_PROC_MAPS_ADDR = 0,
+        MMCB_PROC_MAPS_PERMS,
+        MMCB_PROC_MAPS_OFFSET,
+        MMCB_PROC_MAPS_DEV,
+        MMCB_PROC_MAPS_INODE,
+        MMCB_PROC_MAPS_PATH_NAME,
+    };
+
+    /**
+     *
+     */
+    void
+    get_proc_self_maps_entry(
+        uintptr_t target_addr,
+        mmcb_proc_maps_entry &res_entry
+    ) {
+        // Format
+        // address           perms offset  dev   inode   pathname
+        // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
+        FILE *mapsf = fopen("/proc/self/maps", "r");
+        if (!mapsf) {
+            perror("fopen /proc/self/maps");
+            exit(EXIT_FAILURE);
+        }
+        char cline_buff[2 * PATH_MAX];
+        // Iterate over it one line at a time.
+        while (fgets(cline_buff, sizeof(cline_buff) - 1, mapsf)) {
+#if 0
+            char *pos = cline_buff;
+            // Starting address.
+            char *addrs_end = strchr(cline_buff, '-');
+            *addrs_end = '\0';
+            errno = 0;
+            const uintptr_t caddr = (uintptr_t)strtoull(pos, NULL, 16);
+            int err = errno;
+            if (err != 0) {
+                perror("strtoull");
+                exit(EXIT_FAILURE);
+            }
+            if (target_addr == caddr) {
+                addrs_end++;
+                printf("found it: %llu got %llu on %s\n", target_addr, caddr, addrs_end);
+                break;
+            }
+#endif
+            static const uint8_t n_tok = 6;
+            char *tokp = nullptr, *strp = cline_buff;
+            char toks[n_tok][PATH_MAX];
+            // Tokenize.
+            for (uint8_t i = 0;
+                 i < n_tok && (NULL != (tokp = strtok(strp, " ")));
+                 ++i
+            ) {
+                strp = nullptr;
+                strncpy(toks[i], tokp, sizeof(toks[i]) - 1);
+            }
+        }
+        fclose(mapsf);
     }
 };
