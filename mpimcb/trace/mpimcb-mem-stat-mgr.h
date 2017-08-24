@@ -68,6 +68,11 @@ public:
         reg_shared = false;
         memset(path, '\0', sizeof(path));
     }
+
+    void
+    update_max_pss(size_t cur_pss) {
+        max_pss_in_kb = (cur_pss > max_pss_in_kb) ? cur_pss : max_pss_in_kb;
+    }
 };
 
 class mmcb_proc_smaps_parser {
@@ -95,7 +100,7 @@ public:
         mmcb_proc_maps_entry &res_entry
     ) {
         bool found_entry = false;
-        // Format
+        // First line format.
         // address           perms offset  dev   inode   pathname
         // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
         FILE *mapsf = fopen("/proc/self/smaps", "r");
@@ -141,10 +146,68 @@ public:
             }
         }
         //
-        fclose(mapsf);
-        //
         if (!found_entry) {
-            fprintf(stderr, "ERROR: missing /proc/self/maps entry!\n");
+            // TODO add better error message.
+            fprintf(stderr, "WARNING: missing /proc/self/smaps entry!\n");
+        }
+        else {
+            size_t pss_val = 0;
+            get_pss(mapsf, pss_val);
+            res_entry.update_max_pss(pss_val);
+        }
+        //
+        fclose(mapsf);
+    }
+
+    /**
+     *
+     */
+    static void
+    get_pss(
+        FILE *mapsf,
+        size_t &pss_val
+    ) {
+        /**
+         * Format
+         * Size:               4100 kB
+         * Rss:                 256 kB
+         * Pss:                  81 kB
+         */
+        // Number of lines to ignore before we get to the PSS entry.
+        static const uint8_t ni = 2;
+        static const uint8_t n_tok = 3;
+        static const char *errmsg = "ERROR: Invalid /proc/self/smaps format";
+        char lb[2 * PATH_MAX];
+        // Skip lines.
+        for (uint8_t i = 0; i < ni && (fgets(lb, sizeof(lb) - 1, mapsf)); ++i) { }
+        // Grab PSS entry.
+        char *gets = fgets(lb, sizeof(lb) - 1, mapsf);
+        if (!gets) {
+            fprintf(stderr, "%s (%s)\n", errmsg, "PSS entry not found");
+            exit(EXIT_FAILURE);
+        }
+        char *tokp = nullptr, *strp = lb;
+        // Tokenize.
+        char pss_tokens[n_tok][PATH_MAX];
+        for (uint8_t i = 0;
+             i < n_tok && (NULL != (tokp = strtok(strp, " ")));
+             ++i
+        ) {
+            strp = nullptr;
+            strncpy(pss_tokens[i], tokp, sizeof(pss_tokens[i]) - 1);
+        }
+        // Sanity (expecting kB).
+        static const char *units = "kB";
+        if (strncmp(units, pss_tokens[2], strlen(units)) != 0) {
+            fprintf(stderr, "%s (%s)\n", errmsg, "PSS unit mismatch");
+            exit(EXIT_FAILURE);
+        }
+        // Get the value.
+        errno = 0;
+        pss_val = (size_t)strtoull(pss_tokens[1], NULL, 10);
+        int err = errno;
+        if (err != 0) {
+            perror("strtoull");
             exit(EXIT_FAILURE);
         }
     }
