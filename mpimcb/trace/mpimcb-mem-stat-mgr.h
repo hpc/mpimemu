@@ -51,6 +51,8 @@ public:
     uintptr_t addr_start;
     // Address end.
     uintptr_t addr_end;
+    // Max observed value of PSS (proportional set size).
+    size_t max_pss_in_kb;
     // Whether or not the region permissions say it is shared.
     bool reg_shared;
     // Path to backing store, if backed by a file.
@@ -61,13 +63,14 @@ public:
      */
     mmcb_proc_maps_entry(void) {
         addr_start = 0;
-        addr_end   = 0;
+        addr_end = 0;
+        max_pss_in_kb = 0;
         reg_shared = false;
         memset(path, '\0', sizeof(path));
     }
 };
 
-class mmcb_proc_maps_parser {
+class mmcb_proc_smaps_parser {
     //
     enum {
         MMCB_PROC_MAPS_ADDR = 0,
@@ -87,7 +90,7 @@ public:
      *
      */
     static void
-    get_proc_self_maps_entry(
+    get_proc_self_smaps_entry(
         uintptr_t target_addr,
         mmcb_proc_maps_entry &res_entry
     ) {
@@ -95,9 +98,9 @@ public:
         // Format
         // address           perms offset  dev   inode   pathname
         // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
-        FILE *mapsf = fopen("/proc/self/maps", "r");
+        FILE *mapsf = fopen("/proc/self/smaps", "r");
         if (!mapsf) {
-            perror("fopen /proc/self/maps");
+            perror("fopen /proc/self/smaps");
             exit(EXIT_FAILURE);
         }
         char cline_buff[2 * PATH_MAX];
@@ -253,7 +256,7 @@ public:
             addr2entry.insert(std::make_pair(addr, ope));
             if (opid == MMCB_HOOK_MMAP) {
                 mmcb_proc_maps_entry maps_entry;
-                get_proc_self_maps_entry(addr, maps_entry);
+                get_proc_self_smaps_entry(addr, maps_entry);
             }
         }
         // Existing entry.
@@ -461,10 +464,12 @@ private:
      *
      */
     void
-    get_proc_self_maps_entry(
+    get_proc_self_smaps_entry(
         uintptr_t target_addr,
         mmcb_proc_maps_entry &res_entry
     ) {
-        mmcb_proc_maps_parser::get_proc_self_maps_entry(target_addr, res_entry);
+        mmcb_proc_smaps_parser::get_proc_self_smaps_entry(
+            target_addr, res_entry
+        );
     }
 };
