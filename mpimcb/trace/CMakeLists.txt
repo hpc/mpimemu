@@ -49,11 +49,8 @@ target_link_libraries(
     mpimcb-rt
     mpimcb-mem-stat-mgr
     ${CMAKE_DL_LIBS}
+    pthread
 )
 
-include_directories(
-    ${callpath_INCLUDE_DIR}
-    ${adept_utils_INCLUDE_DIR}
-)
 # Remove the 'lib' prefix.
 set_target_properties(mpimcb-trace PROPERTIES PREFIX "")
