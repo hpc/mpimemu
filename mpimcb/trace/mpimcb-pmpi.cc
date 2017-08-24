@@ -6,6 +6,8 @@
 #include "mpimcb-rt.h"
 #include "mpimcb-mem-stat-mgr.h"
 
+#include <signal.h>
+
 #include "mpi.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,6 +29,8 @@ MPI_Init(
     rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);
     rt->deactivate_all_mem_hooks();
+    // Reset any signal handlers that may have been set in MPI_Init.
+    (void)signal(SIGSEGV, SIG_DFL);
     // For tool purposes, so don't track.
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
