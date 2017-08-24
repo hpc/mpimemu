@@ -216,9 +216,7 @@ private:
     //
     ~mmcb_mem_stat_mgr(void)
     {
-        for (auto &i : addr2entry) {
-            delete i.second;
-        }
+        // Leaky, but at least we won't crash at exit.
     }
     //
     mmcb_mem_stat_mgr(const mmcb_mem_stat_mgr &that) = delete;
