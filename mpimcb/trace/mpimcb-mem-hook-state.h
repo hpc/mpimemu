@@ -18,8 +18,9 @@ enum {
     MMCB_HOOK_FREE,
     MMCB_HOOK_POSIX_MEMALIGN,
     MMCB_HOOK_MMAP,
+    MMCB_HOOK_MMAP_PSS_UPDATE, /* For internal use only. */
     MMCB_HOOK_MUNMAP,
-    MMCB_HOOK_NOOP,
+    MMCB_HOOK_NOOP,            /* For internal use only. */
     MMCB_HOOK_LAST
 };
 

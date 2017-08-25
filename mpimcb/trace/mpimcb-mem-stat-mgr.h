@@ -26,8 +26,9 @@ public:
     uint8_t opid;
     // Address associated with memory operation.
     uintptr_t addr;
-    // If applicable, size associated with memory operation.
-    size_t size;
+    // If applicable, size associated with memory operation. Singed size_t
+    // because some update operations will be negative.
+    ssize_t size;
     // If applicable, 'old' address associated with memory operation.
     uintptr_t old_addr;
 
@@ -37,7 +38,7 @@ public:
     mmcb_memory_op_entry(
         uint8_t opid,
         uintptr_t addr,
-        size_t size = 0,
+        ssize_t size = 0,
         uintptr_t old_addr = 0
     ) : opid(opid)
       , addr(addr)
@@ -52,7 +53,7 @@ public:
     // Address end.
     uintptr_t addr_end;
     // Max observed value of PSS (proportional set size).
-    size_t max_pss_in_kb;
+    size_t pss_in_b;
     // Whether or not the region permissions say it is shared.
     bool reg_shared;
     // Path to backing store, if backed by a file.
@@ -64,14 +65,14 @@ public:
     mmcb_proc_maps_entry(void) {
         addr_start = 0;
         addr_end = 0;
-        max_pss_in_kb = 0;
+        pss_in_b = 0;
         reg_shared = false;
         memset(path, '\0', sizeof(path));
     }
 
     void
-    update_max_pss(size_t cur_pss) {
-        max_pss_in_kb = (cur_pss > max_pss_in_kb) ? cur_pss : max_pss_in_kb;
+    set_pss(size_t cur_pss_in_kb) {
+        pss_in_b = cur_pss_in_kb * 1024;
     }
 };
 
@@ -148,12 +149,18 @@ public:
         //
         if (!found_entry) {
             // TODO add better error message.
-            fprintf(stderr, "WARNING: missing /proc/self/smaps entry!\n");
+            fprintf(
+                stderr,
+                "(pid: %d) WARNING: "
+                "missing /proc/self/smaps entry!\n",
+                (int)getpid()
+            );
         }
         else {
             size_t pss_val = 0;
             get_pss(mapsf, pss_val);
-            res_entry.update_max_pss(pss_val);
+            // In kilobytes.
+            res_entry.set_pss(pss_val);
         }
         //
         fclose(mapsf);
@@ -266,15 +273,17 @@ private:
     //
     uint64_t n_mem_ops_recorded = 0;
     //
-    uint64_t n_mem_allocs = 0;
+    uint64_t n_mem_alloc_ops = 0;
     //
-    uint64_t n_mem_frees = 0;
+    uint64_t n_mem_free_ops = 0;
     //
     size_t current_mem_allocd = 0;
     //
     size_t high_mem_usage_mark = 0;
     // Mapping between address and memory operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
+    // Mapping between address and mmap/munmap operation entries.
+    std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
     // Array of collected memory allocated samples.
     std::deque<size_t> mem_allocd_samples;
     //
@@ -308,29 +317,45 @@ public:
         bool rm_ope = false;
         const uintptr_t addr = ope->addr;
         const uint8_t opid = ope->opid;
-        //
-        if (opid == MMCB_HOOK_REALLOC) {
-            break_down_realloc(ope);
-            return;
+        // Deal with any special cases first.
+        switch (opid) {
+            // realloc is never directly handled.
+            case (MMCB_HOOK_REALLOC):
+                break_down_realloc(ope);
+                return;
+            // mmap requires some extra work to extract its 'real' usage. Note
+            // that this usage will change during the life of the application,
+            // so we need to periodically update mmap entries. We'll do that
+            // later for all captured mmaps. munmap also requires some special
+            // care because mmap captures are stored in a different container.
+            case (MMCB_HOOK_MMAP):
+            case (MMCB_HOOK_MUNMAP):
+                capture_mmap_ops(ope);
+                return;
         }
+        // Now deal with the entry.
         auto got = addr2entry.find(addr);
         // New entry.
         if (got == addr2entry.end()) {
             addr2entry.insert(std::make_pair(addr, ope));
-            if (opid == MMCB_HOOK_MMAP) {
-                mmcb_proc_maps_entry maps_entry;
-                get_proc_self_smaps_entry(addr, maps_entry);
-            }
         }
-        // Existing entry.
+        // Existing entry and free.
+        else if (opid == MMCB_HOOK_FREE) {
+            ope->size = got->second->size;
+            rm_ope = true;
+        }
         else {
-            if (MMCB_HOOK_FREE == opid ||
-                MMCB_HOOK_MUNMAP == opid) {
-                ope->size = got->second->size;
-                rm_ope = true;
-            }
+            fprintf(
+                stderr,
+                "(pid: %d) WARNING: "
+                "existing entry (%p) not a free (OP: %d)\n",
+                (int)getpid(),
+                (void *)addr,
+                (int)opid
+            );
         }
         update_current_mem_allocd(ope);
+        update_all_pss_entries();
         //
         if (rm_ope) {
             addr2entry.erase(got);
@@ -351,7 +376,7 @@ public:
         //
         if (id == 0) {
             printf("\n#########################################################"
-                   "\n# MPI Memory Consumption Benchmark Complete #############"
+                   "\n# MPI Memory Consumption Analysis Complete ##############"
                    "\n#########################################################"
                    "\n");
         }
@@ -384,11 +409,17 @@ public:
         fprintf(reportf, "# Number of Memory Operations Recorded: %llu\n",
                 (unsigned long long)n_mem_ops_recorded);
 
-        fprintf(reportf, "# Number of Allocations Recorded: %llu\n",
-                (unsigned long long)n_mem_allocs);
+        fprintf(
+            reportf,
+            "# Number of Allocation-Related Operations Recorded: %llu\n",
+            (unsigned long long)n_mem_alloc_ops
+        );
 
-        fprintf(reportf, "# Number of Frees Recorded: %llu\n",
-                (unsigned long long)n_mem_frees);
+        fprintf(
+            reportf,
+            "# Number of Deallocation-Related Operations Recorded: %llu\n",
+            (unsigned long long)n_mem_free_ops
+        );
 
         fprintf(reportf, "# High Memory Usage Watermark (MB): %lf\n",
                 tomb(high_mem_usage_mark));
@@ -408,6 +439,93 @@ public:
     }
 
 private:
+
+    /**
+     *
+     */
+    void
+    update_all_pss_entries(void)
+    {
+        static const uint64_t update_freq = 100;
+        static uint64_t update_count = 0;
+
+        if (update_count++ % update_freq != 0) return;
+
+        for (auto &me : addr2mmap_entry) {
+            mmcb_memory_op_entry *e = me.second;
+            if (MMCB_HOOK_MMAP_PSS_UPDATE != e->opid &&
+                MMCB_HOOK_MUNMAP != e->opid) {
+                fprintf(
+                    stderr,
+                    "(pid: %d) WARNING: unexpected opid (%d)\n",
+                    (int)getpid(),
+                    (int)e->opid
+                );
+            }
+            //
+            const ssize_t old_size = e->size;
+            // Next capture the new PSS value.
+            mmcb_proc_maps_entry maps_entry;
+            get_proc_self_smaps_entry(e->addr, maps_entry);
+            const ssize_t new_size = maps_entry.pss_in_b;
+            e->size = new_size - old_size;
+            update_current_mem_allocd(e);
+        }
+    }
+
+    /**
+     *
+     */
+    void
+    capture_mmap_ops(
+        mmcb_memory_op_entry *const ope
+    ) {
+        bool rm_ope = false;
+        const uintptr_t addr = ope->addr;
+        const uint8_t opid = ope->opid;
+        //
+        auto got = addr2mmap_entry.find(addr);
+        // New entry.
+        if (got == addr2mmap_entry.end()) {
+            assert(opid == MMCB_HOOK_MMAP);
+            // Grab PSS stats.
+            mmcb_proc_maps_entry maps_entry;
+            get_proc_self_smaps_entry(addr, maps_entry);
+            // Update opid.
+            ope->opid = MMCB_HOOK_MMAP_PSS_UPDATE;
+            // Update size.
+            // The mmap length is initially captured, so update to PSS.
+            ope->size = maps_entry.pss_in_b;
+            // Add updated entry to map.
+            addr2mmap_entry.insert(std::make_pair(addr, ope));
+            // A new alloc operation not accounted for in capture because mmap
+            // isn't recognized as a first-class operation.
+            n_mem_alloc_ops++;
+        }
+        // Existing entry and munmap.
+        else if (opid == MMCB_HOOK_MUNMAP) {
+            // munmap already has the size, unlike free.
+            rm_ope = true;
+        }
+        // Something went wrong.
+        else {
+            fprintf(
+                stderr,
+                "(pid: %d) WARNING: "
+                "existing entry (%p) not a munmap (OP: %d)\n",
+                (int)getpid(),
+                (void *)addr,
+                (int)opid
+            );
+            return;
+        }
+        //
+        update_current_mem_allocd(ope);
+        //
+        if (rm_ope) {
+            addr2mmap_entry.erase(got);
+        }
+    }
 
     /**
      *
@@ -489,21 +607,25 @@ private:
             case (MMCB_HOOK_MALLOC):
             case (MMCB_HOOK_CALLOC):
             case (MMCB_HOOK_POSIX_MEMALIGN):
-            case (MMCB_HOOK_MMAP):
-                n_mem_allocs++;
+                n_mem_alloc_ops++;
                 current_mem_allocd += size;
                 break;
             case (MMCB_HOOK_FREE):
             case (MMCB_HOOK_MUNMAP):
-                n_mem_frees++;
+                n_mem_free_ops++;
                 current_mem_allocd -= size;
+                break;
+            case (MMCB_HOOK_MMAP_PSS_UPDATE):
+                // Here size may be positive or negative.
+                current_mem_allocd += size;
                 break;
             case (MMCB_HOOK_NOOP):
                 // Nothing to do.
                 break;
             default:
-                // Note: MMCB_HOOK_REALLOC is always broken down in terms of
-                // other operations, so it will never reach this code path.
+                // Note: MMCB_HOOK_REALLOC and MMCB_HOOK_MMAP are always broken
+                // down in terms of other operations, so they will never reach
+                // this code path.
                 assert(false && "Invalid opid");
         }
         update_mem_stats();
