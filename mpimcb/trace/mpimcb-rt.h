@@ -35,7 +35,7 @@ public:
     deactivate_all_mem_hooks(void);
     //
     void
-    set_init_time(double it);
+    set_init_time_now(void);
 };
 #endif
 

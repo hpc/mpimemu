@@ -10,6 +10,7 @@
 # Government nor LANS makes any warranty, express or implied, or assumes any
 # liability or responsibility for the use of this software.
 
+################################################################################
 add_library(
     mpimcb-rt STATIC
     mpimcb-mem-hook-state.h
@@ -26,6 +27,7 @@ set_property(
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
+################################################################################
 add_library(
     mpimcb-mem-stat-mgr STATIC
     mpimcb-mem-stat-mgr.h
@@ -38,16 +40,36 @@ set_property(
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
+################################################################################
+add_library(
+    mpimcb-timer STATIC
+    mpimcb-timer.h
+    mpimcb-timer.cc
+)
+set_property(
+    TARGET
+    mpimcb-timer
+    PROPERTY POSITION_INDEPENDENT_CODE ON
+)
+
+################################################################################
 add_library(
     mpimcb-trace SHARED
     mpimcb-mem-interposers.c
     mpimcb-pmpi.cc
 )
+set_property(
+    TARGET
+    mpimcb-trace
+    PROPERTY POSITION_INDEPENDENT_CODE ON
+)
 
+################################################################################
 target_link_libraries(
     mpimcb-trace
     mpimcb-rt
     mpimcb-mem-stat-mgr
+    mpimcb-timer
     ${CMAKE_DL_LIBS}
     pthread
 )

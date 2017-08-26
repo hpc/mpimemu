@@ -26,7 +26,7 @@ MPI_Init(
 ) {
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Set init time.
-    rt->set_init_time(PMPI_Wtime());
+    rt->set_init_time_now();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);

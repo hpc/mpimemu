@@ -1,4 +1,5 @@
 #include "mpimcb-rt.h"
+#include "mpimcb-timer.h"
 
 #include <cstdio>
 #include <unistd.h>
@@ -57,10 +58,9 @@ mmcb_rt::deactivate_all_mem_hooks(void)
  *
  */
 void
-mmcb_rt::set_init_time(
-    double it
-) {
-    init_time = it;
+mmcb_rt::set_init_time_now(void)
+{
+    init_time = mmcb_time();
 }
 
 /**
