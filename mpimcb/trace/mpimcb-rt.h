@@ -15,6 +15,8 @@ private:
     //
     mmcb_rt &
     operator=(const mmcb_rt &) = delete;
+    //
+    double init_time = 0.0;
 
 public:
     int rank = 0;
@@ -31,6 +33,9 @@ public:
     //
     void
     deactivate_all_mem_hooks(void);
+    //
+    void
+    set_init_time(double it);
 };
 #endif
 

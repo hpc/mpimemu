@@ -87,6 +87,10 @@ class Plotter:
         #
         plt.plot(y, marker=None, color=clr, label=lbl,
                  linestyle=self.line_style)
+        #self.ax.fill_between(
+        #    range(len(y)), 0, y,
+        #    interpolate=True, color=clr, alpha=0.3
+        #)
         #
         self.num_plots += 1
 

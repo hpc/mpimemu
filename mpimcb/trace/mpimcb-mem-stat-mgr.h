@@ -268,10 +268,13 @@ public:
 
 class mmcb_mem_stat_mgr {
 private:
+    size_t num_captures = 0;
     //
     size_t mem_allocd_sample_freq = 1;
     //
     uint64_t n_mem_ops_recorded = 0;
+    //
+    uint64_t n_pss_updates_requested = 0;
     //
     uint64_t n_mem_alloc_ops = 0;
     //
@@ -314,6 +317,7 @@ public:
     capture(
         mmcb_memory_op_entry *const ope
     ) {
+        num_captures++;
         bool rm_ope = false;
         const uintptr_t addr = ope->addr;
         const uint8_t opid = ope->opid;
@@ -348,11 +352,15 @@ public:
             fprintf(
                 stderr,
                 "(pid: %d) WARNING: "
-                "existing entry (%p) not a free (OP: %d)\n",
+                "existing entry (%p) not a free (OP: %d was OP: %d "
+                "size: %lld\n",
                 (int)getpid(),
                 (void *)addr,
-                (int)opid
+                (int)opid,
+                (int)got->second->opid,
+                (long long int)got->second->size
             );
+            return;
         }
         update_current_mem_allocd(ope);
         update_all_pss_entries();
@@ -406,6 +414,9 @@ public:
 
         fprintf(reportf, "# Begin Report\n");
 
+        fprintf(reportf, "# Number of Operation Captures Performed: %llu\n",
+                (unsigned long long)num_captures);
+
         fprintf(reportf, "# Number of Memory Operations Recorded: %llu\n",
                 (unsigned long long)n_mem_ops_recorded);
 
@@ -447,9 +458,8 @@ private:
     update_all_pss_entries(void)
     {
         static const uint64_t update_freq = 10;
-        static uint64_t update_count = 0;
 
-        if (update_count++ % update_freq != 0) return;
+        if (n_pss_updates_requested++ % update_freq != 0) return;
 
         for (auto &me : addr2mmap_entry) {
             mmcb_memory_op_entry *e = me.second;

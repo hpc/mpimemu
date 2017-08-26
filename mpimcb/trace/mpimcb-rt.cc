@@ -56,6 +56,16 @@ mmcb_rt::deactivate_all_mem_hooks(void)
 /**
  *
  */
+void
+mmcb_rt::set_init_time(
+    double it
+) {
+    init_time = it;
+}
+
+/**
+ *
+ */
 mmcb_mem_hook_mgr_t *
 mmcb_rt_get_mem_hook_mgr(void)
 {
