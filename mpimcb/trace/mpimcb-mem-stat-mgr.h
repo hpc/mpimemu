@@ -446,29 +446,46 @@ private:
     void
     update_all_pss_entries(void)
     {
-        static const uint64_t update_freq = 100;
+        static const uint64_t update_freq = 10;
         static uint64_t update_count = 0;
 
         if (update_count++ % update_freq != 0) return;
 
         for (auto &me : addr2mmap_entry) {
             mmcb_memory_op_entry *e = me.second;
-            if (MMCB_HOOK_MMAP_PSS_UPDATE != e->opid &&
-                MMCB_HOOK_MUNMAP != e->opid) {
-                fprintf(
-                    stderr,
-                    "(pid: %d) WARNING: unexpected opid (%d)\n",
-                    (int)getpid(),
-                    (int)e->opid
-                );
+            switch (e->opid) {
+                case(MMCB_HOOK_MMAP_PSS_UPDATE): {
+                    const ssize_t old_size = e->size;
+                    // Next capture the new PSS value.
+                    mmcb_proc_maps_entry maps_entry;
+                    get_proc_self_smaps_entry(e->addr, maps_entry);
+                    const ssize_t new_size = maps_entry.pss_in_b;
+                    if (new_size >= old_size) {
+                        e->size = new_size - old_size;
+                    }
+                    else {
+                        // Free up old size.
+                        e->size = -old_size;
+                        update_current_mem_allocd(e);
+                        // Now include new size.
+                        e->size = new_size;
+                    }
+                    break;
+                }
+                case(MMCB_HOOK_MUNMAP):
+                    // Nothing to do.
+                    break;
+                default:
+                    fprintf(
+                        stderr,
+                        "(pid: %d) WARNING: unexpected opid (%d)\n",
+                        (int)getpid(),
+                        (int)e->opid
+                    );
+                    // Bail.
+                    return;
             }
             //
-            const ssize_t old_size = e->size;
-            // Next capture the new PSS value.
-            mmcb_proc_maps_entry maps_entry;
-            get_proc_self_smaps_entry(e->addr, maps_entry);
-            const ssize_t new_size = maps_entry.pss_in_b;
-            e->size = new_size - old_size;
             update_current_mem_allocd(e);
         }
     }

@@ -35,6 +35,8 @@ MPI_Init(
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
     //
+    PMPI_Barrier(MPI_COMM_WORLD);
+    //
     return rc;
 }
 
@@ -125,6 +127,46 @@ MPI_Isend(
         tag,
         comm,
         request
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Sendrecv(
+    const void *sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    int dest,
+    int sendtag, 
+    void *recvbuf, 
+    int recvcount,
+    MPI_Datatype recvtype,
+    int source,
+    int recvtag,
+    MPI_Comm comm,
+    MPI_Status *status
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Sendrecv(
+        sendbuf,
+        sendcount,
+        sendtype,
+        dest,
+        sendtag, 
+        recvbuf, 
+        recvcount,
+        recvtype,
+        source,
+        recvtag,
+        comm,
+        status
     );
     rt->deactivate_all_mem_hooks();
     //
