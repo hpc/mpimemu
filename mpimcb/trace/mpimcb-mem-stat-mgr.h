@@ -98,9 +98,10 @@ public:
     static void
     get_proc_self_smaps_entry(
         uintptr_t target_addr,
-        mmcb_proc_maps_entry &res_entry
+        mmcb_proc_maps_entry &res_entry,
+        bool &found_entry
     ) {
-        bool found_entry = false;
+        found_entry = false;
         // First line format.
         // address           perms offset  dev   inode   pathname
         // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
@@ -124,7 +125,7 @@ public:
             }
             // Look for target address.
             uintptr_t addr_start = 0, addr_end = 0;
-            get_addr_start_end(toks[MMCB_PROC_MAPS_ADDR], addr_start, addr_end);
+            get_addr_range(toks[MMCB_PROC_MAPS_ADDR], addr_start, addr_end);
             // If we found it, then process and return to caller.
             if (target_addr == addr_start) {
                 found_entry = true;
@@ -148,6 +149,7 @@ public:
         }
         //
         if (!found_entry) {
+#if 0
             // TODO add better error message.
             fprintf(
                 stderr,
@@ -155,6 +157,7 @@ public:
                 "missing /proc/self/smaps entry!\n",
                 (int)getpid()
             );
+#endif
         }
         else {
             size_t pss_val = 0;
@@ -223,7 +226,7 @@ public:
      *
      */
     static void
-    get_addr_start_end(
+    get_addr_range(
         char addr_str_buff[max_entry_len],
         uintptr_t &start,
         uintptr_t &end
@@ -275,6 +278,8 @@ private:
     uint64_t n_mem_ops_recorded = 0;
     //
     uint64_t n_pss_updates_requested = 0;
+    //
+    uint64_t n_pss_updates = 0;
     //
     uint64_t n_mem_alloc_ops = 0;
     //
@@ -414,8 +419,11 @@ public:
 
         fprintf(reportf, "# Begin Report\n");
 
-        fprintf(reportf, "# Number of Operation Captures Performed: %llu\n",
-                (unsigned long long)num_captures);
+        fprintf(
+            reportf,
+            "# Number of Operation Captures Performed: %llu\n",
+            (unsigned long long)num_captures
+        );
 
         fprintf(reportf, "# Number of Memory Operations Recorded: %llu\n",
                 (unsigned long long)n_mem_ops_recorded);
@@ -432,8 +440,17 @@ public:
             (unsigned long long)n_mem_free_ops
         );
 
-        fprintf(reportf, "# High Memory Usage Watermark (MB): %lf\n",
-                tomb(high_mem_usage_mark));
+        fprintf(
+            reportf,
+            "# Number of PSS Updates Performed: %llu\n",
+            (unsigned long long)n_pss_updates
+        );
+
+        fprintf(
+            reportf,
+            "# High Memory Usage Watermark (MB): %lf\n",
+            tomb(high_mem_usage_mark)
+        );
 
         fprintf(reportf, "# Memory Usage (B) Over Time (Logical):\n");
         for (auto &i : mem_allocd_samples) {
@@ -460,6 +477,8 @@ private:
         static const uint64_t update_freq = 10;
 
         if (n_pss_updates_requested++ % update_freq != 0) return;
+
+        n_pss_updates++;
 
         for (auto &me : addr2mmap_entry) {
             mmcb_memory_op_entry *e = me.second;
@@ -680,8 +699,20 @@ private:
         uintptr_t target_addr,
         mmcb_proc_maps_entry &res_entry
     ) {
-        mmcb_proc_smaps_parser::get_proc_self_smaps_entry(
-            target_addr, res_entry
-        );
+        bool found_entry = false;
+        static const int n_tries = 5;
+        for (int i = 0; i < n_tries && !found_entry; ++i) {
+            mmcb_proc_smaps_parser::get_proc_self_smaps_entry(
+                target_addr, res_entry, found_entry
+            );
+        }
+        if (!found_entry) {
+            fprintf(
+                stderr,
+                "(pid: %d) WARNING: "
+                "missing /proc/self/smaps entry!\n",
+                (int)getpid()
+            );
+        }
     }
 };
