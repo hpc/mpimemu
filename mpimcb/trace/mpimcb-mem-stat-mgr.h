@@ -6,6 +6,7 @@
 #pragma once
 
 #include "mpimcb-mem-hook-state.h"
+#include "mpimcb-timer.h"
 
 #include <iostream>
 #include <cstdint>
@@ -293,7 +294,7 @@ private:
     // Mapping between address and mmap/munmap operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
     // Array of collected memory allocated samples.
-    std::deque<size_t> mem_allocd_samples;
+    std::deque< std::pair<double, size_t> > mem_allocd_samples;
     //
     mmcb_mem_stat_mgr(void) = default;
     //
@@ -454,7 +455,10 @@ public:
 
         fprintf(reportf, "# Memory Usage (B) Over Time (Logical):\n");
         for (auto &i : mem_allocd_samples) {
-            fprintf(reportf, "%llu\n", (unsigned long long)i);
+            fprintf(
+                reportf, "%lf %llu\n",
+                i.first,
+                (unsigned long long)i.second);
         }
 
         fprintf(reportf, "# End Report\n");
@@ -687,7 +691,9 @@ private:
         }
         //
         if (n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
-            mem_allocd_samples.push_back(current_mem_allocd);
+            mem_allocd_samples.push_back(
+                std::make_pair(mmcb_time(), current_mem_allocd)
+            );
         }
     }
 

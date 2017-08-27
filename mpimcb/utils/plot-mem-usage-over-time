@@ -26,11 +26,15 @@ class Experiment:
             rank = int(log.split('.')[0])
             fpath = '{}/{}'.format(self.log_path, log)
             with open(fpath, 'r') as f:
-                content = f.readlines()
-                content = [x.strip('\n') for x in content]
-                content = [int(x) for x in content
-                           if not x.strip().startswith("#")]
-                self.rank_stats[rank] = content
+                content = [x.strip('\n') for x in f.readlines()
+                           if not x.strip().startswith('#')]
+                stats = []
+                for l in content:
+                    time_val_str = l.split(' ')
+                    stats.append(
+                        (float(time_val_str[0]), int(time_val_str[1]))
+                    )
+                self.rank_stats[rank] = stats
 
 
 class Plotter:
@@ -48,11 +52,12 @@ class Plotter:
     def plot(self):
         print('plotting to {}'.format(self.fname))
 
-        lens = 0
+        time = 0
         for e in self.experiments:
             for k, v in sorted(e.rank_stats.iteritems()):
                 self.add_plot(k, v)
-                lens = max(lens, len(v))
+                # TODO
+                #time = max(time, max(
         
         plt.grid(False)
         plt.axis('tight')
@@ -62,7 +67,7 @@ class Plotter:
         self.ax.set_xlabel('Time (Logical)', fontsize=16)
 
         scalf = 1.05
-        plt.xlim(0, lens * 1.10) 
+        #plt.xlim(0, lens * 1.10) 
         plt.ylim(min(self.cg_time) / scalf, (max(self.cg_time) * scalf))
 
         #plt.xticks([i for i in self.numpes])
@@ -75,7 +80,9 @@ class Plotter:
                          pad_inches=0.03)
 
     def add_plot(self, rank, rank_stats):
-        y = [x/1024.0/1024.0 for x in rank_stats]
+        x = [tpl[0] for tpl in rank_stats]
+        x = [i-x[0] for i in x]
+        y = [tpl[1]/1024.0/1024.0 for tpl in rank_stats]
         for i in y:
             self.cg_time.add(i)
         mlen = len(self.markers)
@@ -85,7 +92,7 @@ class Plotter:
         clr = self.colors[self.num_plots % clen]
         lbl = 'Rank {}'.format(rank)
         #
-        plt.plot(y, marker=None, color=clr, label=lbl,
+        plt.plot(x, y, marker=None, color=clr, label=lbl,
                  linestyle=self.line_style)
         #self.ax.fill_between(
         #    range(len(y)), 0, y,
