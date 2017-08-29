@@ -511,16 +511,11 @@ private:
                     mmcb_proc_maps_entry maps_entry;
                     get_proc_self_smaps_entry(e->addr, maps_entry);
                     const ssize_t new_size = maps_entry.pss_in_b;
-                    if (new_size >= old_size) {
-                        e->size = new_size - old_size;
-                    }
-                    else {
-                        // Free up old size.
-                        e->size = -old_size;
-                        update_current_mem_allocd(e);
-                        // Now include new size.
-                        e->size = new_size;
-                    }
+                    // Free up old size.
+                    e->size = -old_size;
+                    update_current_mem_allocd(e);
+                    // Now include new size.
+                    e->size = new_size;
                     break;
                 }
                 case(MMCB_HOOK_MUNMAP):
