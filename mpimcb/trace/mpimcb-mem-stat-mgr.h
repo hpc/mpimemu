@@ -30,7 +30,8 @@ public:
     // If applicable, size associated with memory operation. Singed size_t
     // because some update operations will be negative.
     ssize_t size;
-    // If applicable, 'old' address associated with memory operation.
+    // If applicable, 'old' address associated with memory operation. Mostly for
+    // things like realloc.
     uintptr_t old_addr;
 
     /**
@@ -272,9 +273,10 @@ public:
 
 class mmcb_mem_stat_mgr {
 private:
-    size_t num_captures = 0;
     //
-    size_t mem_allocd_sample_freq = 1;
+    static constexpr uint64_t mem_allocd_sample_freq = 1;
+    //
+    uint64_t num_captures = 0;
     //
     uint64_t n_mem_ops_recorded = 0;
     //
@@ -286,15 +288,15 @@ private:
     //
     uint64_t n_mem_free_ops = 0;
     //
-    size_t current_mem_allocd = 0;
+    ssize_t current_mem_allocd = 0;
     //
-    size_t high_mem_usage_mark = 0;
+    ssize_t high_mem_usage_mark = 0;
     // Mapping between address and memory operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
     // Mapping between address and mmap/munmap operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
     // Array of collected memory allocated samples.
-    std::deque< std::pair<double, size_t> > mem_allocd_samples;
+    std::deque< std::pair<double, ssize_t> > mem_allocd_samples;
     //
     mmcb_mem_stat_mgr(void) = default;
     //
@@ -307,6 +309,12 @@ private:
     //
     mmcb_mem_stat_mgr &
     operator=(const mmcb_mem_stat_mgr &) = delete;
+
+    /**
+     *
+     */
+    void
+    increment_num_captures(void) { ++num_captures; }
 
 public:
 
@@ -323,7 +331,8 @@ public:
     capture(
         mmcb_memory_op_entry *const ope
     ) {
-        num_captures++;
+        increment_num_captures();
+        //
         bool rm_ope = false;
         const uintptr_t addr = ope->addr;
         const uint8_t opid = ope->opid;
