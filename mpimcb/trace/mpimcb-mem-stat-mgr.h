@@ -162,7 +162,7 @@ public:
 #endif
         }
         else {
-            size_t pss_val = 0;
+            ssize_t pss_val = 0;
             get_pss(mapsf, pss_val);
             // In kilobytes.
             res_entry.set_pss(pss_val);
@@ -177,7 +177,7 @@ public:
     static void
     get_pss(
         FILE *mapsf,
-        size_t &pss_val
+        ssize_t &pss_val
     ) {
         /**
          * Format
@@ -216,10 +216,10 @@ public:
         }
         // Get the value.
         errno = 0;
-        pss_val = (size_t)strtoull(pss_tokens[1], NULL, 10);
+        pss_val = (ssize_t)strtoll(pss_tokens[1], NULL, 10);
         int err = errno;
         if (err != 0) {
-            perror("strtoull");
+            perror("strtoll");
             exit(EXIT_FAILURE);
         }
     }
