@@ -5,9 +5,7 @@
 
 #include "mpimcb-timer.h"
 
-#include <cstdlib>
-#include <sys/time.h>
-#include <sys/resource.h>
+#include <chrono>
 
 /**
  *
@@ -15,15 +13,9 @@
 double
 mmcb_time(void)
 {
-    struct timeval tp;
-    static long starts = 0, startu;
-    if (!starts) {
-        gettimeofday(&tp, NULL);
-        starts = tp.tv_sec;
-        startu = tp.tv_usec;
-        return 0.0;
-    }
-    gettimeofday(&tp, NULL);
-    return (double(tp.tv_sec  - starts)) +
-           (double(tp.tv_usec - startu)) / 1000000.0;
+    using namespace std::chrono;
+
+    const auto n = steady_clock::now();
+    auto tse_ms = time_point_cast<microseconds>(n).time_since_epoch().count();
+    return (double(tse_ms) / 1e6);
 }
