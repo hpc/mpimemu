@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 class mmcb_memory_op_entry {
 public:
@@ -89,8 +90,6 @@ class mmcb_proc_smaps_parser {
         MMCB_PROC_MAPS_PATH_NAME,
     };
     //
-    static constexpr uint8_t n_tok = 6;
-    //
     static constexpr int32_t max_entry_len = PATH_MAX;
 
 public:
@@ -103,6 +102,9 @@ public:
         mmcb_proc_maps_entry &res_entry,
         bool &found_entry
     ) {
+        //
+        static const uint8_t n_tok = 6;
+        //
         found_entry = false;
         // First line format.
         // address           perms offset  dev   inode   pathname
@@ -151,7 +153,7 @@ public:
         }
         //
         if (!found_entry) {
-#if 0
+#if 1
             // TODO add better error message.
             fprintf(
                 stderr,
@@ -190,7 +192,7 @@ public:
         static const uint8_t n_tok = 3;
         static const char *errmsg = "ERROR: Invalid /proc/self/smaps format";
         char lb[2 * PATH_MAX];
-        // Skip lines.
+        // Skip Size and Rss lines.
         for (uint8_t i = 0; i < ni && (fgets(lb, sizeof(lb) - 1, mapsf)); ++i) { }
         // Grab PSS entry.
         char *gets = fgets(lb, sizeof(lb) - 1, mapsf);
@@ -377,7 +379,9 @@ public:
             );
             return;
         }
+        //
         update_current_mem_allocd(ope);
+        //
         update_all_pss_entries();
         //
         if (rm_ope) {
@@ -431,29 +435,32 @@ public:
 
         fprintf(
             reportf,
-            "# Number of Operation Captures Performed: %llu\n",
-            (unsigned long long)num_captures
-        );
-
-        fprintf(reportf, "# Number of Memory Operations Recorded: %llu\n",
-                (unsigned long long)n_mem_ops_recorded);
-
-        fprintf(
-            reportf,
-            "# Number of Allocation-Related Operations Recorded: %llu\n",
-            (unsigned long long)n_mem_alloc_ops
+            "# Number of Operation Captures Performed: %" PRIu64 "\n",
+            num_captures
         );
 
         fprintf(
             reportf,
-            "# Number of Deallocation-Related Operations Recorded: %llu\n",
-            (unsigned long long)n_mem_free_ops
+            "# Number of Memory Operations Recorded: %" PRIu64 "\n",
+            n_mem_ops_recorded
         );
 
         fprintf(
             reportf,
-            "# Number of PSS Updates Performed: %llu\n",
-            (unsigned long long)n_pss_updates
+            "# Number of Allocation-Related Operations Recorded: %" PRIu64 "\n",
+            n_mem_alloc_ops
+        );
+
+        fprintf(
+            reportf,
+            "# Number of Deallocation-Related Operations Recorded: %" PRIu64 "\n",
+            n_mem_free_ops
+        );
+
+        fprintf(
+            reportf,
+            "# Number of PSS Updates Performed: %" PRIu64 "\n",
+            n_pss_updates
         );
 
         fprintf(
@@ -462,12 +469,14 @@ public:
             tomb(high_mem_usage_mark)
         );
 
-        fprintf(reportf, "# Memory Usage (B) Over Time (Logical):\n");
+        fprintf(reportf, "# Memory Usage (B) Over Time (Since MPI_Init):\n");
+        // TODO substract start stamp from values and update plot script.
         for (auto &i : mem_allocd_samples) {
             fprintf(
-                reportf, "%lf %llu\n",
+                reportf, "%lf %zd\n",
                 i.first,
-                (unsigned long long)i.second);
+                i.second
+            );
         }
 
         fprintf(reportf, "# End Report\n");
@@ -494,7 +503,7 @@ private:
         n_pss_updates++;
 
         for (auto &me : addr2mmap_entry) {
-            mmcb_memory_op_entry *e = me.second;
+            mmcb_memory_op_entry *const e = me.second;
             switch (e->opid) {
                 case(MMCB_HOOK_MMAP_PSS_UPDATE): {
                     const ssize_t old_size = e->size;
