@@ -4,9 +4,7 @@
 
 #ifdef __cplusplus
 #include <string>
-#endif
 
-#ifdef __cplusplus
 class mmcb_rt {
 private:
     mmcb_mem_hook_mgr_t mhmgr;
@@ -49,7 +47,8 @@ public:
     std::string
     get_hostname(void);
 };
-#endif
+
+#endif // #ifdef __cplusplus
 
 #ifdef __cplusplus
 extern "C" {

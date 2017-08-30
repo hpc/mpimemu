@@ -76,7 +76,6 @@ mmcb_rt_get_mem_hook_mgr(void)
 /**
  *
  */
-
 void
 mmcb_rt::set_hostname(void)
 {
@@ -86,6 +85,9 @@ mmcb_rt::set_hostname(void)
     }
 }
 
+/**
+ *
+ */
 std::string
 mmcb_rt::get_hostname(void)
 {

@@ -190,7 +190,7 @@ public:
      */
     static void
     get_proc_self_smaps_pss_total(
-        ssize_t &pss_total
+        ssize_t &pss_total_in_b
     ) {
         /*
          ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
@@ -229,7 +229,7 @@ public:
             for (uint8_t i = 0; i < nskip && (fgets(lb, sizeof(lb) - 1, smapsf)); ++i) { }
         }
         //
-        pss_total = pss_sum;
+        pss_total_in_b = pss_sum * 1024;
         //
         fclose(smapsf);
     }
@@ -370,7 +370,7 @@ private:
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
     // Mapping between address and mmap/munmap operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
-    // Array of collected memory allocated samples.
+    // Array of collected memory allocated samples (MPI only).
     std::deque< std::pair<double, ssize_t> > mem_allocd_samples;
     // Array of summed PSS samples (total process memory usage).
     std::deque< std::pair<double, ssize_t> > pss_total_samples;
@@ -551,8 +551,12 @@ public:
 
         fprintf(
             reportf,
-            "# Memory Usage (B) Over Time "
+            "# MPI Library Memory Usage (B) Over Time "
             "(Since arbitrary time in the past):\n"
+        );
+        fprintf(
+            reportf,
+            "# Data Start\n"
         );
         for (auto &i : mem_allocd_samples) {
             fprintf(
@@ -561,6 +565,31 @@ public:
                 i.second
             );
         }
+        fprintf(
+            reportf,
+            "# Data End\n"
+        );
+
+        fprintf(
+            reportf,
+            "# Application Memory Usage (B) Over Time "
+            "(Since arbitrary time in the past):\n"
+        );
+        fprintf(
+            reportf,
+            "# Data Start\n"
+        );
+        for (auto &i : pss_total_samples) {
+            fprintf(
+                reportf, "%lf %zd\n",
+                i.first,
+                i.second
+            );
+        }
+        fprintf(
+            reportf,
+            "# Data End\n"
+        );
 
         fprintf(reportf, "# End Report\n");
 
@@ -796,7 +825,6 @@ private:
                 std::make_pair(mmcb_time(), current_mem_allocd)
             );
         }
-#if 0
         // Gather total process memory usage also.
         if (n_mem_ops_recorded % pss_totals_sample_freq == 0) {
             ssize_t pss_total = 0;
@@ -805,7 +833,6 @@ private:
                 std::make_pair(mmcb_time(), pss_total)
             );
         }
-#endif
     }
 
     /**
@@ -838,8 +865,8 @@ private:
      */
     void
     get_proc_self_smaps_pss_total(
-        ssize_t &pss_total
+        ssize_t &pss_total_in_b
     ) {
-        mmcb_proc_smaps_parser::get_proc_self_smaps_pss_total(pss_total);
+        mmcb_proc_smaps_parser::get_proc_self_smaps_pss_total(pss_total_in_b);
     }
 };
