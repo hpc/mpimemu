@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "mpimcb-rt.h"
 #include "mpimcb-mem-hook-state.h"
 #include "mpimcb-timer.h"
 
@@ -471,15 +472,14 @@ public:
      */
     void
     report(
-        const std::string &host,
-        int id,
+        mmcb_rt *rt,
         bool emit_report
     ) {
         using namespace std;
         //
         setbuf(stdout, NULL);
         //
-        if (id == 0) {
+        if (rt->rank == 0) {
             printf("\n#########################################################"
                    "\n# MPI Memory Consumption Analysis Complete ##############"
                    "\n#########################################################"
@@ -500,7 +500,7 @@ public:
         char report_name[PATH_MAX];
         snprintf(
             report_name, sizeof(report_name) - 1, "%s/%d.%s",
-            output_dir, id, "mmcb"
+            output_dir, rt->rank, "mmcb"
         );
 
         FILE *reportf = fopen(report_name, "w+");
@@ -511,9 +511,11 @@ public:
 
         fprintf(reportf, "# Begin Report\n");
 
-        fprintf(reportf, "# Hostname: %s\n", host.c_str());
+        fprintf(reportf, "# Application: %s\n", rt->get_app_name().c_str());
 
-        fprintf(reportf, "# ID: %d\n", id);
+        fprintf(reportf, "# Hostname: %s\n", rt->get_hostname().c_str());
+
+        fprintf(reportf, "# ID: %d\n", rt->rank);
 
         fprintf(
             reportf,
@@ -589,7 +591,7 @@ public:
 
         fclose(reportf);
 
-        if (id == 0) {
+        if (rt->rank == 0) {
             printf("# Report written to %s\n", output_dir);
         }
     }

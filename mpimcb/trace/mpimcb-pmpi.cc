@@ -27,7 +27,6 @@ MPI_Init(
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Set init time.
     rt->set_init_time_now();
-    rt->set_hostname();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);
@@ -35,6 +34,7 @@ MPI_Init(
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
     // For tool purposes, so don't track.
+    rt->gather_target_meta();
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
     //
@@ -410,11 +410,7 @@ MPI_Finalize(void)
     // Deactivate to report.
     rt->deactivate_all_mem_hooks();
     //
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->report(
-        rt->get_hostname(),
-        rt->rank,
-        true
-    );
+    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->report(rt, true);
     //
     return PMPI_Finalize();
 }

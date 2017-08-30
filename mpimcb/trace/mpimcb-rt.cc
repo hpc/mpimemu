@@ -3,7 +3,9 @@
 
 #include <cstdio>
 #include <cstdlib>
+
 #include <unistd.h>
+#include <string.h>
 
 /**
  *
@@ -92,4 +94,48 @@ std::string
 mmcb_rt::get_hostname(void)
 {
     return std::string(hostname, sizeof(hostname));
+}
+
+/**
+ *
+ */
+void
+mmcb_rt::set_target_cmdline(void)
+{
+    FILE *commf = fopen("/proc/self/comm", "r");
+    if (!commf) {
+        perror("fopen /proc/self/comm");
+        exit(EXIT_FAILURE);
+    }
+
+    char lb[PATH_MAX];
+    while (fgets(lb, sizeof(lb) - 1, commf)) {
+        break;
+    }
+    char *nl = nullptr;
+    if ((nl = strchr(lb, '\n')) != NULL) {
+        *nl = '\0';
+    }
+    snprintf(app_comm, sizeof(app_comm) - 1, "%s", lb);
+
+    fclose(commf);
+}
+
+/**
+ *
+ */
+void
+mmcb_rt::gather_target_meta(void)
+{
+    set_hostname();
+    set_target_cmdline();
+}
+
+/**
+ *
+ */
+std::string
+mmcb_rt::get_app_name(void)
+{
+    return std::string(app_comm, sizeof(app_comm));
 }

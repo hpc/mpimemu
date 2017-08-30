@@ -4,6 +4,7 @@
 
 #ifdef __cplusplus
 #include <string>
+#include <limits.h>
 
 class mmcb_rt {
 private:
@@ -21,6 +22,14 @@ private:
     double init_time = 0.0;
     //
     char hostname[256];
+    //
+    char app_comm[PATH_MAX];
+    //
+    void
+    set_hostname(void);
+    //
+    void
+    set_target_cmdline(void);
 
 public:
     int rank = 0;
@@ -41,11 +50,14 @@ public:
     void
     set_init_time_now(void);
     //
-    void
-    set_hostname(void);
-    //
     std::string
     get_hostname(void);
+    //
+    std::string
+    get_app_name(void);
+    //
+    void
+    gather_target_meta(void);
 };
 
 #endif // #ifdef __cplusplus

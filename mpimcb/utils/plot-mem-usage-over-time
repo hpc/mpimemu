@@ -144,6 +144,7 @@ def main(argv=None):
         argv = sys.argv
 
     check_args(argv)
+
     f_name = get_usable_file_name('mem-usage-over-time', 'pdf')
     plotter = Plotter(f_name, process_experiments(argv[1:]))
     plotter.plot()
