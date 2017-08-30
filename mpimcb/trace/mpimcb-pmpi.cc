@@ -543,7 +543,7 @@ MPI_Comm_free(
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     //
     rt->activate_all_mem_hooks();
-    int rc = MPI_Comm_free(
+    int rc = PMPI_Comm_free(
         comm
     );
     rt->deactivate_all_mem_hooks();
