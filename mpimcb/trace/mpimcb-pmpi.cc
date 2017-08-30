@@ -402,12 +402,10 @@ MPI_Finalize(void)
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
     // Sync.
     PMPI_Barrier(MPI_COMM_WORLD);
-#if 0
     // Dummy memory operations to sync timings even more.
     rt->activate_all_mem_hooks();
     char *dummy = (char *)malloc(0);
     free(dummy);
-#endif
     // Deactivate to report.
     rt->deactivate_all_mem_hooks();
     //
