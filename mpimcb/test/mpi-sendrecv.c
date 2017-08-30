@@ -11,7 +11,8 @@ main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-    static const int n_txrx = 1024 * 10;
+    static const int n_txrx = 1024;
+
     for (int i = 0; i < n_txrx; ++i) {
         int buffer[100], buffer2[100];
 

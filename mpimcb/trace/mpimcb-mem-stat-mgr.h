@@ -513,7 +513,7 @@ private:
                     const ssize_t new_size = maps_entry.pss_in_b;
                     // Free up old size.
                     e->size = -old_size;
-                    update_current_mem_allocd(e);
+                    update_current_mem_allocd(e, true /* internal_bookkeeping */);
                     // Now include new size.
                     e->size = new_size;
                     break;
@@ -661,7 +661,8 @@ private:
      */
     void
     update_current_mem_allocd(
-        mmcb_memory_op_entry *const ope
+        mmcb_memory_op_entry *const ope,
+        bool internal_bookkeeping = false
     ) {
         const uint8_t opid = ope->opid;
         const size_t size = ope->size;
@@ -691,7 +692,10 @@ private:
                 // this code path.
                 assert(false && "Invalid opid");
         }
-        update_mem_stats();
+        //
+        if (!internal_bookkeeping) {
+            update_mem_stats();
+        }
     }
 
     /**
