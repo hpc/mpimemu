@@ -49,7 +49,7 @@ public:
       , old_addr(old_addr) { }
 };
 
-class mmcb_proc_maps_entry {
+class mmcb_proc_smaps_entry {
 public:
     // Address start.
     uintptr_t addr_start;
@@ -65,7 +65,7 @@ public:
     /**
      *
      */
-    mmcb_proc_maps_entry(void) {
+    mmcb_proc_smaps_entry(void) {
         addr_start = 0;
         addr_end = 0;
         pss_in_b = 0;
@@ -92,14 +92,28 @@ class mmcb_proc_smaps_parser {
     //
     static constexpr int32_t max_entry_len = PATH_MAX;
 
+    /**
+     *
+     */
+    static FILE *
+    open_smaps(void) {
+        FILE *f = fopen("/proc/self/smaps", "r");
+        if (!f) {
+            perror("fopen /proc/self/smaps");
+            exit(EXIT_FAILURE);
+        }
+        return f;
+    }
+
 public:
+
     /**
      *
      */
     static void
     get_proc_self_smaps_entry(
         uintptr_t target_addr,
-        mmcb_proc_maps_entry &res_entry,
+        mmcb_proc_smaps_entry &res_entry,
         bool &found_entry
     ) {
         //
@@ -109,11 +123,8 @@ public:
         // First line format.
         // address           perms offset  dev   inode   pathname
         // 08048000-08056000 r-xp 00000000 03:0c 64593   /usr/sbin/gpm
-        FILE *mapsf = fopen("/proc/self/smaps", "r");
-        if (!mapsf) {
-            perror("fopen /proc/self/smaps");
-            exit(EXIT_FAILURE);
-        }
+        FILE *mapsf = open_smaps();
+        //
         char cline_buff[2 * PATH_MAX];
         // Iterate over it one line at a time.
         while (fgets(cline_buff, sizeof(cline_buff) - 1, mapsf)) {
@@ -153,7 +164,7 @@ public:
         }
         //
         if (!found_entry) {
-#if 1
+#if 0
             // TODO add better error message.
             fprintf(
                 stderr,
@@ -171,6 +182,55 @@ public:
         }
         //
         fclose(mapsf);
+    }
+
+    /**
+     *
+     */
+    static void
+    get_proc_self_smaps_pss_total(
+        ssize_t &pss_total
+    ) {
+        /*
+         ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+         Size:                  4 kB
+         Rss:                   0 kB
+         Pss:                   0 kB
+         Shared_Clean:          0 kB
+         Shared_Dirty:          0 kB
+         Private_Clean:         0 kB
+         Private_Dirty:         0 kB
+         Referenced:            0 kB
+         Anonymous:             0 kB
+         AnonHugePages:         0 kB
+         Shared_Hugetlb:        0 kB
+         Private_Hugetlb:       0 kB
+         Swap:                  0 kB
+         SwapPss:               0 kB
+         KernelPageSize:        4 kB
+         MMUPageSize:           4 kB
+         Locked:                0 kB
+         VmFlags: rd ex
+         */
+
+        FILE *smapsf = open_smaps();
+
+        ssize_t pss_sum = 0;
+
+        char lb[2 * PATH_MAX];
+        // Iterate over it one line at a time.
+        while (fgets(lb, sizeof(lb) - 1, smapsf)) {
+            ssize_t cur_pss = 0;
+            get_pss(smapsf, cur_pss);
+            pss_sum += cur_pss;
+            // Skip rest.
+            uint8_t nskip = 15;
+            for (uint8_t i = 0; i < nskip && (fgets(lb, sizeof(lb) - 1, smapsf)); ++i) { }
+        }
+        //
+        pss_total = pss_sum;
+        //
+        fclose(smapsf);
     }
 
     /**
@@ -209,6 +269,17 @@ public:
         ) {
             strp = nullptr;
             strncpy(pss_tokens[i], tokp, sizeof(pss_tokens[i]) - 1);
+        }
+        // Sanity (expecting Pss:).
+        static const char *ename = "Pss:";
+        if (strncmp(ename, pss_tokens[0], strlen(ename)) != 0) {
+            fprintf(
+                stderr,
+                "%s (%s). Got \'%s\'\n", errmsg,
+                "Invalid entry. Expecting \'Pss:\'",
+                pss_tokens[0]
+            );
+            exit(EXIT_FAILURE);
         }
         // Sanity (expecting kB).
         static const char *units = "kB";
@@ -299,6 +370,8 @@ private:
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
     // Array of collected memory allocated samples.
     std::deque< std::pair<double, ssize_t> > mem_allocd_samples;
+    // Array of summed PSS samples (total process memory usage).
+    std::deque< std::pair<double, ssize_t> > pss_total_samples;
     //
     mmcb_mem_stat_mgr(void) = default;
     //
@@ -496,7 +569,8 @@ private:
     void
     update_all_pss_entries(void)
     {
-        static const uint64_t update_freq = 10;
+        // TODO expose this value as an env var, but min should be around 8.
+        static const uint64_t update_freq = 32;
 
         if (n_pss_updates_requested++ % update_freq != 0) return;
 
@@ -508,7 +582,7 @@ private:
                 case(MMCB_HOOK_MMAP_PSS_UPDATE): {
                     const ssize_t old_size = e->size;
                     // Next capture the new PSS value.
-                    mmcb_proc_maps_entry maps_entry;
+                    mmcb_proc_smaps_entry maps_entry;
                     get_proc_self_smaps_entry(e->addr, maps_entry);
                     const ssize_t new_size = maps_entry.pss_in_b;
                     // Free up old size.
@@ -552,7 +626,7 @@ private:
         if (got == addr2mmap_entry.end()) {
             assert(opid == MMCB_HOOK_MMAP);
             // Grab PSS stats.
-            mmcb_proc_maps_entry maps_entry;
+            mmcb_proc_smaps_entry maps_entry;
             get_proc_self_smaps_entry(addr, maps_entry);
             // Update opid.
             ope->opid = MMCB_HOOK_MMAP_PSS_UPDATE;
@@ -711,6 +785,12 @@ private:
             mem_allocd_samples.push_back(
                 std::make_pair(mmcb_time(), current_mem_allocd)
             );
+            // Gather total process memory usage also.
+            ssize_t pss_total = 0;
+            get_proc_self_smaps_pss_total(pss_total);
+            pss_total_samples.push_back(
+                std::make_pair(mmcb_time(), pss_total)
+            );
         }
     }
 
@@ -720,7 +800,7 @@ private:
     void
     get_proc_self_smaps_entry(
         uintptr_t target_addr,
-        mmcb_proc_maps_entry &res_entry
+        mmcb_proc_smaps_entry &res_entry
     ) {
         bool found_entry = false;
         static const int n_tries = 5;
@@ -737,5 +817,15 @@ private:
                 (int)getpid()
             );
         }
+    }
+
+    /**
+     *
+     */
+    void
+    get_proc_self_smaps_pss_total(
+        ssize_t &pss_total
+    ) {
+        mmcb_proc_smaps_parser::get_proc_self_smaps_pss_total(pss_total);
     }
 };
