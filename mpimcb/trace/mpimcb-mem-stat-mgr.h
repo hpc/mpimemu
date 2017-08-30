@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <string>
 
 #include <limits.h>
 #include <unistd.h>
@@ -348,6 +349,7 @@ class mmcb_mem_stat_mgr {
 private:
     //
     static constexpr uint64_t mem_allocd_sample_freq = 1;
+    static constexpr uint64_t pss_totals_sample_freq = 64;
     //
     uint64_t num_captures = 0;
     //
@@ -467,6 +469,7 @@ public:
      */
     void
     report(
+        const std::string &host,
         int id,
         bool emit_report
     ) {
@@ -506,6 +509,10 @@ public:
 
         fprintf(reportf, "# Begin Report\n");
 
+        fprintf(reportf, "# Hostname: %s\n", host.c_str());
+
+        fprintf(reportf, "# ID: %d\n", id);
+
         fprintf(
             reportf,
             "# Number of Operation Captures Performed: %" PRIu64 "\n",
@@ -542,8 +549,11 @@ public:
             tomb(high_mem_usage_mark)
         );
 
-        fprintf(reportf, "# Memory Usage (B) Over Time (Since MPI_Init):\n");
-        // TODO substract start stamp from values and update plot script.
+        fprintf(
+            reportf,
+            "# Memory Usage (B) Over Time "
+            "(Since arbitrary time in the past):\n"
+        );
         for (auto &i : mem_allocd_samples) {
             fprintf(
                 reportf, "%lf %zd\n",
@@ -785,13 +795,17 @@ private:
             mem_allocd_samples.push_back(
                 std::make_pair(mmcb_time(), current_mem_allocd)
             );
-            // Gather total process memory usage also.
+        }
+#if 0
+        // Gather total process memory usage also.
+        if (n_mem_ops_recorded % pss_totals_sample_freq == 0) {
             ssize_t pss_total = 0;
             get_proc_self_smaps_pss_total(pss_total);
             pss_total_samples.push_back(
                 std::make_pair(mmcb_time(), pss_total)
             );
         }
+#endif
     }
 
     /**

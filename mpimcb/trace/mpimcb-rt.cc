@@ -2,6 +2,7 @@
 #include "mpimcb-timer.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
 
 /**
@@ -70,4 +71,23 @@ mmcb_mem_hook_mgr_t *
 mmcb_rt_get_mem_hook_mgr(void)
 {
     return mmcb_rt::the_mmcb_rt()->get_mem_hook_mgr();
+}
+
+/**
+ *
+ */
+
+void
+mmcb_rt::set_hostname(void)
+{
+    if (0 != gethostname(hostname, sizeof(hostname))) {
+        perror("gethostname");
+        exit(EXIT_FAILURE);
+    }
+}
+
+std::string
+mmcb_rt::get_hostname(void)
+{
+    return std::string(hostname, sizeof(hostname));
 }

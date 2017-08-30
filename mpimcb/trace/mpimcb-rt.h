@@ -3,6 +3,10 @@
 #include "mpimcb-mem-hook-state.h"
 
 #ifdef __cplusplus
+#include <string>
+#endif
+
+#ifdef __cplusplus
 class mmcb_rt {
 private:
     mmcb_mem_hook_mgr_t mhmgr;
@@ -17,6 +21,8 @@ private:
     operator=(const mmcb_rt &) = delete;
     //
     double init_time = 0.0;
+    //
+    char hostname[256];
 
 public:
     int rank = 0;
@@ -36,6 +42,12 @@ public:
     //
     void
     set_init_time_now(void);
+    //
+    void
+    set_hostname(void);
+    //
+    std::string
+    get_hostname(void);
 };
 #endif
 
