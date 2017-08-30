@@ -1,3 +1,8 @@
+###############################################################################
+# Copyright (c)      2017 Los Alamos National Security, LLC.
+#                         All rights reserved.
+###############################################################################
+
 #!/bin/bash
 
 # Prints out MPI types and functions used in source.

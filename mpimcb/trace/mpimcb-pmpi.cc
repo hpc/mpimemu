@@ -113,6 +113,36 @@ MPI_Send(
  *
  */
 int
+MPI_Recv(
+    void *buf,
+    int count,
+    MPI_Datatype datatype,
+    int source,
+    int tag,
+    MPI_Comm comm,
+    MPI_Status *status
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Recv(
+        buf,
+        count,
+        datatype,
+        source,
+        tag,
+        comm,
+        status
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
 MPI_Isend(
     const void *buf,
     int count,
@@ -148,8 +178,8 @@ MPI_Sendrecv(
     int sendcount,
     MPI_Datatype sendtype,
     int dest,
-    int sendtag, 
-    void *recvbuf, 
+    int sendtag,
+    void *recvbuf,
     int recvcount,
     MPI_Datatype recvtype,
     int source,
@@ -165,8 +195,8 @@ MPI_Sendrecv(
         sendcount,
         sendtype,
         dest,
-        sendtag, 
-        recvbuf, 
+        sendtag,
+        recvbuf,
         recvcount,
         recvtype,
         source,
@@ -215,6 +245,90 @@ MPI_Waitall(
         count,
         array_of_requests,
         array_of_statuses
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Iprobe(
+    int source,
+    int tag,
+    MPI_Comm comm,
+    int *flag,
+    MPI_Status *status
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Iprobe(
+        source,
+        tag,
+        comm,
+        flag,
+        status
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Issend(
+    const void *buf,
+    int count,
+    MPI_Datatype datatype,
+    int dest,
+    int tag,
+    MPI_Comm comm,
+    MPI_Request *request
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Issend(
+        buf,
+        count,
+        datatype,
+        dest,
+        tag,
+        comm,
+        request
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Ssend(
+    const void *buf,
+    int count,
+    MPI_Datatype datatype,
+    int dest,
+    int tag,
+    MPI_Comm comm
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Ssend(
+        buf,
+        count,
+        datatype,
+        dest,
+        tag,
+        comm
     );
     rt->deactivate_all_mem_hooks();
     //
@@ -369,6 +483,74 @@ MPI_Reduce(
     return rc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Other
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ *
+ */
+int
+MPI_Address(
+    void *location,
+    MPI_Aint *address
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Address(
+        location,
+        address
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Comm_split(
+    MPI_Comm comm,
+    int color,
+    int key,
+    MPI_Comm *newcomm
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Comm_split(
+        comm,
+        color,
+        key,
+        newcomm
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Comm_free(
+    MPI_Comm *comm
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = MPI_Comm_free(
+        comm
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
 /**
  *
  */
@@ -383,6 +565,116 @@ MPI_Abort(
     int rc = PMPI_Abort(
         comm,
         errorcode
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Type_commit(
+    MPI_Datatype *type
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Type_commit(
+        type
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Type_free(
+    MPI_Datatype *type
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Type_free(
+        type
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Type_contiguous(
+    int count,
+    MPI_Datatype oldtype,
+    MPI_Datatype *newtype
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Type_contiguous(
+        count,
+        oldtype,
+        newtype
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Type_struct(
+    int count,
+    int array_of_blocklengths[],
+    MPI_Aint array_of_displacements[],
+    MPI_Datatype array_of_types[],
+    MPI_Datatype *newtype
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Type_struct(
+        count,
+        array_of_blocklengths,
+        array_of_displacements,
+        array_of_types,
+        newtype
+    );
+    rt->deactivate_all_mem_hooks();
+    //
+    return rc;
+}
+
+/**
+ *
+ */
+int
+MPI_Type_vector(
+    int count,
+    int blocklength,
+    int stride,
+    MPI_Datatype oldtype,
+    MPI_Datatype *newtype
+) {
+    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    //
+    rt->activate_all_mem_hooks();
+    int rc = PMPI_Type_vector(
+        count,
+        blocklength,
+        stride,
+        oldtype,
+        newtype
     );
     rt->deactivate_all_mem_hooks();
     //

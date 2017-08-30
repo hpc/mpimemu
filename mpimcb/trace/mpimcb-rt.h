@@ -33,6 +33,7 @@ private:
 
 public:
     int rank = 0;
+    //
     int numpe = 0;
     //
     static mmcb_rt *
