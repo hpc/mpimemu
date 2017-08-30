@@ -1,5 +1,6 @@
 #include "mpi.h"
 #include <unistd.h>
+#include <stdlib.h>
 
 int
 main(int argc, char **argv)

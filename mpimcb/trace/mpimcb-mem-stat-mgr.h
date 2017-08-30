@@ -355,9 +355,11 @@ private:
     //
     uint64_t n_mem_ops_recorded = 0;
     //
-    uint64_t n_pss_updates_requested = 0;
+    uint64_t n_mpi_pss_samples_requested = 0;
     //
-    uint64_t n_pss_updates = 0;
+    uint64_t n_mpi_pss_samples = 0;
+    //
+    uint64_t n_app_pss_samples = 0;
     //
     uint64_t n_mem_alloc_ops = 0;
     //
@@ -539,8 +541,14 @@ public:
 
         fprintf(
             reportf,
-            "# Number of PSS Updates Performed: %" PRIu64 "\n",
-            n_pss_updates
+            "# Number of MPI Library PSS Samples Collected: %" PRIu64 "\n",
+            n_mpi_pss_samples
+        );
+
+        fprintf(
+            reportf,
+            "# Number of Application PSS Samples Collected: %" PRIu64 "\n",
+            n_app_pss_samples
         );
 
         fprintf(
@@ -554,42 +562,28 @@ public:
             "# MPI Library Memory Usage (B) Over Time "
             "(Since arbitrary time in the past):\n"
         );
-        fprintf(
-            reportf,
-            "# Data Start\n"
-        );
         for (auto &i : mem_allocd_samples) {
             fprintf(
-                reportf, "%lf %zd\n",
+                reportf, "%s %lf %zd\n",
+                "MPI_MEM_USAGE",
                 i.first,
                 i.second
             );
         }
-        fprintf(
-            reportf,
-            "# Data End\n"
-        );
 
         fprintf(
             reportf,
             "# Application Memory Usage (B) Over Time "
             "(Since arbitrary time in the past):\n"
         );
-        fprintf(
-            reportf,
-            "# Data Start\n"
-        );
         for (auto &i : pss_total_samples) {
             fprintf(
-                reportf, "%lf %zd\n",
+                reportf, "%s %lf %zd\n",
+                "APP_MEM_USAGE",
                 i.first,
                 i.second
             );
         }
-        fprintf(
-            reportf,
-            "# Data End\n"
-        );
 
         fprintf(reportf, "# End Report\n");
 
@@ -611,9 +605,9 @@ private:
         // TODO expose this value as an env var, but min should be around 8.
         static const uint64_t update_freq = 32;
 
-        if (n_pss_updates_requested++ % update_freq != 0) return;
+        if (n_mpi_pss_samples_requested++ % update_freq != 0) return;
 
-        n_pss_updates++;
+        n_mpi_pss_samples++;
 
         for (auto &me : addr2mmap_entry) {
             mmcb_memory_op_entry *const e = me.second;
@@ -827,6 +821,8 @@ private:
         }
         // Gather total process memory usage also.
         if (n_mem_ops_recorded % pss_totals_sample_freq == 0) {
+            n_app_pss_samples++;
+            //
             ssize_t pss_total = 0;
             get_proc_self_smaps_pss_total(pss_total);
             pss_total_samples.push_back(
