@@ -367,8 +367,10 @@ private:
     uint64_t n_mem_free_ops = 0;
     //
     ssize_t current_mem_allocd = 0;
-    //
-    ssize_t high_mem_usage_mark = 0;
+    // MPI-only.
+    ssize_t mpi_high_mem_usage_mark = 0;
+    // MPI plus application.
+    ssize_t pss_high_mem_usage_mark = 0;
     // Mapping between address and memory operation entries.
     std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
     // Mapping between address and mmap/munmap operation entries.
@@ -556,7 +558,13 @@ public:
         fprintf(
             reportf,
             "# High Memory Usage Watermark (MPI) (MB): %lf\n",
-            tomb(high_mem_usage_mark)
+            tomb(mpi_high_mem_usage_mark)
+        );
+
+        fprintf(
+            reportf,
+            "# High Memory Usage Watermark (Application + MPI) (MB): %lf\n",
+            tomb(pss_high_mem_usage_mark)
         );
 
         fprintf(reportf, "# [Run Info End]\n");
@@ -814,8 +822,8 @@ private:
      */
     void
     update_mem_stats(void) {
-        if (current_mem_allocd > high_mem_usage_mark) {
-            high_mem_usage_mark = current_mem_allocd;
+        if (current_mem_allocd > mpi_high_mem_usage_mark) {
+            mpi_high_mem_usage_mark = current_mem_allocd;
         }
         //
         if (n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
@@ -832,6 +840,10 @@ private:
             pss_total_samples.push_back(
                 std::make_pair(mmcb_time(), pss_total)
             );
+            //
+            if (pss_total > pss_high_mem_usage_mark) {
+                pss_high_mem_usage_mark = pss_total;
+            }
         }
     }
 

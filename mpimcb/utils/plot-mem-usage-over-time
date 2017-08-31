@@ -25,7 +25,8 @@ class RunMetadata:
             'Number of Deallocation-Related Operations Recorded': long(0),
             'Number of MPI Library PSS Samples Collected': long(0),
             'Number of Application PSS Samples Collected': long(0),
-            'High Memory Usage Watermark (MPI) (MB)': float(0)
+            'High Memory Usage Watermark (MPI) (MB)': float(0),
+            'High Memory Usage Watermark (Application + MPI) (MB)': float(0)
         }
 
         with open(data_path, 'r') as f:
