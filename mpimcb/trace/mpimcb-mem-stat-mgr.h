@@ -593,7 +593,7 @@ public:
         for (auto &i : pss_total_samples) {
             fprintf(
                 reportf, "%s %lf %zd\n",
-                "APP_MEM_USAGE",
+                "ALL_MEM_USAGE",
                 i.first,
                 i.second
             );

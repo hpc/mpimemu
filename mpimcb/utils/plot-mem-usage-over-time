@@ -180,6 +180,7 @@ class Experiment:
 
                 ts = {
                     'MPI_MEM_USAGE': TimeSeries(),
+                    'ALL_MEM_USAGE': TimeSeries(),
                     'APP_MEM_USAGE': TimeSeries()
                 }
 
@@ -191,6 +192,12 @@ class Experiment:
                     ts[dtype].push(dtime, dmem)
 
                 self.rank_to_time_series[rank] = ts
+
+        self.calc_app_mem_usage()
+
+    def calc_app_mem_usage(self):
+        for rnk, ts in self.rank_to_time_series.iteritems():
+            ts['APP_MEM_USAGE'].data = ts['ALL_MEM_USAGE'].data
 
 
 ###############################################################################
@@ -219,9 +226,15 @@ class Plotter:
         self.fname = self.get_usable_file_name('mem-usage-over-time', 'pdf')
         self.experiments = experiments_to_plot
         self.numpes = set()
-        self.fig, self.axs = plt.subplots(2, sharex=True)
+        self.fig, self.axs = plt.subplots(3, sharex=True)
+        self.ax2ts = {
+            'ALL_MEM_USAGE': self.axs[0],
+            'MPI_MEM_USAGE': self.axs[1],
+            'APP_MEM_USAGE': self.axs[2]
+        }
         self.line_style = 'solid'
         self.colorer = None
+        self.axis_font_size = 12
 
     def plot(self):
         ''' Color maps setup '''
@@ -230,25 +243,38 @@ class Plotter:
 
         print('plotting to {}'.format(self.fname))
 
-        axidx = 0
         for e in self.experiments:
             for rank, ts in e.rank_to_time_series.iteritems():
-                for tsi in [ts[k] for k in ['APP_MEM_USAGE', 'MPI_MEM_USAGE']]:
-                    self.add_plot(self.axs[axidx % 2], rank, tsi)
-                    axidx += 1
+                for tsk, tsi in ts.iteritems():
+                    self.add_plot(self.ax2ts[tsk], rank, tsi)
 
         '''
         plt.title('Memory Usage Over Time')
-        '''
-
-        plt.ylabel('Memory Usage (MB)', fontsize=12)
 
         plt.xlabel(
             'Wall Time Since Initialization (s)', fontsize=12
         )
+        '''
 
         for ax in self.axs:
             ax.grid(True)
+
+        '''
+        Set common y label.
+        '''
+        self.fig.text(
+            0.06, 0.5,
+            'Memory Usage (MB)',
+            fontsize=self.axis_font_size,
+            ha='center', va='center', rotation='vertical'
+        )
+
+        '''
+        Only bottom-most axis will have x label.
+        '''
+        self.axs[-1].set_xlabel(
+            'Wall Time Since Initialization (s)', fontsize=self.axis_font_size
+        )
 
         plt.axis('tight')
 
