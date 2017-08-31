@@ -509,13 +509,13 @@ public:
             return;
         }
 
-        fprintf(reportf, "# Begin Report\n");
+        fprintf(reportf, "# [Run Info Begin]\n");
 
-        fprintf(reportf, "# Application: %s\n", rt->get_app_name().c_str());
+        fprintf(reportf, "# Application Name: %s\n", rt->get_app_name().c_str());
 
         fprintf(reportf, "# Hostname: %s\n", rt->get_hostname().c_str());
 
-        fprintf(reportf, "# ID: %d\n", rt->rank);
+        fprintf(reportf, "# MPI_COMM_WORLD Rank: %d\n", rt->rank);
 
         fprintf(
             reportf,
@@ -559,6 +559,10 @@ public:
             tomb(high_mem_usage_mark)
         );
 
+        fprintf(reportf, "# [Run Info End]\n");
+
+        ////////////////////////////////////////////////////////////////////////
+
         fprintf(
             reportf,
             "# MPI Library Memory Usage (B) Over Time "
@@ -586,8 +590,6 @@ public:
                 i.second
             );
         }
-
-        fprintf(reportf, "# End Report\n");
 
         fclose(reportf);
 

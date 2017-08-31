@@ -10,19 +10,72 @@ import sys
 import matplotlib.pyplot as plt
 
 
+###############################################################################
+class RunMetadata:
+    def __init__(self, data_path):
+        self.data = {
+            'Application Name': '',
+            'Hostname': '',
+            'MPI_COMM_WORLD Rank': long(0),
+            'Number of Operation Captures Performed': long(0),
+            'Number of Memory Operations Recorded': long(0),
+            'Number of Allocation-Related Operations Recorded': long(0),
+            'Number of Deallocation-Related Operations Recorded': long(0),
+            'Number of MPI Library PSS Samples Collected': long(0),
+            'Number of Application PSS Samples Collected': long(0),
+            'High Memory Usage Watermark (MB)': float(0)
+        }
+
+        with open(data_path, 'r') as f:
+            lines = [x.strip('\n') for x in f.readlines()]
+
+            assert(lines[0] == '# [Run Info Begin]')
+
+            lidx = 1
+            meta_lines = []
+            while True:
+                if lines[lidx] == '# [Run Info End]':
+                    break
+                meta_lines.append(lines[lidx].strip('# '))
+                lidx += 1
+
+            for ml in meta_lines:
+                kv = [x.strip(' ') for x in ml.split(':')]
+                assert(len(kv) == 2)
+                key = kv[0]
+                val_str = kv[1]
+                if key not in self.data:
+                    print("ERROR: '{}' not a recognized key...".format(key))
+                    assert(False)
+                self.data[key] = self.cast(type(self.data[key]), val_str)
+
+    def cast(self, val_type, string):
+        return val_type(string)
+
+
+###############################################################################
 class Experiment:
     def __init__(self, log_path):
         self.log_path = log_path
         self.log_files = self.get_log_files(log_path)
         self.rank_stats = {}
+        self.run_meta = self.get_run_meta()
 
     def get_log_files(self, log_path):
         (_, _, file_names) = os.walk(log_path).next()
-        return [f for f in file_names if f.endswith('mmcb')]
+        logs = [f for f in file_names if f.endswith('.mmcb')]
+        return self.sort_human(logs)
+
+    def get_run_meta(self):
+        meta = []
+        for log in self.log_files:
+            data_path = '{}/{}'.format(self.log_path, log)
+            meta.append(RunMetadata(data_path))
+        return meta
 
     def crunch(self):
-        for log in sorted(self.log_files):
-            print('processing {}'.format(log))
+        for log in self.log_files:
+            print('--> Processing {}'.format(log))
             rank = int(log.split('.')[0])
             fpath = '{}/{}'.format(self.log_path, log)
             with open(fpath, 'r') as f:
@@ -32,14 +85,18 @@ class Experiment:
                 for l in content:
                     time_val_str = l.split(' ')
                     stats.append(
-                        (float(time_val_str[0]), int(time_val_str[1]))
+                        (float(time_val_str[1]), int(time_val_str[2]))
                     )
                 self.rank_stats[rank] = stats
 
+    def sort_human(self, lst):
+        return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
 
+
+###############################################################################
 class Plotter:
-    def __init__(self, out_fname, experiments_to_plot):
-        self.fname = out_fname
+    def __init__(self, experiments_to_plot):
+        self.fname = self.get_usable_file_name('mem-usage-over-time', 'pdf')
         self.experiments = experiments_to_plot
         self.markers = ['o',      '^',       's',       'D',       '8']
         self.colors = ['#6384B1', '#98A942', '#999999', '#D79C43', '#111111']
@@ -101,11 +158,23 @@ class Plotter:
         #
         self.num_plots += 1
 
+    def get_usable_file_name(self, name, extension):
+        fidx = 1
+        cwd = os.getcwd()
+        target_fname = '{}/{}.{}'.format(cwd, name, extension)
+        while (os.path.isfile(target_fname)):
+            target_fname = '{}/{}-{}.{}'.format(cwd, name, fidx, extension)
+            fidx += 1
 
+        return target_fname
+
+
+###############################################################################
 def usage():
     print('usage: plot-xhpcg-weak [DATADIR]...')
 
 
+###############################################################################
 def check_args(argv):
     if len(argv) < 2:
         usage()
@@ -118,39 +187,36 @@ def check_args(argv):
             exit(os.EX_USAGE)
 
 
-def process_experiments(data_dirs):
+###############################################################################
+def process_experiment_data(data_dirs):
     experiments = []
+
     for data_dir in data_dirs:
-        print('processing files in {}'.format(data_dir))
+        print('# Processing files in {}'.format(data_dir))
         e = Experiment(data_dir)
         e.crunch()
         experiments.append(e)
+
     return experiments
 
 
-def get_usable_file_name(name, extension):
-    fidx = 1
-    cwd = os.getcwd()
-    target_fname = '{}/{}.{}'.format(cwd, name, extension)
-    while (os.path.isfile(target_fname)):
-        target_fname = '{}/{}-{}.{}'.format(cwd, name, fidx, extension)
-        fidx += 1
-
-    return target_fname
-
-
+###############################################################################
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
     check_args(argv)
 
-    f_name = get_usable_file_name('mem-usage-over-time', 'pdf')
-    plotter = Plotter(f_name, process_experiments(argv[1:]))
+    experiments = process_experiment_data(argv[1:])
+
+    plotter = Plotter(experiments)
     plotter.plot()
 
     return os.EX_OK
 
 
+###############################################################################
+###############################################################################
+###############################################################################
 if __name__ == "__main__":
     sys.exit(main())
