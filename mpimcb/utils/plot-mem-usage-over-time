@@ -7,12 +7,14 @@
 
 import os
 import sys
+import operator
 import matplotlib.pyplot as plt
 
 
 ###############################################################################
 class RunMetadata:
     def __init__(self, data_path):
+
         self.data = {
             'Application Name': '',
             'Hostname': '',
@@ -23,7 +25,7 @@ class RunMetadata:
             'Number of Deallocation-Related Operations Recorded': long(0),
             'Number of MPI Library PSS Samples Collected': long(0),
             'Number of Application PSS Samples Collected': long(0),
-            'High Memory Usage Watermark (MB)': float(0)
+            'High Memory Usage Watermark (MPI) (MB)': float(0)
         }
 
         with open(data_path, 'r') as f:
@@ -52,14 +54,59 @@ class RunMetadata:
     def cast(self, val_type, string):
         return val_type(string)
 
+    @staticmethod
+    def emit_stats(meta_list):
+        header = '# Run Statistics '
+        print('{}{}'.format(header, '#' * (80 - len(header))))
+
+        print('# Application: {}'.format(
+            meta_list[0].data['Application Name'])
+        )
+
+        print('# Number of Output Files Analyzed: {}'.format(len(meta_list)))
+
+        for kprefix in ['Number of', 'High Memory Usage Watermark']:
+            stat_keys = [k for k in meta_list[0].data.keys()
+                         if k.startswith(kprefix)]
+            RunMetadata.emit_min_max_aves(meta_list, stat_keys)
+
+    @staticmethod
+    def emit_min_max_aves(meta_list, keys):
+        for k in keys:
+            print('# {}'.format(k))
+
+            vals = [meta.data[k] for meta in meta_list]
+
+            minidx, minval = min(enumerate(vals), key=operator.itemgetter(1))
+            maxidx, maxval = max(enumerate(vals), key=operator.itemgetter(1))
+
+            min_where = meta_list[minidx].data['Hostname']
+            max_where = meta_list[maxidx].data['Hostname']
+            ave = RunMetadata.mean(vals)
+
+            print('- Min: {}, Who: {}, Where: {}'.format(
+                minval, minidx, min_where)
+            )
+            print('- Max: {}, Who: {}, Where: {}'.format(
+                maxval, maxidx, max_where)
+            )
+            print('- Ave: {0:0.3f}'.format(ave))
+
+    @staticmethod
+    def mean(num_lst):
+        return float(sum(num_lst)) / max(len(num_lst), 1)
 
 ###############################################################################
 class Experiment:
     def __init__(self, log_path):
         self.log_path = log_path
         self.log_files = self.get_log_files(log_path)
-        self.rank_stats = {}
         self.run_meta = self.get_run_meta()
+        self.rank_stats = {}
+
+        self.data_sanity()
+
+        RunMetadata.emit_stats(self.run_meta)
 
     def get_log_files(self, log_path):
         (_, _, file_names) = os.walk(log_path).next()
@@ -73,9 +120,24 @@ class Experiment:
             meta.append(RunMetadata(data_path))
         return meta
 
+    def sort_human(self, lst):
+        return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
+
+    def data_sanity(self):
+        app_name = None
+        for idx, meta in enumerate(self.run_meta):
+            cur_app_name = meta.data['Application Name']
+            if app_name is None:
+                app_name = cur_app_name
+            elif app_name != cur_app_name:
+                print("ERROR: Application name mismatch!")
+                assert(False)
+            rank = meta.data['MPI_COMM_WORLD Rank']
+            assert(rank == idx)
+
     def crunch(self):
         for log in self.log_files:
-            print('--> Processing {}'.format(log))
+            '''print('--> Processing {}'.format(log))'''
             rank = int(log.split('.')[0])
             fpath = '{}/{}'.format(self.log_path, log)
             with open(fpath, 'r') as f:
@@ -88,9 +150,6 @@ class Experiment:
                         (float(time_val_str[1]), int(time_val_str[2]))
                     )
                 self.rank_stats[rank] = stats
-
-    def sort_human(self, lst):
-        return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
 
 
 ###############################################################################

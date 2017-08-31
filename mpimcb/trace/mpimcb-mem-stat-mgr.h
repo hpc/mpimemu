@@ -555,7 +555,7 @@ public:
 
         fprintf(
             reportf,
-            "# High Memory Usage Watermark (MB): %lf\n",
+            "# High Memory Usage Watermark (MPI) (MB): %lf\n",
             tomb(high_mem_usage_mark)
         );
 
