@@ -17,7 +17,7 @@ import collections
 class Util:
     @staticmethod
     def btomb(b):
-        return b * 1024 * 1024
+        return float(b) / 1024.0 / 1024.0
 
 
 ###############################################################################
@@ -219,7 +219,7 @@ class Plotter:
         self.fname = self.get_usable_file_name('mem-usage-over-time', 'pdf')
         self.experiments = experiments_to_plot
         self.numpes = set()
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.axs = plt.subplots(2, sharex=True)
         self.line_style = 'solid'
         self.colorer = None
 
@@ -230,17 +230,27 @@ class Plotter:
 
         print('plotting to {}'.format(self.fname))
 
+        axidx = 0
         for e in self.experiments:
-            for rank, ts in sorted(e.rank_to_time_series.iteritems()):
-                for ts_type, tsi in ts.iteritems():
-                    self.add_plot(rank, tsi)
+            for rank, ts in e.rank_to_time_series.iteritems():
+                for tsi in [ts[k] for k in ['APP_MEM_USAGE', 'MPI_MEM_USAGE']]:
+                    self.add_plot(self.axs[axidx % 2], rank, tsi)
+                    axidx += 1
 
-        plt.grid(True)
-        plt.axis('tight')
-
+        '''
         plt.title('Memory Usage Over Time')
-        self.ax.set_ylabel('Memory Usage (MB)', fontsize=16)
-        self.ax.set_xlabel('Wall Time Since Initialization (s)', fontsize=16)
+        '''
+
+        plt.ylabel('Memory Usage (MB)', fontsize=12)
+
+        plt.xlabel(
+            'Wall Time Since Initialization (s)', fontsize=12
+        )
+
+        for ax in self.axs:
+            ax.grid(True)
+
+        plt.axis('tight')
 
         '''
         scalf = 1.05
@@ -258,7 +268,7 @@ class Plotter:
             pad_inches=0.03
         )
 
-    def add_plot(self, rank, time_series):
+    def add_plot(self, target_ax, rank, time_series):
         x = time_series.get('times')
         x0 = x[0]
         x = [i - x0 for i in x]
@@ -269,7 +279,7 @@ class Plotter:
         lbl = 'Rank {}'.format(rank)
         clr = self.colorer.get_color()
         #
-        plt.plot(
+        target_ax.plot(
             x, y,
             label=lbl,
             linestyle=self.line_style,
