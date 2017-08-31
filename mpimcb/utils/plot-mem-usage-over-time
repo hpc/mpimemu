@@ -10,6 +10,14 @@ import sys
 import operator
 import matplotlib.pyplot as plt
 import numpy as np
+import collections
+
+
+###############################################################################
+class Util:
+    @staticmethod
+    def btomb(b):
+        return b * 1024 * 1024
 
 
 ###############################################################################
@@ -100,16 +108,39 @@ class RunMetadata:
 
 
 ###############################################################################
+class TimeSeries:
+    def __init__(self):
+        self.data = {
+            'times': [],
+            'svals': []
+        }
+
+    def push(self, time, samp_val):
+        self.data['times'].append(time)
+        self.data['svals'].append(samp_val)
+
+    def get(self, key):
+        assert(key in self.data)
+        return self.data[key]
+
+
+###############################################################################
 class Experiment:
     def __init__(self, log_path):
         self.log_path = log_path
         self.log_files = self.get_log_files(log_path)
         self.run_meta = self.get_run_meta()
-        self.rank_stats = {}
+        '''
+        Two level dict maps rank to usage type to time series.
+        '''
+        self.rank_to_time_series = collections.defaultdict(dict)
 
         self.data_sanity()
 
         RunMetadata.emit_stats(self.run_meta)
+
+    def get_num_species(self):
+        return len(self.rank_to_time_series)
 
     def get_log_files(self, log_path):
         (_, _, file_names) = os.walk(log_path).next()
@@ -140,24 +171,32 @@ class Experiment:
 
     def crunch(self):
         for log in self.log_files:
-            '''print('--> Processing {}'.format(log))'''
             rank = int(log.split('.')[0])
             fpath = '{}/{}'.format(self.log_path, log)
+
             with open(fpath, 'r') as f:
                 content = [x.strip('\n') for x in f.readlines()
                            if not x.strip().startswith('#')]
-                stats = []
+
+                ts = {
+                    'MPI_MEM_USAGE': TimeSeries(),
+                    'APP_MEM_USAGE': TimeSeries()
+                }
+
                 for l in content:
-                    time_val_str = l.split(' ')
-                    stats.append(
-                        (float(time_val_str[1]), int(time_val_str[2]))
-                    )
-                self.rank_stats[rank] = stats
+                    ldata = l.split(' ')
+                    dtype = ldata[0]
+                    dtime = float(ldata[1])
+                    dmem = long(ldata[2])
+                    ts[dtype].push(dtime, dmem)
+
+                self.rank_to_time_series[rank] = ts
 
 
 ###############################################################################
 class Colorer:
     def __init__(self, n_colors):
+        self.n_colors = n_colors
         self.color_idx = 0
         self.pvalues = np.logspace(-0.1, 0, n_colors)
         self.pmin = self.pvalues[0]
@@ -167,7 +206,9 @@ class Colorer:
         return (pval - self.pmin) / float(self.pmax - self.pmin)
 
     def get_color(self):
-        c = plt.cm.copper(self.norm(self.pvalues[self.color_idx]))
+        c = plt.cm.copper(
+            self.norm(self.pvalues[self.color_idx % self.n_colors])
+        )
         self.color_idx += 1
         return c
 
@@ -178,34 +219,34 @@ class Plotter:
         self.fname = self.get_usable_file_name('mem-usage-over-time', 'pdf')
         self.experiments = experiments_to_plot
         self.numpes = set()
-        self.cg_time = set()
         self.fig, self.ax = plt.subplots()
         self.line_style = 'solid'
         self.colorer = None
 
     def plot(self):
         ''' Color maps setup '''
-        num_colors = sum([len(e.rank_stats) for e in self.experiments])
+        num_colors = max([e.get_num_species() for e in self.experiments])
         self.colorer = Colorer(num_colors)
 
         print('plotting to {}'.format(self.fname))
 
         for e in self.experiments:
-            for k, v in sorted(e.rank_stats.iteritems()):
-                self.add_plot(k, v)
+            for rank, ts in sorted(e.rank_to_time_series.iteritems()):
+                for ts_type, tsi in ts.iteritems():
+                    self.add_plot(rank, tsi)
 
-        plt.grid(False)
+        plt.grid(True)
         plt.axis('tight')
 
-        plt.title('Memory Usage')
+        plt.title('Memory Usage Over Time')
         self.ax.set_ylabel('Memory Usage (MB)', fontsize=16)
-        self.ax.set_xlabel('Time Since Initialization (s)', fontsize=16)
+        self.ax.set_xlabel('Wall Time Since Initialization (s)', fontsize=16)
 
+        '''
         scalf = 1.05
-        '''
         plt.xlim(0, lens * 1.10)
-        '''
         plt.ylim(min(self.cg_time) / scalf, (max(self.cg_time) * scalf))
+        '''
         '''
         plt.legend(loc=2)
         '''
@@ -217,12 +258,12 @@ class Plotter:
             pad_inches=0.03
         )
 
-    def add_plot(self, rank, rank_stats):
-        x = [tpl[0] for tpl in rank_stats]
-        x = [i-x[0] for i in x]
-        y = [tpl[1]/1024.0/1024.0 for tpl in rank_stats]
-        for i in y:
-            self.cg_time.add(i)
+    def add_plot(self, rank, time_series):
+        x = time_series.get('times')
+        x0 = x[0]
+        x = [i - x0 for i in x]
+
+        y = map(Util.btomb, time_series.get('svals'))
 
         #
         lbl = 'Rank {}'.format(rank)
