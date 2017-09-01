@@ -298,6 +298,9 @@ class Plotter:
             'MPI_MEM_USAGE': None,
             'APP_MEM_USAGE': None
         }
+        self.max_x = sys.float_info.min
+        self.max_y = sys.float_info.min
+        self.min_y = sys.float_info.max
         self.line_style = 'solid'
         self.axis_font_size = 12
 
@@ -318,11 +321,20 @@ class Plotter:
 
         '''
         plt.title('Memory Usage Over Time')
-
-        plt.xlabel(
-            'Wall Time Since Initialization (s)', fontsize=12
-        )
         '''
+
+        scalf = 1.05
+        xmin = 0
+        xmax = self.max_x * scalf
+        '''
+        ymin = self.min_y / scalf
+        ymax = self.max_y * scalf
+        '''
+        for ax in self.axs.flat:
+            ax.set_xlim(xmin, xmax)
+            '''
+            ax.set_ylim(ymin, ymax)
+            '''
 
         for ax in self.axs:
             ax.grid(True)
@@ -344,13 +356,8 @@ class Plotter:
             'Wall Time Since Initialization (s)', fontsize=self.axis_font_size
         )
 
-        plt.axis('tight')
+        #plt.axis('tight')
 
-        '''
-        scalf = 1.05
-        plt.xlim(0, lens * 1.10)
-        plt.ylim(min(self.cg_time) / scalf, (max(self.cg_time) * scalf))
-        '''
         '''
         plt.legend(loc=2)
         '''
@@ -366,8 +373,11 @@ class Plotter:
         x = time_series.get('times')
         x0 = x[0]
         x = [i - x0 for i in x]
+        self.max_x = max(self.max_x, max(x))
 
         y = map(Util.btomb, time_series.get('svals'))
+        self.min_y = min(self.min_y, min(y))
+        self.max_y = max(self.max_y, max(y))
 
         #
         lbl = 'Rank {}'.format(rank)
