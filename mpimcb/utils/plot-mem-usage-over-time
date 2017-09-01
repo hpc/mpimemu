@@ -8,16 +8,27 @@
 import os
 import sys
 import operator
+import collections
 import matplotlib.pyplot as plt
 import numpy as np
-import collections
+import pandas as pd
 
 
 ###############################################################################
 class Util:
+
     @staticmethod
     def btomb(b):
         return float(b) / 1024.0 / 1024.0
+
+    @staticmethod
+    def mean(num_lst):
+        return float(sum(num_lst)) / max(len(num_lst), 1)
+
+    @staticmethod
+    def sort_human(lst):
+        return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
+
 
 
 ###############################################################################
@@ -92,7 +103,7 @@ class RunMetadata:
 
             min_where = meta_list[minidx].data['Hostname']
             max_where = meta_list[maxidx].data['Hostname']
-            ave = RunMetadata.mean(vals)
+            ave = Util.mean(vals)
 
             print('- Min: {}, Who: {}, Where: {}'.format(
                 minval, minidx, min_where)
@@ -101,10 +112,6 @@ class RunMetadata:
                 maxval, maxidx, max_where)
             )
             print('- Ave: {0:0.3f}'.format(ave))
-
-    @staticmethod
-    def mean(num_lst):
-        return float(sum(num_lst)) / max(len(num_lst), 1)
 
 
 ###############################################################################
@@ -122,6 +129,36 @@ class TimeSeries:
     def get(self, key):
         assert(key in self.data)
         return self.data[key]
+
+    @staticmethod
+    def align(ts1, ts2):
+        ts1_times = ts1.get('times')
+        ts2_times = ts2.get('times')
+
+        ts1_svals = ts1.get('svals')
+        ts2_svals = ts2.get('svals')
+
+        df1 = pd.DataFrame({
+            't1': np.asarray(ts1_times),
+            'v1': np.asarray(ts1_svals)
+        })
+
+        df2 = pd.DataFrame({
+            't2': np.asarray(ts2_times),
+            'v2': np.asarray(ts2_svals)
+        })
+        '''
+        Doesn't seem to do what we want...
+        df1a, df2a = pddf1.align(pddf2)
+        '''
+        '''
+        Interpolate to get rid of NaNs
+        '''
+        joined = df1.join(df2, how='outer').interpolate()
+        ts1j = joined[['t1', 'v1']]
+        ts2j = joined[['t2', 'v2']]
+
+        return (ts1j.values.tolist(), ts2j.values.tolist())
 
 
 ###############################################################################
@@ -145,7 +182,7 @@ class Experiment:
     def get_log_files(self, log_path):
         (_, _, file_names) = os.walk(log_path).next()
         logs = [f for f in file_names if f.endswith('.mmcb')]
-        return self.sort_human(logs)
+        return Util.sort_human(logs)
 
     def get_run_meta(self):
         meta = []
@@ -153,9 +190,6 @@ class Experiment:
             data_path = '{}/{}'.format(self.log_path, log)
             meta.append(RunMetadata(data_path))
         return meta
-
-    def sort_human(self, lst):
-        return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
 
     def data_sanity(self):
         app_name = None
@@ -193,11 +227,38 @@ class Experiment:
 
                 self.rank_to_time_series[rank] = ts
 
+        self.align_ts_data()
         self.calc_app_mem_usage()
+
+    def align_ts_data(self):
+        for _, ts in self.rank_to_time_series.iteritems():
+            (mpia, alla) = TimeSeries.align(
+                ts['MPI_MEM_USAGE'],
+                ts['ALL_MEM_USAGE']
+            )
+
+            ts['MPI_MEM_USAGE'] = TimeSeries()
+            ts['ALL_MEM_USAGE'] = TimeSeries()
+
+            for tv in mpia:
+                ts['MPI_MEM_USAGE'].push(tv[0], tv[1])
+
+            for tv in alla:
+                ts['ALL_MEM_USAGE'].push(tv[0], tv[1])
 
     def calc_app_mem_usage(self):
         for rnk, ts in self.rank_to_time_series.iteritems():
-            ts['APP_MEM_USAGE'].data = ts['ALL_MEM_USAGE'].data
+            all_len = len(ts['ALL_MEM_USAGE'].data.get('svals'))
+            mpi_len = len(ts['MPI_MEM_USAGE'].data.get('svals'))
+            assert(all_len == mpi_len)
+
+            zvals = zip(ts['ALL_MEM_USAGE'].data.get('svals'),
+                        ts['MPI_MEM_USAGE'].data.get('svals'))
+            # Pick one
+            times = ts['ALL_MEM_USAGE'].data.get('times')
+
+            for (t, (allv, mpiv)) in zip(times, zvals):
+                ts['APP_MEM_USAGE'].push(t, allv - mpiv)
 
 
 ###############################################################################
@@ -313,9 +374,9 @@ class Plotter:
             alpha=0.75
         )
         '''
-        self.ax.fill_between(
+        target_ax.fill_between(
             range(len(y)), 0, y,
-            interpolate=True, color=clr, alpha=0.3
+            interpolate=True, color=clr, alpha=0.2
         )
         '''
 

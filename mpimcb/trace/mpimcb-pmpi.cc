@@ -693,16 +693,16 @@ int
 MPI_Finalize(void)
 {
     static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    rt->deactivate_all_mem_hooks();
+    static auto *stat_mgr = mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr();
     // Sync.
     PMPI_Barrier(MPI_COMM_WORLD);
-    // Dummy memory operations to sync timings even more.
-    rt->activate_all_mem_hooks();
-    char *dummy = (char *)malloc(0);
-    free(dummy);
-    // Deactivate to report.
-    rt->deactivate_all_mem_hooks();
     //
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->report(rt, true);
+    static const bool force_sample = true;
+    stat_mgr->update_mem_stats(force_sample);
+    // Sync.
+    PMPI_Barrier(MPI_COMM_WORLD);
+    stat_mgr->report(rt, true);
     //
     return PMPI_Finalize();
 }

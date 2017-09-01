@@ -348,9 +348,11 @@ public:
 
 class mmcb_mem_stat_mgr {
 private:
-    //
+    // TODO expose these value as env vars. Make sure that they can't be less
+    // than about 16 (especially the PSS-related ones).
     static constexpr uint64_t mem_allocd_sample_freq = 1;
-    static constexpr uint64_t pss_totals_sample_freq = 64;
+    static constexpr uint64_t mpi_pss_update_freq = 16;
+    static constexpr uint64_t pss_totals_sample_freq = 16;
     //
     uint64_t num_captures = 0;
     //
@@ -606,18 +608,51 @@ public:
         }
     }
 
+    /**
+     *
+     */
+    void
+    update_mem_stats(bool sample = false) {
+        if (current_mem_allocd > mpi_high_mem_usage_mark) {
+            mpi_high_mem_usage_mark = current_mem_allocd;
+        }
+        //
+        if (sample || n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
+            mem_allocd_samples.push_back(
+                std::make_pair(mmcb_time(), current_mem_allocd)
+            );
+        }
+        // Gather total process memory usage also.
+        if (sample || n_mem_ops_recorded % pss_totals_sample_freq == 0) {
+            n_app_pss_samples++;
+            //
+            ssize_t pss_total = 0;
+            get_proc_self_smaps_pss_total(pss_total);
+            pss_total_samples.push_back(
+                std::make_pair(mmcb_time(), pss_total)
+            );
+            //
+            if (pss_total > pss_high_mem_usage_mark) {
+                pss_high_mem_usage_mark = pss_total;
+            }
+        }
+
+        if (sample) {
+            update_all_pss_entries(sample);
+        }
+    }
+
 private:
 
     /**
      *
      */
     void
-    update_all_pss_entries(void)
+    update_all_pss_entries(bool samp = false)
     {
-        // TODO expose this value as an env var, but min should be around 8.
-        static const uint64_t update_freq = 32;
-
-        if (n_mpi_pss_samples_requested++ % update_freq != 0) return;
+        if (!samp && n_mpi_pss_samples_requested++ % mpi_pss_update_freq != 0) {
+            return;
+        }
 
         n_mpi_pss_samples++;
 
@@ -814,36 +849,6 @@ private:
         //
         if (!internal_bookkeeping) {
             update_mem_stats();
-        }
-    }
-
-    /**
-     *
-     */
-    void
-    update_mem_stats(void) {
-        if (current_mem_allocd > mpi_high_mem_usage_mark) {
-            mpi_high_mem_usage_mark = current_mem_allocd;
-        }
-        //
-        if (n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
-            mem_allocd_samples.push_back(
-                std::make_pair(mmcb_time(), current_mem_allocd)
-            );
-        }
-        // Gather total process memory usage also.
-        if (n_mem_ops_recorded % pss_totals_sample_freq == 0) {
-            n_app_pss_samples++;
-            //
-            ssize_t pss_total = 0;
-            get_proc_self_smaps_pss_total(pss_total);
-            pss_total_samples.push_back(
-                std::make_pair(mmcb_time(), pss_total)
-            );
-            //
-            if (pss_total > pss_high_mem_usage_mark) {
-                pss_high_mem_usage_mark = pss_total;
-            }
         }
     }
 
