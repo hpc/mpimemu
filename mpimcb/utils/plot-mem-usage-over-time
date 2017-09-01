@@ -275,7 +275,7 @@ class Colorer:
 
     def get_color(self):
         c = plt.cm.copper(
-            self.norm(self.pvalues[self.color_idx % self.n_colors])
+            self.norm(self.pvalues[self.color_idx])
         )
         self.color_idx += 1
         return c
@@ -293,21 +293,28 @@ class Plotter:
             'MPI_MEM_USAGE': self.axs[1],
             'APP_MEM_USAGE': self.axs[2]
         }
+        self.colorer2ts = {
+            'ALL_MEM_USAGE': None,
+            'MPI_MEM_USAGE': None,
+            'APP_MEM_USAGE': None
+        }
         self.line_style = 'solid'
-        self.colorer = None
         self.axis_font_size = 12
 
     def plot(self):
         ''' Color maps setup '''
         num_colors = max([e.get_num_species() for e in self.experiments])
-        self.colorer = Colorer(num_colors)
+        for key in self.colorer2ts:
+            self.colorer2ts[key] = Colorer(num_colors)
 
         print('plotting to {}'.format(self.fname))
 
         for e in self.experiments:
             for rank, ts in e.rank_to_time_series.iteritems():
                 for tsk, tsi in ts.iteritems():
-                    self.add_plot(self.ax2ts[tsk], rank, tsi)
+                    self.add_plot(
+                        self.ax2ts[tsk], self.colorer2ts[tsk], rank, tsi
+                    )
 
         '''
         plt.title('Memory Usage Over Time')
@@ -355,7 +362,7 @@ class Plotter:
             pad_inches=0.03
         )
 
-    def add_plot(self, target_ax, rank, time_series):
+    def add_plot(self, target_ax, colorer, rank, time_series):
         x = time_series.get('times')
         x0 = x[0]
         x = [i - x0 for i in x]
@@ -364,7 +371,7 @@ class Plotter:
 
         #
         lbl = 'Rank {}'.format(rank)
-        clr = self.colorer.get_color()
+        clr = colorer.get_color()
         #
         target_ax.plot(
             x, y,
