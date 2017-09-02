@@ -351,8 +351,8 @@ private:
     // TODO expose these value as env vars. Make sure that they can't be less
     // than about 16 (especially the PSS-related ones).
     static constexpr uint64_t mem_allocd_sample_freq = 1;
-    static constexpr uint64_t mpi_pss_update_freq = 16;
-    static constexpr uint64_t pss_totals_sample_freq = 16;
+    static constexpr uint64_t mpi_pss_update_freq = 2;
+    static constexpr uint64_t pss_totals_sample_freq = 2;
     //
     uint64_t num_captures = 0;
     //
@@ -572,17 +572,17 @@ public:
         fprintf(reportf, "# [Run Info End]\n");
 
         ////////////////////////////////////////////////////////////////////////
-
+        const double init_time = rt->get_init_time();
         fprintf(
             reportf,
             "# MPI Library Memory Usage (B) Over Time "
-            "(Since arbitrary time in the past):\n"
+            "(Since MPI_Init):\n"
         );
         for (auto &i : mem_allocd_samples) {
             fprintf(
                 reportf, "%s %lf %zd\n",
                 "MPI_MEM_USAGE",
-                i.first,
+                i.first - init_time,
                 i.second
             );
         }
@@ -590,13 +590,13 @@ public:
         fprintf(
             reportf,
             "# Application Memory Usage (B) Over Time "
-            "(Since arbitrary time in the past):\n"
+            "(Since MPI_Init):\n"
         );
         for (auto &i : pss_total_samples) {
             fprintf(
                 reportf, "%s %lf %zd\n",
                 "ALL_MEM_USAGE",
-                i.first,
+                i.first - init_time,
                 i.second
             );
         }

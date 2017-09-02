@@ -59,6 +59,11 @@ public:
     //
     void
     gather_target_meta(void);
+    //
+    double
+    get_init_time(void) {
+        return init_time;
+    }
 };
 
 #endif // #ifdef __cplusplus

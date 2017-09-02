@@ -147,18 +147,16 @@ class TimeSeries:
             't2': np.asarray(ts2_times),
             'v2': np.asarray(ts2_svals)
         })
-        '''
-        Doesn't seem to do what we want...
-        df1a, df2a = pddf1.align(pddf2)
-        '''
-        '''
-        Interpolate to get rid of NaNs
-        '''
-        joined = df1.join(df2, how='outer').interpolate()
-        ts1j = joined[['t1', 'v1']]
-        ts2j = joined[['t2', 'v2']]
 
-        return (ts1j.values.tolist(), ts2j.values.tolist())
+        df1a, df2a = df1.align(df2)
+        # dfm = pd.merge(df1a, df2a, how='outer')
+        # dfm = dfm.interpolate(method='linear', axis=0).bfill()
+        dfm = df1.join(df2, how='outer').interpolate()
+
+        ts1a = df1[['t1', 'v1']]
+        ts2a = df2[['t2', 'v2']]
+
+        return (ts1a.values.tolist(), ts2a.values.tolist())
 
 
 ###############################################################################
@@ -227,26 +225,10 @@ class Experiment:
 
                 self.rank_to_time_series[rank] = ts
 
-        self.align_ts_data()
         self.calc_app_mem_usage()
 
-    def align_ts_data(self):
-        for _, ts in self.rank_to_time_series.iteritems():
-            (mpia, alla) = TimeSeries.align(
-                ts['MPI_MEM_USAGE'],
-                ts['ALL_MEM_USAGE']
-            )
-
-            ts['MPI_MEM_USAGE'] = TimeSeries()
-            ts['ALL_MEM_USAGE'] = TimeSeries()
-
-            for tv in mpia:
-                ts['MPI_MEM_USAGE'].push(tv[0], tv[1])
-
-            for tv in alla:
-                ts['ALL_MEM_USAGE'].push(tv[0], tv[1])
-
     def calc_app_mem_usage(self):
+        '''
         for rnk, ts in self.rank_to_time_series.iteritems():
             all_len = len(ts['ALL_MEM_USAGE'].data.get('svals'))
             mpi_len = len(ts['MPI_MEM_USAGE'].data.get('svals'))
@@ -259,6 +241,10 @@ class Experiment:
 
             for (t, (allv, mpiv)) in zip(times, zvals):
                 ts['APP_MEM_USAGE'].push(t, allv - mpiv)
+        '''
+        for rnk, ts in self.rank_to_time_series.iteritems():
+            ts['APP_MEM_USAGE'].data = ts['ALL_MEM_USAGE'].data
+
 
 
 ###############################################################################
@@ -371,8 +357,6 @@ class Plotter:
 
     def add_plot(self, target_ax, colorer, rank, time_series):
         x = time_series.get('times')
-        x0 = x[0]
-        x = [i - x0 for i in x]
         self.max_x = max(self.max_x, max(x))
 
         y = map(Util.btomb, time_series.get('svals'))
