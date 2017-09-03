@@ -351,8 +351,8 @@ private:
     // TODO expose these value as env vars. Make sure that they can't be less
     // than about 16 (especially the PSS-related ones).
     static constexpr uint64_t mem_allocd_sample_freq = 1;
-    static constexpr uint64_t mpi_pss_update_freq = 2;
-    static constexpr uint64_t pss_totals_sample_freq = 2;
+    static constexpr uint64_t mpi_pss_update_freq = 5;
+    static constexpr uint64_t pss_totals_sample_freq = 5;
     //
     uint64_t num_captures = 0;
     //
@@ -515,11 +515,19 @@ public:
 
         fprintf(reportf, "# [Run Info Begin]\n");
 
+        fprintf(
+            reportf,
+            "# Report Date Time: %s\n",
+            rt->get_date_time_str_now().c_str()
+        );
+
         fprintf(reportf, "# Application Name: %s\n", rt->get_app_name().c_str());
 
         fprintf(reportf, "# Hostname: %s\n", rt->get_hostname().c_str());
 
         fprintf(reportf, "# MPI_COMM_WORLD Rank: %d\n", rt->rank);
+
+        fprintf(reportf, "# MPI_COMM_WORLD Size: %d\n", rt->numpe);
 
         fprintf(
             reportf,

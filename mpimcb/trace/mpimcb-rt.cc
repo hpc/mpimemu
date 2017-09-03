@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 
 #include <unistd.h>
 #include <string.h>
@@ -138,4 +139,22 @@ std::string
 mmcb_rt::get_app_name(void)
 {
     return std::string(app_comm, sizeof(app_comm));
+}
+
+/**
+ *
+ */
+std::string
+mmcb_rt::get_date_time_str_now(void)
+{
+    char tsb[64];
+    struct tm *bd_time_ptr = NULL;
+
+    time_t raw_time;
+    time(&raw_time);
+    bd_time_ptr = localtime(&raw_time);
+
+    strftime(tsb, sizeof(tsb) - 1, "%Y%m%d-%H%M%S", bd_time_ptr);
+    //
+    return std::string(tsb, sizeof(tsb));
 }

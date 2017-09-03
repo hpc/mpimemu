@@ -30,15 +30,16 @@ class Util:
         return sorted(lst, key=lambda x: '{0:0>8}'.format(x).lower())
 
 
-
 ###############################################################################
 class RunMetadata:
     def __init__(self, data_path):
 
         self.data = {
+            'Report Date Time': '',
             'Application Name': '',
             'Hostname': '',
             'MPI_COMM_WORLD Rank': long(0),
+            'MPI_COMM_WORLD Size': long(0),
             'Number of Operation Captures Performed': long(0),
             'Number of Memory Operations Recorded': long(0),
             'Number of Allocation-Related Operations Recorded': long(0),
@@ -80,9 +81,20 @@ class RunMetadata:
         header = '# Run Statistics '
         print('{}{}'.format(header, '#' * (80 - len(header))))
 
+        print('# Report Date Time: {}'.format(
+            meta_list[0].data['Report Date Time'])
+        )
+
         print('# Application: {}'.format(
             meta_list[0].data['Application Name'])
         )
+
+        for kprefix in ['MPI_COMM_WORLD']:
+            mpi_keys = [k for k in meta_list[0].data.keys()
+                        if k.startswith(kprefix)]
+
+            for k in mpi_keys:
+                print('# {}: {}'.format(k, meta_list[0].data[k]))
 
         print('# Number of Output Files Analyzed: {}'.format(len(meta_list)))
 
@@ -364,15 +376,13 @@ class Plotter:
         self.max_y = max(self.max_y, max(y))
 
         #
-        lbl = 'Rank {}'.format(rank)
         clr = colorer.get_color()
         #
         target_ax.plot(
             x, y,
-            label=lbl,
             linestyle=self.line_style,
             color=clr,
-            alpha=0.75
+            alpha=0.70
         )
         '''
         target_ax.fill_between(

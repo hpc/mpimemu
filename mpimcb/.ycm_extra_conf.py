@@ -32,7 +32,6 @@ import os
 import ycm_core
 
 home = os.getenv("HOME")
-callpath_home = os.getenv("CALLPATH_HOME")
 
 # These are the compilation flags that will be used in case there's no
 # compilation database set (by default, one is not set).
@@ -49,7 +48,6 @@ flags = [
 '-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.3.0/include',
 '-isystem/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include',
 '-I.',
-'-I' + callpath_home + '/include',
 '-I/usr/include/mpi'
 ]
 

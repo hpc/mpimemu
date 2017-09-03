@@ -52,6 +52,9 @@ public:
     set_init_time_now(void);
     //
     std::string
+    get_date_time_str_now(void);
+    //
+    std::string
     get_hostname(void);
     //
     std::string
