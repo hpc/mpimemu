@@ -24,36 +24,36 @@ enum {
     MMCB_HOOK_LAST
 };
 
-typedef struct mmcb_mem_hook_state_t {
+typedef struct mmcu_mem_hook_state_t {
     uint8_t active;
-} mmcb_mem_hook_state_t;
+} mmcu_mem_hook_state_t;
 
-typedef struct mmcb_mem_hook_mgr_t {
-    mmcb_mem_hook_state_t mmcb_mem_hook_state_tab[MMCB_HOOK_LAST];
-} mmcb_mem_hook_mgr_t;
+typedef struct mmcu_mem_hook_mgr_t {
+    mmcu_mem_hook_state_t mmcu_mem_hook_state_tab[MMCB_HOOK_LAST];
+} mmcu_mem_hook_mgr_t;
 
 /**
  *
  */
 void
-mmcb_mem_hook_mgr_activate_all(
-    mmcb_mem_hook_mgr_t *mgr
+mmcu_mem_hook_mgr_activate_all(
+    mmcu_mem_hook_mgr_t *mgr
 );
 
 /**
  *
  */
 void
-mmcb_mem_hook_mgr_deactivate_all(
-    mmcb_mem_hook_mgr_t *mgr
+mmcu_mem_hook_mgr_deactivate_all(
+    mmcu_mem_hook_mgr_t *mgr
 );
 
 /**
  *
  */
 uint8_t
-mmcb_mem_hook_mgr_hook_active(
-    mmcb_mem_hook_mgr_t *mgr,
+mmcu_mem_hook_mgr_hook_active(
+    mmcu_mem_hook_mgr_t *mgr,
     uint8_t hook_id
 );
 

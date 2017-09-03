@@ -12,67 +12,67 @@
 
 ################################################################################
 add_library(
-    mpimcb-rt STATIC
-    mpimcb-mem-hook-state.h
-    mpimcb-mem-hook-state.c
-    mpimcb-mem-hooks.h
-    mpimcb-mem-hooks.cc
-    mpimcb-rt.h
-    mpimcb-rt.cc
+    mpimcu-rt STATIC
+    mpimcu-mem-hook-state.h
+    mpimcu-mem-hook-state.c
+    mpimcu-mem-hooks.h
+    mpimcu-mem-hooks.cc
+    mpimcu-rt.h
+    mpimcu-rt.cc
 )
 
 set_property(
     TARGET
-    mpimcb-rt 
+    mpimcu-rt
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 add_library(
-    mpimcb-mem-stat-mgr STATIC
-    mpimcb-mem-stat-mgr.h
-    mpimcb-mem-stat-mgr.cc
+    mpimcu-mem-stat-mgr STATIC
+    mpimcu-mem-stat-mgr.h
+    mpimcu-mem-stat-mgr.cc
 )
 
 set_property(
     TARGET
-    mpimcb-mem-stat-mgr
+    mpimcu-mem-stat-mgr
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 add_library(
-    mpimcb-timer STATIC
-    mpimcb-timer.h
-    mpimcb-timer.cc
+    mpimcu-timer STATIC
+    mpimcu-timer.h
+    mpimcu-timer.cc
 )
 set_property(
     TARGET
-    mpimcb-timer
+    mpimcu-timer
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 add_library(
-    mpimcb-trace SHARED
-    mpimcb-mem-interposers.c
-    mpimcb-pmpi.cc
+    mpimcu-trace SHARED
+    mpimcu-mem-interposers.c
+    mpimcu-pmpi.cc
 )
 set_property(
     TARGET
-    mpimcb-trace
+    mpimcu-trace
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 target_link_libraries(
-    mpimcb-trace
-    mpimcb-rt
-    mpimcb-mem-stat-mgr
-    mpimcb-timer
+    mpimcu-trace
+    mpimcu-rt
+    mpimcu-mem-stat-mgr
+    mpimcu-timer
     ${CMAKE_DL_LIBS}
     pthread
 )
 
 # Remove the 'lib' prefix.
-set_target_properties(mpimcb-trace PROPERTIES PREFIX "")
+set_target_properties(mpimcu-trace PROPERTIES PREFIX "")

@@ -10,7 +10,7 @@
 # Government nor LANS makes any warranty, express or implied, or assumes any
 # liability or responsibility for the use of this software.
 
-project(mpimcb)
+project(mpimcu)
 
 cmake_minimum_required(VERSION 3.1)
 
@@ -34,12 +34,6 @@ function(emit_package_status name)
     message(STATUS "Using ${name} found in ${${name}_DIR}.")
   endif()
 endfunction()
-
-#find_package(adept_utils REQUIRED)
-#emit_package_status(adept_utils)
-#
-#find_package(callpath REQUIRED)
-#emit_package_status(callpath)
 
 add_subdirectory(trace)
 add_subdirectory(test)

@@ -6,4 +6,4 @@
 #pragma once
 
 double
-mmcb_time(void);
+mmcu_time(void);

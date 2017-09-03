@@ -3,11 +3,11 @@
  *                         All rights reserved.
  */
 
-#include "mpimcb-mem-stat-mgr.h"
+#include "mpimcu-mem-stat-mgr.h"
 
-mmcb_mem_stat_mgr *
-mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr(void)
+mmcu_mem_stat_mgr *
+mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr(void)
 {
-    static mmcb_mem_stat_mgr singleton;
+    static mmcu_mem_stat_mgr singleton;
     return &singleton;
 }

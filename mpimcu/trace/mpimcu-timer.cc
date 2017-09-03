@@ -3,7 +3,7 @@
  *                         All rights reserved.
  */
 
-#include "mpimcb-timer.h"
+#include "mpimcu-timer.h"
 
 #include <chrono>
 
@@ -11,7 +11,7 @@
  *
  */
 double
-mmcb_time(void)
+mmcu_time(void)
 {
     using namespace std::chrono;
 

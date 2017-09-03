@@ -3,8 +3,8 @@
  *                         All rights reserved.
  */
 
-#include "mpimcb-rt.h"
-#include "mpimcb-mem-stat-mgr.h"
+#include "mpimcu-rt.h"
+#include "mpimcu-mem-stat-mgr.h"
 
 #include <signal.h>
 
@@ -24,7 +24,7 @@ MPI_Init(
     int *argc,
     char ***argv
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Set init time.
     rt->set_init_time_now();
     //
@@ -74,7 +74,7 @@ MPI_Irecv(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Irecv(
@@ -103,7 +103,7 @@ MPI_Send(
     int tag,
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Send(
@@ -132,7 +132,7 @@ MPI_Recv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Recv(
@@ -162,7 +162,7 @@ MPI_Isend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Isend(
@@ -197,7 +197,7 @@ MPI_Sendrecv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Sendrecv(
@@ -227,7 +227,7 @@ MPI_Wait(
     MPI_Request *request,
     MPI_Status *status
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Wait(
@@ -248,7 +248,7 @@ MPI_Waitall(
     MPI_Request array_of_requests[],
     MPI_Status *array_of_statuses
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Waitall(
@@ -272,7 +272,7 @@ MPI_Iprobe(
     int *flag,
     MPI_Status *status
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Iprobe(
@@ -300,7 +300,7 @@ MPI_Issend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Issend(
@@ -329,7 +329,7 @@ MPI_Ssend(
     int tag,
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Ssend(
@@ -359,7 +359,7 @@ MPI_Comm_size(
     MPI_Comm comm,
     int *size
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_size(
@@ -379,7 +379,7 @@ MPI_Comm_rank(
     MPI_Comm comm,
     int *rank
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_rank(
@@ -398,7 +398,7 @@ int
 MPI_Barrier(
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Barrier(
@@ -421,7 +421,7 @@ MPI_Allreduce(
     MPI_Op op,
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Allreduce(
@@ -448,7 +448,7 @@ MPI_Bcast(
     int root,
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Bcast(
@@ -476,7 +476,7 @@ MPI_Reduce(
     int root,
     MPI_Comm comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Reduce(
@@ -507,7 +507,7 @@ MPI_Address(
     void *location,
     MPI_Aint *address
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Address(
@@ -529,7 +529,7 @@ MPI_Comm_split(
     int key,
     MPI_Comm *newcomm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_split(
@@ -550,7 +550,7 @@ int
 MPI_Comm_free(
     MPI_Comm *comm
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Comm_free(
@@ -569,7 +569,7 @@ MPI_Abort(
     MPI_Comm comm,
     int errorcode
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Abort(
@@ -588,7 +588,7 @@ int
 MPI_Type_commit(
     MPI_Datatype *type
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Type_commit(
@@ -606,7 +606,7 @@ int
 MPI_Type_free(
     MPI_Datatype *type
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Type_free(
@@ -626,7 +626,7 @@ MPI_Type_contiguous(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Type_contiguous(
@@ -650,7 +650,7 @@ MPI_Type_struct(
     MPI_Datatype array_of_types[],
     MPI_Datatype *newtype
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Type_struct(
@@ -676,7 +676,7 @@ MPI_Type_vector(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Type_vector(
@@ -702,9 +702,9 @@ MPI_Type_vector(
 int
 MPI_Finalize(void)
 {
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     rt->deactivate_all_mem_hooks();
-    static auto *stat_mgr = mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr();
+    static auto *stat_mgr = mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr();
     // Sync.
     PMPI_Barrier(MPI_COMM_WORLD);
     //

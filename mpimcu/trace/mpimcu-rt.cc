@@ -1,5 +1,5 @@
-#include "mpimcb-rt.h"
-#include "mpimcb-timer.h"
+#include "mpimcu-rt.h"
+#include "mpimcu-timer.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -11,7 +11,7 @@
 /**
  *
  */
-mmcb_rt::mmcb_rt(void)
+mmcu_rt::mmcu_rt(void)
 {
     deactivate_all_mem_hooks();
 }
@@ -19,23 +19,23 @@ mmcb_rt::mmcb_rt(void)
 /**
  *
  */
-mmcb_rt::~mmcb_rt(void) = default;
+mmcu_rt::~mmcu_rt(void) = default;
 
 /**
  *
  */
-mmcb_rt *
-mmcb_rt::the_mmcb_rt(void)
+mmcu_rt *
+mmcu_rt::the_mmcu_rt(void)
 {
-    static mmcb_rt singleton;
+    static mmcu_rt singleton;
     return &singleton;
 }
 
 /**
  *
  */
-mmcb_mem_hook_mgr_t *
-mmcb_rt::get_mem_hook_mgr(void)
+mmcu_mem_hook_mgr_t *
+mmcu_rt::get_mem_hook_mgr(void)
 {
     return &mhmgr;
 }
@@ -44,43 +44,43 @@ mmcb_rt::get_mem_hook_mgr(void)
  *
  */
 void
-mmcb_rt::activate_all_mem_hooks(void)
+mmcu_rt::activate_all_mem_hooks(void)
 {
-    mmcb_mem_hook_mgr_activate_all(&mhmgr);
+    mmcu_mem_hook_mgr_activate_all(&mhmgr);
 }
 
 /**
  *
  */
 void
-mmcb_rt::deactivate_all_mem_hooks(void)
+mmcu_rt::deactivate_all_mem_hooks(void)
 {
-    mmcb_mem_hook_mgr_deactivate_all(&mhmgr);
+    mmcu_mem_hook_mgr_deactivate_all(&mhmgr);
 }
 
 /**
  *
  */
 void
-mmcb_rt::set_init_time_now(void)
+mmcu_rt::set_init_time_now(void)
 {
-    init_time = mmcb_time();
+    init_time = mmcu_time();
 }
 
 /**
  *
  */
-mmcb_mem_hook_mgr_t *
-mmcb_rt_get_mem_hook_mgr(void)
+mmcu_mem_hook_mgr_t *
+mmcu_rt_get_mem_hook_mgr(void)
 {
-    return mmcb_rt::the_mmcb_rt()->get_mem_hook_mgr();
+    return mmcu_rt::the_mmcu_rt()->get_mem_hook_mgr();
 }
 
 /**
  *
  */
 void
-mmcb_rt::set_hostname(void)
+mmcu_rt::set_hostname(void)
 {
     if (0 != gethostname(hostname, sizeof(hostname))) {
         perror("gethostname");
@@ -92,7 +92,7 @@ mmcb_rt::set_hostname(void)
  *
  */
 std::string
-mmcb_rt::get_hostname(void)
+mmcu_rt::get_hostname(void)
 {
     return std::string(hostname, sizeof(hostname));
 }
@@ -101,7 +101,7 @@ mmcb_rt::get_hostname(void)
  *
  */
 void
-mmcb_rt::set_target_cmdline(void)
+mmcu_rt::set_target_cmdline(void)
 {
     FILE *commf = fopen("/proc/self/comm", "r");
     if (!commf) {
@@ -126,7 +126,7 @@ mmcb_rt::set_target_cmdline(void)
  *
  */
 void
-mmcb_rt::gather_target_meta(void)
+mmcu_rt::gather_target_meta(void)
 {
     set_hostname();
     set_target_cmdline();
@@ -136,7 +136,7 @@ mmcb_rt::gather_target_meta(void)
  *
  */
 std::string
-mmcb_rt::get_app_name(void)
+mmcu_rt::get_app_name(void)
 {
     return std::string(app_comm, sizeof(app_comm));
 }
@@ -145,7 +145,7 @@ mmcb_rt::get_app_name(void)
  *
  */
 std::string
-mmcb_rt::get_date_time_str_now(void)
+mmcu_rt::get_date_time_str_now(void)
 {
     char tsb[64];
     struct tm *bd_time_ptr = NULL;

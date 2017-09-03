@@ -191,7 +191,7 @@ class Experiment:
 
     def get_log_files(self, log_path):
         (_, _, file_names) = os.walk(log_path).next()
-        logs = [f for f in file_names if f.endswith('.mmcb')]
+        logs = [f for f in file_names if f.endswith('.mmcu')]
         return Util.sort_human(logs)
 
     def get_run_meta(self):

@@ -3,8 +3,8 @@
  *                         All rights reserved.
  */
 
-#include "mpimcb-mem-hooks.h"
-#include "mpimcb-rt.h"
+#include "mpimcu-mem-hooks.h"
+#include "mpimcu-rt.h"
 
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -20,9 +20,9 @@ extern void __libc_free(void *ptr);
 void *
 malloc(size_t size)
 {
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MALLOC)) {
-        return mmcb_mem_hooks_malloc_hook(size);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MALLOC)) {
+        return mmcu_mem_hooks_malloc_hook(size);
     }
     return __libc_malloc(size);
 }
@@ -33,9 +33,9 @@ malloc(size_t size)
 void *
 calloc(size_t nmemb, size_t size)
 {
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_CALLOC)) {
-        return mmcb_mem_hooks_calloc_hook(nmemb, size);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_CALLOC)) {
+        return mmcu_mem_hooks_calloc_hook(nmemb, size);
     }
     return __libc_calloc(nmemb, size);
 }
@@ -48,9 +48,9 @@ realloc(
     void *ptr,
     size_t size
 ) {
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_REALLOC)) {
-        return mmcb_mem_hooks_realloc_hook(ptr, size);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_REALLOC)) {
+        return mmcu_mem_hooks_realloc_hook(ptr, size);
     }
     return __libc_realloc(ptr, size);
 }
@@ -61,9 +61,9 @@ realloc(
 void
 free(void *ptr)
 {
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_FREE)) {
-        mmcb_mem_hooks_free_hook(ptr);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_FREE)) {
+        mmcu_mem_hooks_free_hook(ptr);
     }
     else {
         __libc_free(ptr);
@@ -82,9 +82,9 @@ posix_memalign(
     typedef int (*op_fn_t)(void **, size_t, size_t);
     static op_fn_t fun = NULL;
     //
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_POSIX_MEMALIGN)) {
-        return mmcb_mem_hooks_posix_memalign_hook(memptr, alignment, size);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_POSIX_MEMALIGN)) {
+        return mmcu_mem_hooks_posix_memalign_hook(memptr, alignment, size);
     }
     if (!fun) {
         fun = (op_fn_t)dlsym(RTLD_NEXT, "posix_memalign");
@@ -107,9 +107,9 @@ mmap(
     typedef void *(*op_fn_t)(void *, size_t, int, int, int, off_t);
     static op_fn_t fun = NULL;
     //
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MMAP)) {
-        return mmcb_mem_hooks_mmap_hook(
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MMAP)) {
+        return mmcu_mem_hooks_mmap_hook(
                    addr, length, prot, flags, fd, offset
                );
     }
@@ -130,9 +130,9 @@ munmap(
     typedef int (*op_fn_t)(void *, size_t);
     static op_fn_t fun = NULL;
     //
-    mmcb_mem_hook_mgr_t *mgr = mmcb_rt_get_mem_hook_mgr();
-    if (mmcb_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MUNMAP)) {
-        return mmcb_mem_hooks_munmap_hook(addr, length);
+    mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MUNMAP)) {
+        return mmcu_mem_hooks_munmap_hook(addr, length);
     }
     if (!fun) {
         fun = (op_fn_t)dlsym(RTLD_NEXT, "munmap");

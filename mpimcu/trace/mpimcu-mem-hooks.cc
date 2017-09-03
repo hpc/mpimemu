@@ -3,10 +3,10 @@
  *                         All rights reserved.
  */
 
-#include "mpimcb-mem-hooks.h"
+#include "mpimcu-mem-hooks.h"
 
-#include "mpimcb-rt.h"
-#include "mpimcb-mem-stat-mgr.h"
+#include "mpimcu-rt.h"
+#include "mpimcu-mem-stat-mgr.h"
 
 #include <cstdlib>
 #include <mutex>
@@ -14,26 +14,26 @@
 #include <sys/mman.h>
 
 namespace {
-static std::mutex mmcb_mem_hooks_mtx;
+static std::mutex mmcu_mem_hooks_mtx;
 }
 
 /**
  *
  */
 void *
-mmcb_mem_hooks_malloc_hook(
+mmcu_mem_hooks_malloc_hook(
     size_t size
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = malloc(size);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(MMCB_HOOK_MALLOC, uintptr_t(res), size)
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(MMCB_HOOK_MALLOC, uintptr_t(res), size)
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -45,21 +45,21 @@ mmcb_mem_hooks_malloc_hook(
  *
  */
 void *
-mmcb_mem_hooks_calloc_hook(
+mmcu_mem_hooks_calloc_hook(
     size_t nmemb,
     size_t size
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = calloc(nmemb, size);
     // Do logging.
     const size_t real_size = nmemb * size;
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -71,20 +71,20 @@ mmcb_mem_hooks_calloc_hook(
  *
  */
 void *
-mmcb_mem_hooks_realloc_hook(
+mmcu_mem_hooks_realloc_hook(
     void *ptr,
     size_t size
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = realloc(ptr, size);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(
             MMCB_HOOK_REALLOC,
             uintptr_t(res),
             size,
@@ -100,21 +100,21 @@ mmcb_mem_hooks_realloc_hook(
  *
  */
 int
-mmcb_mem_hooks_posix_memalign_hook(
+mmcu_mem_hooks_posix_memalign_hook(
     void **memptr,
     size_t alignment,
     size_t size
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     int rc = posix_memalign(memptr, alignment, size);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(
             MMCB_HOOK_POSIX_MEMALIGN,
             uintptr_t(*memptr),
             size
@@ -130,7 +130,7 @@ mmcb_mem_hooks_posix_memalign_hook(
  *
  */
 void *
-mmcb_mem_hooks_mmap_hook(
+mmcu_mem_hooks_mmap_hook(
     void *addr,
     size_t length,
     int prot,
@@ -138,16 +138,16 @@ mmcb_mem_hooks_mmap_hook(
     int fd,
     off_t offset
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     void *res = mmap(addr, length, prot, flags, fd, offset);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(
             MMCB_HOOK_MMAP,
             uintptr_t(res),
             length
@@ -163,19 +163,19 @@ mmcb_mem_hooks_mmap_hook(
  *
  */
 void
-mmcb_mem_hooks_free_hook(
+mmcu_mem_hooks_free_hook(
     void *ptr
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     free(ptr);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -185,20 +185,20 @@ mmcb_mem_hooks_free_hook(
  *
  */
 int
-mmcb_mem_hooks_munmap_hook(
+mmcu_mem_hooks_munmap_hook(
     void *addr,
     size_t length
 ) {
-    std::lock_guard<std::mutex> lock(mmcb_mem_hooks_mtx);
+    std::lock_guard<std::mutex> lock(mmcu_mem_hooks_mtx);
     //
-    static mmcb_rt *rt = mmcb_rt::the_mmcb_rt();
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Deactivate hooks for logging.
     rt->deactivate_all_mem_hooks();
     // Do op.
     int res = munmap(addr, length);
     // Do logging.
-    mmcb_mem_stat_mgr::the_mmcb_mem_stat_mgr()->capture(
-        new mmcb_memory_op_entry(
+    mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
+        new mmcu_memory_op_entry(
             MMCB_HOOK_MUNMAP,
             uintptr_t(addr),
             length

@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "mpimcb-rt.h"
-#include "mpimcb-mem-hook-state.h"
-#include "mpimcb-timer.h"
+#include "mpimcu-rt.h"
+#include "mpimcu-mem-hook-state.h"
+#include "mpimcu-timer.h"
 
 #include <iostream>
 #include <cstdint>
@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <inttypes.h>
 
-class mmcb_memory_op_entry {
+class mmcu_memory_op_entry {
 public:
     // Memory opteration ID.
     uint8_t opid;
@@ -40,7 +40,7 @@ public:
     /**
      *
      */
-    mmcb_memory_op_entry(
+    mmcu_memory_op_entry(
         uint8_t opid,
         uintptr_t addr,
         ssize_t size = 0,
@@ -51,7 +51,7 @@ public:
       , old_addr(old_addr) { }
 };
 
-class mmcb_proc_smaps_entry {
+class mmcu_proc_smaps_entry {
 public:
     // Address start.
     uintptr_t addr_start;
@@ -67,7 +67,7 @@ public:
     /**
      *
      */
-    mmcb_proc_smaps_entry(void) {
+    mmcu_proc_smaps_entry(void) {
         addr_start = 0;
         addr_end = 0;
         pss_in_b = 0;
@@ -81,7 +81,7 @@ public:
     }
 };
 
-class mmcb_proc_smaps_parser {
+class mmcu_proc_smaps_parser {
     //
     enum {
         MMCB_PROC_MAPS_ADDR = 0,
@@ -115,7 +115,7 @@ public:
     static void
     get_proc_self_smaps_entry(
         uintptr_t target_addr,
-        mmcb_proc_smaps_entry &res_entry,
+        mmcu_proc_smaps_entry &res_entry,
         bool &found_entry
     ) {
         //
@@ -346,13 +346,13 @@ public:
     }
 };
 
-class mmcb_mem_stat_mgr {
+class mmcu_mem_stat_mgr {
 private:
     // TODO expose these value as env vars. Make sure that they can't be less
     // than about 16 (especially the PSS-related ones).
     static constexpr uint64_t mem_allocd_sample_freq = 1;
-    static constexpr uint64_t mpi_pss_update_freq = 5;
-    static constexpr uint64_t pss_totals_sample_freq = 5;
+    static constexpr uint64_t mpi_pss_update_freq = 8;
+    static constexpr uint64_t pss_totals_sample_freq = 8;
     //
     uint64_t num_captures = 0;
     //
@@ -374,25 +374,25 @@ private:
     // MPI plus application.
     ssize_t pss_high_mem_usage_mark = 0;
     // Mapping between address and memory operation entries.
-    std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2entry;
+    std::unordered_map<uintptr_t, mmcu_memory_op_entry *> addr2entry;
     // Mapping between address and mmap/munmap operation entries.
-    std::unordered_map<uintptr_t, mmcb_memory_op_entry *> addr2mmap_entry;
+    std::unordered_map<uintptr_t, mmcu_memory_op_entry *> addr2mmap_entry;
     // Array of collected memory allocated samples (MPI only).
     std::deque< std::pair<double, ssize_t> > mem_allocd_samples;
     // Array of summed PSS samples (total process memory usage).
     std::deque< std::pair<double, ssize_t> > pss_total_samples;
     //
-    mmcb_mem_stat_mgr(void) = default;
+    mmcu_mem_stat_mgr(void) = default;
     //
-    ~mmcb_mem_stat_mgr(void)
+    ~mmcu_mem_stat_mgr(void)
     {
         // Leaky, but at least we won't crash at exit.
     }
     //
-    mmcb_mem_stat_mgr(const mmcb_mem_stat_mgr &that) = delete;
+    mmcu_mem_stat_mgr(const mmcu_mem_stat_mgr &that) = delete;
     //
-    mmcb_mem_stat_mgr &
-    operator=(const mmcb_mem_stat_mgr &) = delete;
+    mmcu_mem_stat_mgr &
+    operator=(const mmcu_mem_stat_mgr &) = delete;
 
     /**
      *
@@ -405,15 +405,15 @@ public:
     /**
      *
      */
-    static mmcb_mem_stat_mgr *
-    the_mmcb_mem_stat_mgr(void);
+    static mmcu_mem_stat_mgr *
+    the_mmcu_mem_stat_mgr(void);
 
     /**
      *
      */
     void
     capture(
-        mmcb_memory_op_entry *const ope
+        mmcu_memory_op_entry *const ope
     ) {
         increment_num_captures();
         //
@@ -483,7 +483,7 @@ public:
      */
     void
     report(
-        mmcb_rt *rt,
+        mmcu_rt *rt,
         bool emit_report
     ) {
         using namespace std;
@@ -511,7 +511,7 @@ public:
         char report_name[PATH_MAX];
         snprintf(
             report_name, sizeof(report_name) - 1, "%s/%d.%s",
-            output_dir, rt->rank, "mmcb"
+            output_dir, rt->rank, "mmcu"
         );
 
         FILE *reportf = fopen(report_name, "w+");
@@ -634,7 +634,7 @@ public:
         //
         if (sample || n_mem_ops_recorded++ % mem_allocd_sample_freq == 0) {
             mem_allocd_samples.push_back(
-                std::make_pair(mmcb_time(), current_mem_allocd)
+                std::make_pair(mmcu_time(), current_mem_allocd)
             );
         }
         // Gather total process memory usage also.
@@ -644,7 +644,7 @@ public:
             ssize_t pss_total = 0;
             get_proc_self_smaps_pss_total(pss_total);
             pss_total_samples.push_back(
-                std::make_pair(mmcb_time(), pss_total)
+                std::make_pair(mmcu_time(), pss_total)
             );
             //
             if (pss_total > pss_high_mem_usage_mark) {
@@ -672,12 +672,12 @@ private:
         n_mpi_pss_samples++;
 
         for (auto &me : addr2mmap_entry) {
-            mmcb_memory_op_entry *const e = me.second;
+            mmcu_memory_op_entry *const e = me.second;
             switch (e->opid) {
                 case(MMCB_HOOK_MMAP_PSS_UPDATE): {
                     const ssize_t old_size = e->size;
                     // Next capture the new PSS value.
-                    mmcb_proc_smaps_entry maps_entry;
+                    mmcu_proc_smaps_entry maps_entry;
                     get_proc_self_smaps_entry(e->addr, maps_entry);
                     const ssize_t new_size = maps_entry.pss_in_b;
                     // Free up old size.
@@ -710,7 +710,7 @@ private:
      */
     void
     capture_mmap_ops(
-        mmcb_memory_op_entry *const ope
+        mmcu_memory_op_entry *const ope
     ) {
         bool rm_ope = false;
         const uintptr_t addr = ope->addr;
@@ -721,7 +721,7 @@ private:
         if (got == addr2mmap_entry.end()) {
             assert(opid == MMCB_HOOK_MMAP);
             // Grab PSS stats.
-            mmcb_proc_smaps_entry maps_entry;
+            mmcu_proc_smaps_entry maps_entry;
             get_proc_self_smaps_entry(addr, maps_entry);
             // Update opid.
             ope->opid = MMCB_HOOK_MMAP_PSS_UPDATE;
@@ -764,7 +764,7 @@ private:
      */
     void
     break_down_realloc(
-        mmcb_memory_op_entry *const ope
+        mmcu_memory_op_entry *const ope
     ) {
         const uintptr_t addr = ope->addr;
         const uintptr_t old_addr = ope->old_addr;
@@ -830,7 +830,7 @@ private:
      */
     void
     update_current_mem_allocd(
-        mmcb_memory_op_entry *const ope,
+        mmcu_memory_op_entry *const ope,
         bool internal_bookkeeping = false
     ) {
         const uint8_t opid = ope->opid;
@@ -873,12 +873,12 @@ private:
     void
     get_proc_self_smaps_entry(
         uintptr_t target_addr,
-        mmcb_proc_smaps_entry &res_entry
+        mmcu_proc_smaps_entry &res_entry
     ) {
         bool found_entry = false;
         static const int n_tries = 5;
         for (int i = 0; i < n_tries && !found_entry; ++i) {
-            mmcb_proc_smaps_parser::get_proc_self_smaps_entry(
+            mmcu_proc_smaps_parser::get_proc_self_smaps_entry(
                 target_addr, res_entry, found_entry
             );
         }
@@ -899,6 +899,6 @@ private:
     get_proc_self_smaps_pss_total(
         ssize_t &pss_total_in_b
     ) {
-        mmcb_proc_smaps_parser::get_proc_self_smaps_pss_total(pss_total_in_b);
+        mmcu_proc_smaps_parser::get_proc_self_smaps_pss_total(pss_total_in_b);
     }
 };
