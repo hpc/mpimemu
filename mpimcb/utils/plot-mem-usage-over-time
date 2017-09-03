@@ -203,12 +203,19 @@ class Experiment:
 
     def data_sanity(self):
         app_name = None
+        numpe = None
         for idx, meta in enumerate(self.run_meta):
             cur_app_name = meta.data['Application Name']
+            cur_numpe = meta.data['MPI_COMM_WORLD Size']
             if app_name is None:
                 app_name = cur_app_name
             elif app_name != cur_app_name:
                 print("ERROR: Application name mismatch!")
+                assert(False)
+            if numpe is None:
+                numpe = cur_numpe
+            elif numpe != cur_numpe:
+                print("ERROR: Application numpe mismatch!")
                 assert(False)
             rank = meta.data['MPI_COMM_WORLD Rank']
             assert(rank == idx)

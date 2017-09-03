@@ -42,6 +42,16 @@ MPI_Init(
     for (int i = 0; i < nsyncs; ++i) {
         PMPI_Barrier(MPI_COMM_WORLD);
     }
+    // Obnoxious header that lets the user know something is happening.
+    if (rt->rank == 0) {
+        printf(
+            "_|      _|  _|_|_|    _|_|_|  _|      _|    _|_|_|  _|    _|\n"
+            "_|_|  _|_|  _|    _|    _|    _|_|  _|_|  _|        _|    _|\n"
+            "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
+            "_|      _|  _|          _|    _|      _|  _|        _|    _|\n"
+            "_|      _|  _|        _|_|_|  _|      _|    _|_|_|    _|_|  \n"
+        );
+    }
     //
     return rc;
 }

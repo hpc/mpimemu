@@ -448,17 +448,24 @@ public:
             rm_ope = true;
         }
         else {
-            fprintf(
-                stderr,
-                "(pid: %d) WARNING: "
-                "existing entry (%p) not a free (OP: %d was OP: %d "
-                "size: %lld\n",
-                (int)getpid(),
-                (void *)addr,
-                (int)opid,
-                (int)got->second->opid,
-                (long long int)got->second->size
-            );
+            static const ssize_t report_thresh = 1024 * 1024;
+            static ssize_t curious_b = 0;
+
+            curious_b += got->second->size;
+
+            if (curious_b >= report_thresh) {
+                fprintf(
+                    stderr,
+                    "(pid: %d) WARNING: "
+                    "existing entry (%p) not a free (OP: %d was OP: %d "
+                    "size: %lld\n",
+                    (int)getpid(),
+                    (void *)addr,
+                    (int)opid,
+                    (int)got->second->opid,
+                    (long long int)got->second->size
+                );
+            }
             return;
         }
         //
