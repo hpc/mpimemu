@@ -9,9 +9,11 @@ import os
 import sys
 import operator
 import collections
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
-import pandas as pd
 
 
 ###############################################################################
@@ -229,11 +231,16 @@ class Colorer:
         return (pval - self.pmin) / float(self.pmax - self.pmin)
 
     def get_color(self):
-        c = plt.cm.copper(
+        cm = Colorer.get_cm()
+        c = cm(
             self.norm(self.pvalues[self.color_idx])
         )
         self.color_idx += 1
         return c
+
+    @staticmethod
+    def get_cm():
+        return plt.cm.copper
 
 
 ###############################################################################
@@ -298,6 +305,7 @@ class Plotter:
                 fontsize=self.title_font_size
             )
 
+        self.add_colorbar_to_subplots(num_colors)
         '''
         Set common y label.
         '''
@@ -315,8 +323,6 @@ class Plotter:
             'Wall Time Since Initialization (s)', fontsize=self.axis_font_size
         )
 
-        #plt.axis('tight')
-
         '''
         plt.legend(loc=2)
         '''
@@ -327,6 +333,29 @@ class Plotter:
             bbox_inches='tight',
             pad_inches=0.03
         )
+
+    def add_colorbar_to_subplots(self, num_colors):
+        # To number of ranks.
+        normalize = mcolors.Normalize(vmin=0, vmax=num_colors)
+        smappaple = cm.ScalarMappable(norm=normalize, cmap=Colorer.get_cm())
+        smappaple.set_array(num_colors)
+
+        # Create an axes on the right side of ax. The width of cax will be 2%
+        # of ax and the padding between cax and ax will be fixed at 0.05 inch.
+        for ax in self.axs:
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes(
+                "right",
+                size="2%",
+                pad=0.05
+            )
+            cbar = plt.colorbar(
+                smappaple,
+                cax=cax,
+                format='%.0e'
+            )
+            cbar.set_ticks([0, num_colors])
+            cbar.set_label('Process Identifier Map', rotation='vertical')
 
     def add_plot(self, target_ax, colorer, rank, time_series):
         x = time_series.get('times')

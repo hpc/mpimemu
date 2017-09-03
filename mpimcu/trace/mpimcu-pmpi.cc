@@ -45,6 +45,7 @@ MPI_Init(
     // Obnoxious header that lets the user know something is happening.
     if (rt->rank == 0) {
         printf(
+            "\n"
             "_|      _|  _|_|_|    _|_|_|  _|      _|    _|_|_|  _|    _|\n"
             "_|_|  _|_|  _|    _|    _|    _|_|  _|_|  _|        _|    _|\n"
             "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
