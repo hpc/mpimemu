@@ -13,7 +13,7 @@ mem_hook_set_all(
     uint8_t state
 ) {
     assert(mgr);
-    for (uint8_t i = 0; i < MMCB_HOOK_LAST; ++i) {
+    for (uint8_t i = 0; i < MMCU_HOOK_LAST; ++i) {
         mgr->mmcu_mem_hook_state_tab[i].active = state;
     }
 }
@@ -40,6 +40,6 @@ mmcu_mem_hook_mgr_hook_active(
     uint8_t hook_id
 ) {
     assert(mgr);
-    assert(hook_id < MMCB_HOOK_LAST);
+    assert(hook_id < MMCU_HOOK_LAST);
     return mgr->mmcu_mem_hook_state_tab[hook_id].active;
 }

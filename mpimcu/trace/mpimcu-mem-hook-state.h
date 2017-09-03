@@ -12,16 +12,16 @@ extern "C" {
 #endif
 
 enum {
-    MMCB_HOOK_MALLOC = 0,
-    MMCB_HOOK_CALLOC,
-    MMCB_HOOK_REALLOC,
-    MMCB_HOOK_FREE,
-    MMCB_HOOK_POSIX_MEMALIGN,
-    MMCB_HOOK_MMAP,
-    MMCB_HOOK_MMAP_PSS_UPDATE, /* For internal use only. */
-    MMCB_HOOK_MUNMAP,
-    MMCB_HOOK_NOOP,            /* For internal use only. */
-    MMCB_HOOK_LAST
+    MMCU_HOOK_MALLOC = 0,
+    MMCU_HOOK_CALLOC,
+    MMCU_HOOK_REALLOC,
+    MMCU_HOOK_FREE,
+    MMCU_HOOK_POSIX_MEMALIGN,
+    MMCU_HOOK_MMAP,
+    MMCU_HOOK_MMAP_PSS_UPDATE, /* For internal use only. */
+    MMCU_HOOK_MUNMAP,
+    MMCU_HOOK_NOOP,            /* For internal use only. */
+    MMCU_HOOK_LAST
 };
 
 typedef struct mmcu_mem_hook_state_t {
@@ -29,7 +29,7 @@ typedef struct mmcu_mem_hook_state_t {
 } mmcu_mem_hook_state_t;
 
 typedef struct mmcu_mem_hook_mgr_t {
-    mmcu_mem_hook_state_t mmcu_mem_hook_state_tab[MMCB_HOOK_LAST];
+    mmcu_mem_hook_state_t mmcu_mem_hook_state_tab[MMCU_HOOK_LAST];
 } mmcu_mem_hook_mgr_t;
 
 /**

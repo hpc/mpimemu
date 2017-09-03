@@ -21,7 +21,7 @@ void *
 malloc(size_t size)
 {
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MALLOC)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_MALLOC)) {
         return mmcu_mem_hooks_malloc_hook(size);
     }
     return __libc_malloc(size);
@@ -34,7 +34,7 @@ void *
 calloc(size_t nmemb, size_t size)
 {
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_CALLOC)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_CALLOC)) {
         return mmcu_mem_hooks_calloc_hook(nmemb, size);
     }
     return __libc_calloc(nmemb, size);
@@ -49,7 +49,7 @@ realloc(
     size_t size
 ) {
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_REALLOC)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_REALLOC)) {
         return mmcu_mem_hooks_realloc_hook(ptr, size);
     }
     return __libc_realloc(ptr, size);
@@ -62,7 +62,7 @@ void
 free(void *ptr)
 {
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_FREE)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_FREE)) {
         mmcu_mem_hooks_free_hook(ptr);
     }
     else {
@@ -83,7 +83,7 @@ posix_memalign(
     static op_fn_t fun = NULL;
     //
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_POSIX_MEMALIGN)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_POSIX_MEMALIGN)) {
         return mmcu_mem_hooks_posix_memalign_hook(memptr, alignment, size);
     }
     if (!fun) {
@@ -108,7 +108,7 @@ mmap(
     static op_fn_t fun = NULL;
     //
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MMAP)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_MMAP)) {
         return mmcu_mem_hooks_mmap_hook(
                    addr, length, prot, flags, fd, offset
                );
@@ -131,7 +131,7 @@ munmap(
     static op_fn_t fun = NULL;
     //
     mmcu_mem_hook_mgr_t *mgr = mmcu_rt_get_mem_hook_mgr();
-    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCB_HOOK_MUNMAP)) {
+    if (mmcu_mem_hook_mgr_hook_active(mgr, MMCU_HOOK_MUNMAP)) {
         return mmcu_mem_hooks_munmap_hook(addr, length);
     }
     if (!fun) {

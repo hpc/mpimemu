@@ -33,7 +33,7 @@ mmcu_mem_hooks_malloc_hook(
     void *res = malloc(size);
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
-        new mmcu_memory_op_entry(MMCB_HOOK_MALLOC, uintptr_t(res), size)
+        new mmcu_memory_op_entry(MMCU_HOOK_MALLOC, uintptr_t(res), size)
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -59,7 +59,7 @@ mmcu_mem_hooks_calloc_hook(
     // Do logging.
     const size_t real_size = nmemb * size;
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
-        new mmcu_memory_op_entry(MMCB_HOOK_CALLOC, uintptr_t(res), real_size)
+        new mmcu_memory_op_entry(MMCU_HOOK_CALLOC, uintptr_t(res), real_size)
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -85,7 +85,7 @@ mmcu_mem_hooks_realloc_hook(
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
         new mmcu_memory_op_entry(
-            MMCB_HOOK_REALLOC,
+            MMCU_HOOK_REALLOC,
             uintptr_t(res),
             size,
             uintptr_t(ptr))
@@ -115,7 +115,7 @@ mmcu_mem_hooks_posix_memalign_hook(
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
         new mmcu_memory_op_entry(
-            MMCB_HOOK_POSIX_MEMALIGN,
+            MMCU_HOOK_POSIX_MEMALIGN,
             uintptr_t(*memptr),
             size
         )
@@ -148,7 +148,7 @@ mmcu_mem_hooks_mmap_hook(
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
         new mmcu_memory_op_entry(
-            MMCB_HOOK_MMAP,
+            MMCU_HOOK_MMAP,
             uintptr_t(res),
             length
         )
@@ -175,7 +175,7 @@ mmcu_mem_hooks_free_hook(
     free(ptr);
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
-        new mmcu_memory_op_entry(MMCB_HOOK_FREE, uintptr_t(ptr))
+        new mmcu_memory_op_entry(MMCU_HOOK_FREE, uintptr_t(ptr))
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
@@ -199,7 +199,7 @@ mmcu_mem_hooks_munmap_hook(
     // Do logging.
     mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr()->capture(
         new mmcu_memory_op_entry(
-            MMCB_HOOK_MUNMAP,
+            MMCU_HOOK_MUNMAP,
             uintptr_t(addr),
             length
         )

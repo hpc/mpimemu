@@ -349,10 +349,15 @@ class Plotter:
                 size="2%",
                 pad=0.05
             )
+
+            tick_format = '%d'
+            if (num_colors > 99):
+                tick_format = '%.0e'
+
             cbar = plt.colorbar(
                 smappaple,
                 cax=cax,
-                format='%.0e'
+                format=tick_format
             )
             cbar.set_ticks([0, num_colors])
             cbar.set_label('Process Identifier Map', rotation='vertical')

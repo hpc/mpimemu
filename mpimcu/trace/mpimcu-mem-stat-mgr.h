@@ -84,12 +84,13 @@ public:
 class mmcu_proc_smaps_parser {
     //
     enum {
-        MMCB_PROC_MAPS_ADDR = 0,
-        MMCB_PROC_MAPS_PERMS,
-        MMCB_PROC_MAPS_OFFSET,
-        MMCB_PROC_MAPS_DEV,
-        MMCB_PROC_MAPS_INODE,
-        MMCB_PROC_MAPS_PATH_NAME,
+        MMCU_PROC_MAPS_ADDR = 0,
+        MMCU_PROC_MAPS_PERMS,
+        MMCU_PROC_MAPS_OFFSET,
+        MMCU_PROC_MAPS_DEV,
+        MMCU_PROC_MAPS_INODE,
+        MMCU_PROC_MAPS_PATH_NAME,
+        MMCU_PROC_MAPS_LAST
     };
     //
     static constexpr int32_t max_entry_len = PATH_MAX;
@@ -119,7 +120,7 @@ public:
         bool &found_entry
     ) {
         //
-        static const uint8_t n_tok = 6;
+        static const uint8_t n_tok = MMCU_PROC_MAPS_LAST;
         //
         found_entry = false;
         // First line format.
@@ -142,7 +143,7 @@ public:
             }
             // Look for target address.
             uintptr_t addr_start = 0, addr_end = 0;
-            get_addr_range(toks[MMCB_PROC_MAPS_ADDR], addr_start, addr_end);
+            get_addr_range(toks[MMCU_PROC_MAPS_ADDR], addr_start, addr_end);
             // If we found it, then process and return to caller.
             if (target_addr == addr_start) {
                 found_entry = true;
@@ -150,13 +151,13 @@ public:
                 res_entry.addr_start = addr_start;
                 res_entry.addr_end = addr_end;
                 res_entry.reg_shared = entry_has_shared_perms(
-                    toks[MMCB_PROC_MAPS_PERMS]
+                    toks[MMCU_PROC_MAPS_PERMS]
                 );
                 // Stash path to file backing store only if shared.
                 if (res_entry.reg_shared) {
                     strncpy(
                         res_entry.path,
-                        toks[MMCB_PROC_MAPS_PATH_NAME],
+                        toks[MMCU_PROC_MAPS_PATH_NAME],
                         sizeof(res_entry.path) - 1
                     );
                 }
@@ -218,13 +219,42 @@ public:
         FILE *smapsf = open_smaps();
 
         ssize_t pss_sum = 0;
+        // Number of tokens for first line of smaps.
+        static const uint8_t n_tok = MMCU_PROC_MAPS_LAST;
 
         char lb[2 * PATH_MAX];
         // Iterate over it one line at a time.
         while (fgets(lb, sizeof(lb) - 1, smapsf)) {
+            bool add_pss_to_tally = true;
+            // Let's see if we should skip this entry.
+            char *tokp = nullptr, *strp = lb;
+            char toks[n_tok][PATH_MAX];
+            // Tokenize.
+            for (uint8_t i = 0;
+                 i < n_tok && (NULL != (tokp = strtok(strp, " ")));
+                 ++i
+            ) {
+                strp = nullptr;
+                strncpy(toks[i], tokp, sizeof(toks[i]) - 1);
+            }
+            // If you change the name of the trace library, update.
+            // TODO add a more robust way of naming files we should skip.
+            static const std::string skip_name("mpimcu-trace.so");
+            std::string path_str(
+                toks[MMCU_PROC_MAPS_PATH_NAME],
+                sizeof(toks[MMCU_PROC_MAPS_PATH_NAME])
+            );
+            //
+            std::size_t found = path_str.rfind(skip_name);
+            // Found it, so skip.
+            if (found != std::string::npos) {
+                add_pss_to_tally = false;
+            }
             ssize_t cur_pss = 0;
             get_pss(smapsf, cur_pss);
-            pss_sum += cur_pss;
+            if (add_pss_to_tally) {
+                pss_sum += cur_pss;
+            }
             // Skip rest.
             uint8_t nskip = 15;
             for (uint8_t i = 0; i < nskip && (fgets(lb, sizeof(lb) - 1, smapsf)); ++i) { }
@@ -423,7 +453,7 @@ public:
         // Deal with any special cases first.
         switch (opid) {
             // realloc is never directly handled.
-            case (MMCB_HOOK_REALLOC):
+            case (MMCU_HOOK_REALLOC):
                 break_down_realloc(ope);
                 return;
             // mmap requires some extra work to extract its 'real' usage. Note
@@ -431,8 +461,8 @@ public:
             // so we need to periodically update mmap entries. We'll do that
             // later for all captured mmaps. munmap also requires some special
             // care because mmap captures are stored in a different container.
-            case (MMCB_HOOK_MMAP):
-            case (MMCB_HOOK_MUNMAP):
+            case (MMCU_HOOK_MMAP):
+            case (MMCU_HOOK_MUNMAP):
                 capture_mmap_ops(ope);
                 return;
         }
@@ -443,7 +473,7 @@ public:
             addr2entry.insert(std::make_pair(addr, ope));
         }
         // Existing entry and free.
-        else if (opid == MMCB_HOOK_FREE) {
+        else if (opid == MMCU_HOOK_FREE) {
             ope->size = got->second->size;
             rm_ope = true;
         }
@@ -498,7 +528,7 @@ public:
         }
         //
         if (!emit_report) return;
-        char *output_dir = getenv("MMCB_REPORT_OUTPUT_PATH");
+        char *output_dir = getenv("MMCU_REPORT_OUTPUT_PATH");
         // Not set, so output to pwd.
         if (!output_dir) {
             output_dir = getenv("PWD");
@@ -674,7 +704,7 @@ private:
         for (auto &me : addr2mmap_entry) {
             mmcu_memory_op_entry *const e = me.second;
             switch (e->opid) {
-                case(MMCB_HOOK_MMAP_PSS_UPDATE): {
+                case(MMCU_HOOK_MMAP_PSS_UPDATE): {
                     const ssize_t old_size = e->size;
                     // Next capture the new PSS value.
                     mmcu_proc_smaps_entry maps_entry;
@@ -687,7 +717,7 @@ private:
                     e->size = new_size;
                     break;
                 }
-                case(MMCB_HOOK_MUNMAP):
+                case(MMCU_HOOK_MUNMAP):
                     // Nothing to do.
                     break;
                 default:
@@ -719,12 +749,12 @@ private:
         auto got = addr2mmap_entry.find(addr);
         // New entry.
         if (got == addr2mmap_entry.end()) {
-            assert(opid == MMCB_HOOK_MMAP);
+            assert(opid == MMCU_HOOK_MMAP);
             // Grab PSS stats.
             mmcu_proc_smaps_entry maps_entry;
             get_proc_self_smaps_entry(addr, maps_entry);
             // Update opid.
-            ope->opid = MMCB_HOOK_MMAP_PSS_UPDATE;
+            ope->opid = MMCU_HOOK_MMAP_PSS_UPDATE;
             // Update size.
             // The mmap length is initially captured, so update to PSS.
             ope->size = maps_entry.pss_in_b;
@@ -735,7 +765,7 @@ private:
             n_mem_alloc_ops++;
         }
         // Existing entry and munmap.
-        else if (opid == MMCB_HOOK_MUNMAP) {
+        else if (opid == MMCU_HOOK_MUNMAP) {
             // munmap already has the size, unlike free.
             rm_ope = true;
         }
@@ -772,32 +802,32 @@ private:
         // Returned NULL, so old_addr was unchanged.
         if (!addr) {
             // Nothing to do.
-            ope->opid = MMCB_HOOK_NOOP;
+            ope->opid = MMCU_HOOK_NOOP;
         }
         // Acts like free.
         else if (size == 0 && old_addr) {
             auto got = addr2entry.find(old_addr);
             if (got != addr2entry.end()) {
-                ope->opid = MMCB_HOOK_FREE;
+                ope->opid = MMCU_HOOK_FREE;
                 // Will be looked up in terms of addr, so update.
                 ope->addr = old_addr;
             }
             // Probably an application bug, so do nothing.
             else {
-                ope->opid = MMCB_HOOK_NOOP;
+                ope->opid = MMCU_HOOK_NOOP;
             }
         }
         // Acts like malloc.
         else if (!old_addr) {
-            ope->opid = MMCB_HOOK_MALLOC;
+            ope->opid = MMCU_HOOK_MALLOC;
         }
         // Area pointed to was moved.
         else if (old_addr != addr) {
             // New region was first created.
-            ope->opid = MMCB_HOOK_MALLOC;
+            ope->opid = MMCU_HOOK_MALLOC;
             capture(ope);
             // Old region was freed.
-            ope->opid = MMCB_HOOK_FREE;
+            ope->opid = MMCU_HOOK_FREE;
             // Will be looked up in terms of addr, so update.
             ope->addr = old_addr;
             // The final capture will be done below.
@@ -808,10 +838,10 @@ private:
             // I'm not sure if this is the best way to capture this... Ideas..?
             // First remove old entry. old_addr and addr should be equal.
             // This first bit should decrement memory usage by the old size.
-            ope->opid = MMCB_HOOK_FREE;
+            ope->opid = MMCU_HOOK_FREE;
             capture(ope);
             // Now increment memory usage by the new size.
-            ope->opid = MMCB_HOOK_MALLOC;
+            ope->opid = MMCU_HOOK_MALLOC;
             ope->size = size;
         }
         capture(ope);
@@ -837,26 +867,26 @@ private:
         const size_t size = ope->size;
 
         switch (opid) {
-            case (MMCB_HOOK_MALLOC):
-            case (MMCB_HOOK_CALLOC):
-            case (MMCB_HOOK_POSIX_MEMALIGN):
+            case (MMCU_HOOK_MALLOC):
+            case (MMCU_HOOK_CALLOC):
+            case (MMCU_HOOK_POSIX_MEMALIGN):
                 n_mem_alloc_ops++;
                 current_mem_allocd += size;
                 break;
-            case (MMCB_HOOK_FREE):
-            case (MMCB_HOOK_MUNMAP):
+            case (MMCU_HOOK_FREE):
+            case (MMCU_HOOK_MUNMAP):
                 n_mem_free_ops++;
                 current_mem_allocd -= size;
                 break;
-            case (MMCB_HOOK_MMAP_PSS_UPDATE):
+            case (MMCU_HOOK_MMAP_PSS_UPDATE):
                 // Here size may be positive or negative.
                 current_mem_allocd += size;
                 break;
-            case (MMCB_HOOK_NOOP):
+            case (MMCU_HOOK_NOOP):
                 // Nothing to do.
                 break;
             default:
-                // Note: MMCB_HOOK_REALLOC and MMCB_HOOK_MMAP are always broken
+                // Note: MMCU_HOOK_REALLOC and MMCU_HOOK_MMAP are always broken
                 // down in terms of other operations, so they will never reach
                 // this code path.
                 assert(false && "Invalid opid");
