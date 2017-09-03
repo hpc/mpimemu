@@ -240,7 +240,8 @@ class Colorer:
 
     @staticmethod
     def get_cm():
-        return plt.cm.copper
+        # return plt.cm.copper
+        return plt.cm.viridis
 
 
 ###############################################################################
