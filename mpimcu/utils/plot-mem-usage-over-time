@@ -142,34 +142,6 @@ class TimeSeries:
         assert(key in self.data)
         return self.data[key]
 
-    @staticmethod
-    def align(ts1, ts2):
-        ts1_times = ts1.get('times')
-        ts2_times = ts2.get('times')
-
-        ts1_svals = ts1.get('svals')
-        ts2_svals = ts2.get('svals')
-
-        df1 = pd.DataFrame({
-            't1': np.asarray(ts1_times),
-            'v1': np.asarray(ts1_svals)
-        })
-
-        df2 = pd.DataFrame({
-            't2': np.asarray(ts2_times),
-            'v2': np.asarray(ts2_svals)
-        })
-
-        df1a, df2a = df1.align(df2)
-        # dfm = pd.merge(df1a, df2a, how='outer')
-        # dfm = dfm.interpolate(method='linear', axis=0).bfill()
-        dfm = df1.join(df2, how='outer').interpolate()
-
-        ts1a = df1[['t1', 'v1']]
-        ts2a = df2[['t2', 'v2']]
-
-        return (ts1a.values.tolist(), ts2a.values.tolist())
-
 
 ###############################################################################
 class Experiment:
@@ -231,8 +203,7 @@ class Experiment:
 
                 ts = {
                     'MPI_MEM_USAGE': TimeSeries(),
-                    'ALL_MEM_USAGE': TimeSeries(),
-                    'APP_MEM_USAGE': TimeSeries()
+                    'ALL_MEM_USAGE': TimeSeries()
                 }
 
                 for l in content:
@@ -243,27 +214,6 @@ class Experiment:
                     ts[dtype].push(dtime, dmem)
 
                 self.rank_to_time_series[rank] = ts
-
-        self.calc_app_mem_usage()
-
-    def calc_app_mem_usage(self):
-        '''
-        for rnk, ts in self.rank_to_time_series.iteritems():
-            all_len = len(ts['ALL_MEM_USAGE'].data.get('svals'))
-            mpi_len = len(ts['MPI_MEM_USAGE'].data.get('svals'))
-            assert(all_len == mpi_len)
-
-            zvals = zip(ts['ALL_MEM_USAGE'].data.get('svals'),
-                        ts['MPI_MEM_USAGE'].data.get('svals'))
-            # Pick one
-            times = ts['ALL_MEM_USAGE'].data.get('times')
-
-            for (t, (allv, mpiv)) in zip(times, zvals):
-                ts['APP_MEM_USAGE'].push(t, allv - mpiv)
-        '''
-        for rnk, ts in self.rank_to_time_series.iteritems():
-            ts['APP_MEM_USAGE'].data = ts['ALL_MEM_USAGE'].data
-
 
 
 ###############################################################################
@@ -292,28 +242,31 @@ class Plotter:
         self.fname = self.get_usable_file_name('mem-usage-over-time', 'pdf')
         self.experiments = experiments_to_plot
         self.numpes = set()
-        self.fig, self.axs = plt.subplots(3, sharex=True)
-        self.ax2ts = {
+        self.fig, self.axs = plt.subplots(2, sharex=True)
+        self.ts2ax = {
             'ALL_MEM_USAGE': self.axs[0],
-            'MPI_MEM_USAGE': self.axs[1],
-            'APP_MEM_USAGE': self.axs[2]
+            'MPI_MEM_USAGE': self.axs[1]
         }
-        self.colorer2ts = {
+        self.ts2colorer = {
             'ALL_MEM_USAGE': None,
-            'MPI_MEM_USAGE': None,
-            'APP_MEM_USAGE': None
+            'MPI_MEM_USAGE': None
+        }
+        self.ts2title = {
+            'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
+            'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
         }
         self.max_x = sys.float_info.min
         self.max_y = sys.float_info.min
         self.min_y = sys.float_info.max
         self.line_style = 'solid'
+        self.title_font_size = 12
         self.axis_font_size = 12
 
     def plot(self):
         ''' Color maps setup '''
         num_colors = max([e.get_num_species() for e in self.experiments])
-        for key in self.colorer2ts:
-            self.colorer2ts[key] = Colorer(num_colors)
+        for key in self.ts2colorer:
+            self.ts2colorer[key] = Colorer(num_colors)
 
         print('plotting to {}'.format(self.fname))
 
@@ -321,7 +274,7 @@ class Plotter:
             for rank, ts in e.rank_to_time_series.iteritems():
                 for tsk, tsi in ts.iteritems():
                     self.add_plot(
-                        self.ax2ts[tsk], self.colorer2ts[tsk], rank, tsi
+                        self.ts2ax[tsk], self.ts2colorer[tsk], rank, tsi
                     )
 
         '''
@@ -337,12 +290,13 @@ class Plotter:
         '''
         for ax in self.axs.flat:
             ax.set_xlim(xmin, xmax)
-            '''
-            ax.set_ylim(ymin, ymax)
-            '''
-
-        for ax in self.axs:
             ax.grid(True)
+
+        for axk, axi in self.ts2ax.iteritems():
+            axi.set_title(
+                self.ts2title[axk],
+                fontsize=self.title_font_size
+            )
 
         '''
         Set common y label.
