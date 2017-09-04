@@ -346,11 +346,12 @@ class Plotter:
         )
 
     def add_mpi_init_shading_to_subplots(self):
+        max_time = sys.float_info.min
         for e in self.experiments:
-            run_meta = e.run_meta[0]
-            mpi_init_len_rank0 = run_meta.data['MPI Init Time (s)']
+            for meta in e.run_meta:
+                max_time = max(max_time, meta.data['MPI Init Time (s)'])
             for ax in self.axs:
-                ax.axvspan(0, mpi_init_len_rank0, alpha=0.5, color='#f1f1f1')
+                ax.axvspan(0, max_time, alpha=0.5, color='#f1f1f1')
 
     def add_colorbar_to_subplots(self, num_colors):
         # To number of ranks.
