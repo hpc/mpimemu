@@ -19,7 +19,9 @@ private:
     mmcu_rt &
     operator=(const mmcu_rt &) = delete;
     //
-    double init_time = 0.0;
+    double init_begin_time = 0.0;
+    //
+    double init_end_time = 0.0;
     //
     char hostname[256];
     //
@@ -49,7 +51,10 @@ public:
     deactivate_all_mem_hooks(void);
     //
     void
-    set_init_time_now(void);
+    set_init_begin_time_now(void);
+    //
+    void
+    set_init_end_time_now(void);
     //
     std::string
     get_date_time_str_now(void);
@@ -64,8 +69,13 @@ public:
     gather_target_meta(void);
     //
     double
-    get_init_time(void) {
-        return init_time;
+    get_init_begin_time(void) {
+        return init_begin_time;
+    }
+    //
+    double
+    get_init_end_time(void) {
+        return init_end_time;
     }
 };
 

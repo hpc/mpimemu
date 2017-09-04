@@ -42,6 +42,7 @@ class RunMetadata:
             'Hostname': '',
             'MPI_COMM_WORLD Rank': long(0),
             'MPI_COMM_WORLD Size': long(0),
+            'MPI Init Time (s)': float(0),
             'Number of Operation Captures Performed': long(0),
             'Number of Memory Operations Recorded': long(0),
             'Number of Allocation-Related Operations Recorded': long(0),
@@ -91,7 +92,7 @@ class RunMetadata:
             meta_list[0].data['Application Name'])
         )
 
-        for kprefix in ['MPI_COMM_WORLD']:
+        for kprefix in ['MPI_COMM_WORLD', 'MPI Init Time']:
             mpi_keys = [k for k in meta_list[0].data.keys()
                         if k.startswith(kprefix)]
 
@@ -378,7 +379,7 @@ class Plotter:
             x, y,
             linestyle=self.line_style,
             color=clr,
-            alpha=0.70
+            alpha=0.9
         )
         '''
         target_ax.fill_between(

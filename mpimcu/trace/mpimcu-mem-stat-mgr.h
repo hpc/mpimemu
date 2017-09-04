@@ -108,6 +108,19 @@ class mmcu_proc_smaps_parser {
         return f;
     }
 
+    /**
+     *
+     */
+    static bool
+    has_suffix(
+        const std::string &str,
+        const std::string &suffix
+    ) {
+        return str.size() >= suffix.size() &&
+        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+    }
+
+
 public:
 
     /**
@@ -239,15 +252,19 @@ public:
             }
             // If you change the name of the trace library, update.
             // TODO add a more robust way of naming files we should skip.
-            static const std::string skip_name("mpimcu-trace.so");
+            static const std::string skip_suffix("mpimcu-trace.so");
             std::string path_str(
                 toks[MMCU_PROC_MAPS_PATH_NAME],
-                sizeof(toks[MMCU_PROC_MAPS_PATH_NAME])
+                // Remove \n.
+                strlen(toks[MMCU_PROC_MAPS_PATH_NAME]) - 1
             );
             //
-            std::size_t found = path_str.rfind(skip_name);
-            // Found it, so skip.
-            if (found != std::string::npos) {
+            bool has_suffix = mmcu_proc_smaps_parser::has_suffix(
+                                  path_str,
+                                  skip_suffix
+            );
+            // Has suffix, so skip it.
+            if (has_suffix) {
                 add_pss_to_tally = false;
             }
             ssize_t cur_pss = 0;
@@ -487,14 +504,12 @@ public:
                 fprintf(
                     stderr,
                     "(pid: %d) WARNING: "
-                    "existing entry (%p) not a free (OP: %d was OP: %d "
-                    "size: %lld\n",
+                    "Number of \'curious operations\' "
+                    "exceeded threshold of %zd B\n",
                     (int)getpid(),
-                    (void *)addr,
-                    (int)opid,
-                    (int)got->second->opid,
-                    (long long int)got->second->size
+                    report_thresh
                 );
+                curious_b = 0;
             }
             return;
         }
@@ -565,6 +580,10 @@ public:
         fprintf(reportf, "# MPI_COMM_WORLD Rank: %d\n", rt->rank);
 
         fprintf(reportf, "# MPI_COMM_WORLD Size: %d\n", rt->numpe);
+        // Time from 0 to what is reported.
+        const double time_to_init = rt->get_init_end_time()
+                                  - rt->get_init_begin_time();
+        fprintf(reportf, "# MPI Init Time (s): %lf\n", time_to_init);
 
         fprintf(
             reportf,
@@ -617,7 +636,7 @@ public:
         fprintf(reportf, "# [Run Info End]\n");
 
         ////////////////////////////////////////////////////////////////////////
-        const double init_time = rt->get_init_time();
+        const double init_time = rt->get_init_begin_time();
         fprintf(
             reportf,
             "# MPI Library Memory Usage (B) Over Time "

@@ -62,9 +62,18 @@ mmcu_rt::deactivate_all_mem_hooks(void)
  *
  */
 void
-mmcu_rt::set_init_time_now(void)
+mmcu_rt::set_init_begin_time_now(void)
 {
-    init_time = mmcu_time();
+    init_begin_time = mmcu_time();
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::set_init_end_time_now(void)
+{
+    init_end_time = mmcu_time();
 }
 
 /**

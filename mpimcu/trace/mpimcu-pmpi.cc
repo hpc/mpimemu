@@ -26,11 +26,13 @@ MPI_Init(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     // Set init time.
-    rt->set_init_time_now();
+    rt->set_init_begin_time_now();
     //
     rt->activate_all_mem_hooks();
     int rc = PMPI_Init(argc, argv);
     rt->deactivate_all_mem_hooks();
+    // Set init end time.
+    rt->set_init_end_time_now();
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
     // For tool purposes, so don't track.
@@ -51,6 +53,7 @@ MPI_Init(
             "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
             "_|      _|  _|          _|    _|      _|  _|        _|    _|\n"
             "_|      _|  _|        _|_|_|  _|      _|    _|_|_|    _|_|  \n"
+            "\n"
         );
     }
     //
