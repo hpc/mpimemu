@@ -506,6 +506,21 @@ MPI_Reduce(
 /**
  *
  */
+double
+MPI_Wtime(void)
+{
+    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    //
+    rt->activate_all_mem_hooks();
+    double res = PMPI_Wtime();
+    rt->deactivate_all_mem_hooks();
+    //
+    return res;
+}
+
+/**
+ *
+ */
 int
 MPI_Address(
     void *location,
