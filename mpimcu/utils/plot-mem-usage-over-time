@@ -12,6 +12,7 @@ import collections
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
@@ -299,7 +300,14 @@ class Plotter:
         '''
         for ax in self.axs.flat:
             ax.set_xlim(xmin, xmax)
+            # Show grids.
             ax.grid(True)
+            # Set y labels.
+            ax.set_ylabel(
+                'Memory Usage (MB)', fontsize=self.axis_font_size
+            )
+            # Set y-tick format.
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
         for axk, axi in self.ts2ax.iteritems():
             axi.set_title(
@@ -311,13 +319,13 @@ class Plotter:
         self.add_mpi_init_shading_to_subplots()
         '''
         Set common y label.
-        '''
         self.fig.text(
             0.06, 0.5,
             'Memory Usage (MB)',
             fontsize=self.axis_font_size,
             ha='center', va='center', rotation='vertical'
         )
+        '''
 
         '''
         Only bottom-most axis will have x label.
