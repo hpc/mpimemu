@@ -308,6 +308,7 @@ class Plotter:
             )
 
         self.add_colorbar_to_subplots(num_colors)
+        self.add_mpi_init_shading_to_subplots()
         '''
         Set common y label.
         '''
@@ -335,6 +336,13 @@ class Plotter:
             bbox_inches='tight',
             pad_inches=0.03
         )
+
+    def add_mpi_init_shading_to_subplots(self):
+        for e in self.experiments:
+            run_meta = e.run_meta[0]
+            mpi_init_len_rank0 = run_meta.data['MPI Init Time (s)']
+            for ax in self.axs:
+                ax.axvspan(0, mpi_init_len_rank0, alpha=0.5, color='#f1f1f1')
 
     def add_colorbar_to_subplots(self, num_colors):
         # To number of ranks.
