@@ -88,7 +88,8 @@ mmcu_mem_hooks_realloc_hook(
             MMCU_HOOK_REALLOC,
             uintptr_t(res),
             size,
-            uintptr_t(ptr))
+            uintptr_t(ptr)
+        )
     );
     // Reactivate hooks.
     rt->activate_all_mem_hooks();
