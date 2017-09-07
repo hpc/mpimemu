@@ -13,12 +13,11 @@
 ################################################################################
 add_library(
     mpimcu-rt STATIC
-    mpimcu-mem-hook-state.h
-    mpimcu-mem-hook-state.c
-    mpimcu-mem-hooks.h
-    mpimcu-mem-hooks.cc
-    mpimcu-rt.h
-    mpimcu-rt.cc
+    mpimcu.h
+    mpimcu-sample.h
+    mpimcu-sampler.h mpimcu-sampler.cc
+    mpimcu-timer.h mpimcu-timer.cc
+    mpimcu-rt.h mpimcu-rt.cc
 )
 
 set_property(
@@ -29,33 +28,7 @@ set_property(
 
 ################################################################################
 add_library(
-    mpimcu-mem-stat-mgr STATIC
-    mpimcu-mem-stat-mgr.h
-    mpimcu-mem-stat-mgr.cc
-)
-
-set_property(
-    TARGET
-    mpimcu-mem-stat-mgr
-    PROPERTY POSITION_INDEPENDENT_CODE ON
-)
-
-################################################################################
-add_library(
-    mpimcu-timer STATIC
-    mpimcu-timer.h
-    mpimcu-timer.cc
-)
-set_property(
-    TARGET
-    mpimcu-timer
-    PROPERTY POSITION_INDEPENDENT_CODE ON
-)
-
-################################################################################
-add_library(
     mpimcu-trace SHARED
-    mpimcu-mem-interposers.c
     mpimcu-pmpi.cc
 )
 set_property(
@@ -68,10 +41,6 @@ set_property(
 target_link_libraries(
     mpimcu-trace
     mpimcu-rt
-    mpimcu-mem-stat-mgr
-    mpimcu-timer
-    ${CMAKE_DL_LIBS}
-    pthread
 )
 
 # Remove the 'lib' prefix.

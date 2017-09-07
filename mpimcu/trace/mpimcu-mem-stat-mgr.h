@@ -6,7 +6,6 @@
 #pragma once
 
 #include "mpimcu-rt.h"
-#include "mpimcu-mem-hook-state.h"
 #include "mpimcu-timer.h"
 
 #include <iostream>

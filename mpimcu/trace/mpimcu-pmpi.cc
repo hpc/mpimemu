@@ -4,7 +4,8 @@
  */
 
 #include "mpimcu-rt.h"
-#include "mpimcu-mem-stat-mgr.h"
+
+#include <iostream>
 
 #include <signal.h>
 
@@ -28,38 +29,33 @@ MPI_Init(
     // Set init time.
     rt->set_init_begin_time_now();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter, sdelta;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Init(argc, argv);
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    mmcu_rt::sample_delta(sbefore, safter, sdelta);
     // Set init end time.
     rt->set_init_end_time_now();
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
-    // For tool purposes, so don't track.
+    //
     rt->gather_target_meta();
     PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
     PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
     //
-    const int nsyncs = 4;
+    const int nsyncs = 2;
     for (int i = 0; i < nsyncs; ++i) {
         PMPI_Barrier(MPI_COMM_WORLD);
     }
-    // Obnoxious header that lets the user know something is happening.
+    // Emit obnoxious header that lets the user know something is happening.
     if (rt->rank == 0) {
-        printf(
-            "\n"
-            "_|      _|  _|_|_|    _|_|_|  _|      _|    _|_|_|  _|    _|\n"
-            "_|_|  _|_|  _|    _|    _|    _|_|  _|_|  _|        _|    _|\n"
-            "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
-            "_|      _|  _|          _|    _|      _|  _|        _|    _|\n"
-            "_|      _|  _|        _|_|_|  _|      _|    _|_|_|    _|_|  \n"
-            "\n"
-        );
+        rt->emit_header();
     }
     //
     return rc;
 }
 
+#if 0
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Point to Point
@@ -735,3 +731,4 @@ MPI_Finalize(void)
     //
     return PMPI_Finalize();
 }
+#endif

@@ -1,6 +1,7 @@
 #include "mpimcu-rt.h"
 #include "mpimcu-timer.h"
 
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -11,51 +12,11 @@
 /**
  *
  */
-mmcu_rt::mmcu_rt(void)
-{
-    deactivate_all_mem_hooks();
-}
-
-/**
- *
- */
-mmcu_rt::~mmcu_rt(void) = default;
-
-/**
- *
- */
 mmcu_rt *
 mmcu_rt::the_mmcu_rt(void)
 {
     static mmcu_rt singleton;
     return &singleton;
-}
-
-/**
- *
- */
-mmcu_mem_hook_mgr_t *
-mmcu_rt::get_mem_hook_mgr(void)
-{
-    return &mhmgr;
-}
-
-/**
- *
- */
-void
-mmcu_rt::activate_all_mem_hooks(void)
-{
-    mmcu_mem_hook_mgr_activate_all(&mhmgr);
-}
-
-/**
- *
- */
-void
-mmcu_rt::deactivate_all_mem_hooks(void)
-{
-    mmcu_mem_hook_mgr_deactivate_all(&mhmgr);
 }
 
 /**
@@ -74,15 +35,6 @@ void
 mmcu_rt::set_init_end_time_now(void)
 {
     init_end_time = mmcu_time();
-}
-
-/**
- *
- */
-mmcu_mem_hook_mgr_t *
-mmcu_rt_get_mem_hook_mgr(void)
-{
-    return mmcu_rt::the_mmcu_rt()->get_mem_hook_mgr();
 }
 
 /**
@@ -134,6 +86,15 @@ mmcu_rt::set_target_cmdline(void)
 /**
  *
  */
+std::string
+mmcu_rt::get_app_name(void)
+{
+    return std::string(app_comm, sizeof(app_comm));
+}
+
+/**
+ *
+ */
 void
 mmcu_rt::gather_target_meta(void)
 {
@@ -144,10 +105,19 @@ mmcu_rt::gather_target_meta(void)
 /**
  *
  */
-std::string
-mmcu_rt::get_app_name(void)
+double
+mmcu_rt::get_init_begin_time(void)
 {
-    return std::string(app_comm, sizeof(app_comm));
+    return init_begin_time;
+}
+
+/**
+ *
+ */
+double
+mmcu_rt::get_init_end_time(void)
+{
+    return init_end_time;
 }
 
 /**
@@ -166,4 +136,54 @@ mmcu_rt::get_date_time_str_now(void)
     strftime(tsb, sizeof(tsb) - 1, "%Y%m%d-%H%M%S", bd_time_ptr);
     //
     return std::string(tsb, sizeof(tsb));
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::emit_header(void)
+{
+    printf(
+        "\n"
+        "_|      _|  _|_|_|    _|_|_|  _|      _|    _|_|_|  _|    _|\n"
+        "_|_|  _|_|  _|    _|    _|    _|_|  _|_|  _|        _|    _|\n"
+        "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
+        "_|      _|  _|          _|    _|      _|  _|        _|    _|\n"
+        "_|      _|  _|        _|_|_|  _|      _|    _|_|_|    _|_|  \n"
+        "\n"
+    );
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::sample(
+    const std::string &what,
+    mmcu_sample &res
+) {
+    res = mmcu_sample(what);
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::sample_delta(
+    const mmcu_sample &happened_before,
+    const mmcu_sample &happened_after,
+    mmcu_sample &delta
+) {
+    mmcu_sample::delta(happened_before, happened_after, delta);
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::sample_emit(
+    const mmcu_sample &s
+) {
+    mmcu_sample::emit(s);
 }

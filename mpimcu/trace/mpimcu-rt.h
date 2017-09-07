@@ -1,23 +1,13 @@
 #pragma once
 
-#include "mpimcu-mem-hook-state.h"
+#include "mpimcu.h"
+#include "mpimcu-sample.h"
 
-#ifdef __cplusplus
 #include <string>
 #include <limits.h>
 
 class mmcu_rt {
 private:
-    mmcu_mem_hook_mgr_t mhmgr;
-    //
-    mmcu_rt(void);
-    //
-    ~mmcu_rt(void);
-    //
-    mmcu_rt(const mmcu_rt &that) = delete;
-    //
-    mmcu_rt &
-    operator=(const mmcu_rt &) = delete;
     //
     double init_begin_time = 0.0;
     //
@@ -26,6 +16,15 @@ private:
     char hostname[256];
     //
     char app_comm[PATH_MAX];
+    //
+    mmcu_rt(void) = default;
+    //
+    ~mmcu_rt(void) = default;
+    //
+    mmcu_rt(const mmcu_rt &that) = delete;
+    //
+    mmcu_rt &
+    operator=(const mmcu_rt &) = delete;
     //
     void
     set_hostname(void);
@@ -41,14 +40,8 @@ public:
     static mmcu_rt *
     the_mmcu_rt(void);
     //
-    mmcu_mem_hook_mgr_t *
-    get_mem_hook_mgr(void);
-    //
     void
-    activate_all_mem_hooks(void);
-    //
-    void
-    deactivate_all_mem_hooks(void);
+    emit_header(void);
     //
     void
     set_init_begin_time_now(void);
@@ -69,23 +62,31 @@ public:
     gather_target_meta(void);
     //
     double
-    get_init_begin_time(void) {
-        return init_begin_time;
-    }
+    get_init_begin_time(void);
     //
     double
-    get_init_end_time(void) {
-        return init_end_time;
-    }
+    get_init_end_time(void);
+    //
+    void
+    sample(
+        const std::string &what,
+        mmcu_sample &res
+    );
+    //
+    static void
+    sample_delta(
+        const mmcu_sample &happened_before,
+        const mmcu_sample &happened_after,
+        mmcu_sample &delta
+    );
+    //
+    static void
+    sample_emit(
+        const mmcu_sample &s
+    );
 };
 
-#endif // #ifdef __cplusplus
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-mmcu_mem_hook_mgr_t *
-mmcu_rt_get_mem_hook_mgr(void);
-#ifdef __cplusplus
-}
-#endif
+#define mmcu_rt_sample(mmcu_rtp, mmcu_samp_res)                                \
+do {                                                                           \
+    mmcu_rtp->sample(MMCU_FUNC, mmcu_samp_res);                                \
+} while (0)
