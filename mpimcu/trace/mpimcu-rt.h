@@ -3,8 +3,11 @@
 #include "mpimcu.h"
 #include "mpimcu-sample.h"
 
-#include <string>
 #include <limits.h>
+
+#include <string>
+#include <vector>
+#include <map>
 
 class mmcu_rt {
 private:
@@ -16,6 +19,8 @@ private:
     char hostname[256];
     //
     char app_comm[PATH_MAX];
+    //
+    std::map< sample_type, std::vector<mmcu_sample> > samples;
     //
     mmcu_rt(void) = default;
     //
@@ -84,6 +89,15 @@ public:
     sample_emit(
         const mmcu_sample &s
     );
+    //
+    void
+    store_sample(
+        const mmcu_sample &happened_before,
+        const mmcu_sample &happened_after
+    );
+    //
+    void
+    report(void);
 };
 
 #define mmcu_rt_sample(mmcu_rtp, mmcu_samp_res)                                \

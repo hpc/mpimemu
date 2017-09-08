@@ -5,7 +5,9 @@
 
 #include <string>
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
+#include <vector>
 
 class mmcu_sample {
     //
@@ -74,4 +76,26 @@ public:
         mmcu_smaps_sampler::sample::emit(s.smaps);
         cout << "# ###############################################" << endl;
     }
+#if 0
+"MPI_MEM_USAGE",
+"ALL_MEM_USAGE",
+#endif
+    // FIXME
+    static void
+    report(
+        FILE *tof,
+        const std::vector<mmcu_sample> &samples,
+        double since
+    ) {
+    }
+};
+
+class mmcu_dataset {
+    //
+    enum type {
+        MPI,
+        APP
+    };
+    //
+    std::map< sample_type, std::vector<mmcu_sample> > samples;
 };

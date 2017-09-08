@@ -187,3 +187,150 @@ mmcu_rt::sample_emit(
 ) {
     mmcu_sample::emit(s);
 }
+
+/**
+ *
+ */
+void
+mmcu_rt::store_sample(
+    const mmcu_sample &happened_before,
+    const mmcu_sample &happened_after
+) {
+    mmcu_sample delta;
+
+    mmcu_rt::sample_delta(happened_before, happened_after, delta);
+
+    samples[APP].push_back(happened_before);
+    samples[APP].push_back(happened_after);
+
+    samples[MPI].push_back(delta);
+}
+
+/**
+ *
+ */
+void
+mmcu_rt::report(void)
+{
+    using namespace std;
+    //
+    setbuf(stdout, NULL);
+    //
+    if (rank == 0) {
+        printf("\n#########################################################"
+                "\n# MPI Memory Consumption Analysis Complete ##############"
+                "\n#########################################################"
+                "\n");
+    }
+    //
+    char *output_dir = getenv("MMCU_REPORT_OUTPUT_PATH");
+    // Not set, so output to pwd.
+    if (!output_dir) {
+        output_dir = getenv("PWD");
+    }
+    if (!output_dir) {
+        fprintf(stderr, "Error saving report.\n");
+        return;
+    }
+
+    char report_name[PATH_MAX];
+    snprintf(
+        report_name, sizeof(report_name) - 1, "%s/%d.%s",
+        output_dir, rank, "mmcu"
+    );
+
+    FILE *reportf = fopen(report_name, "w+");
+    if (!reportf) {
+        fprintf(stderr, "Error saving report to %s.\n", report_name);
+        return;
+    }
+
+    fprintf(reportf, "# [Run Info Begin]\n");
+
+    fprintf(
+        reportf,
+        "# Report Date Time: %s\n",
+        get_date_time_str_now().c_str()
+    );
+
+    fprintf(reportf, "# Application Name: %s\n", get_app_name().c_str());
+
+    fprintf(reportf, "# Hostname: %s\n", get_hostname().c_str());
+
+    fprintf(reportf, "# MPI_COMM_WORLD Rank: %d\n", rank);
+
+    fprintf(reportf, "# MPI_COMM_WORLD Size: %d\n", numpe);
+
+    fprintf(
+        reportf,
+        "# Number of Operation Captures Performed: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# Number of Memory Operations Recorded: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# Number of Allocation-Related Operations Recorded: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# Number of Deallocation-Related Operations Recorded: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# Number of MPI Library PSS Samples Collected: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# Number of Application PSS Samples Collected: %" PRIu64 "\n",
+        0uL
+    );
+
+    fprintf(
+        reportf,
+        "# High Memory Usage Watermark (MPI) (MB): %lf\n",
+        0.0
+    );
+
+    fprintf(
+        reportf,
+        "# High Memory Usage Watermark (Application + MPI) (MB): %lf\n",
+        0.0
+    );
+
+    fprintf(reportf, "# [Run Info End]\n");
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    const double init_time = get_init_begin_time();
+
+    fprintf(
+        reportf,
+        "# MPI Library Memory Usage (B) Over Time "
+        "(Since MPI_Init):\n"
+    );
+    mmcu_sample::report(reportf, samples[MPI], init_time);
+
+    fprintf(
+        reportf,
+        "# Application Memory Usage (B) Over Time "
+        "(Since MPI_Init):\n"
+    );
+    mmcu_sample::report(reportf, samples[APP], init_time);
+
+    fclose(reportf);
+
+    if (rank == 0) {
+        printf("# Report written to %s\n", output_dir);
+    }
+}

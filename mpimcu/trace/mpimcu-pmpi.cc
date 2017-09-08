@@ -29,13 +29,14 @@ MPI_Init(
     // Set init time.
     rt->set_init_begin_time_now();
     //
-    mmcu_sample sbefore, safter, sdelta;
+    mmcu_sample sbefore, safter;
     mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Init(argc, argv);
     mmcu_rt_sample(rt, safter);
-    mmcu_rt::sample_delta(sbefore, safter, sdelta);
     // Set init end time.
     rt->set_init_end_time_now();
+    // Store the results.
+    rt->store_sample(sbefore, safter);
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
     //
@@ -705,6 +706,7 @@ MPI_Type_vector(
     //
     return rc;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -718,17 +720,10 @@ int
 MPI_Finalize(void)
 {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
-    rt->deactivate_all_mem_hooks();
-    static auto *stat_mgr = mmcu_mem_stat_mgr::the_mmcu_mem_stat_mgr();
     // Sync.
     PMPI_Barrier(MPI_COMM_WORLD);
-    //
-    static const bool force_sample = true;
-    stat_mgr->update_mem_stats(force_sample);
-    // Sync.
-    PMPI_Barrier(MPI_COMM_WORLD);
-    stat_mgr->report(rt, true);
+    // Report.
+    rt->report();
     //
     return PMPI_Finalize();
 }
-#endif
