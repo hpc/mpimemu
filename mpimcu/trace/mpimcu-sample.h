@@ -49,8 +49,15 @@ public:
     }
     //
     int64_t
-    get_mem_usage_in_kb(void) const {
-        return smaps.data_in_kb[mmcu_smaps_sampler::PSS];
+    get_mem_usage_in_kb(
+        int64_t *running_total = nullptr
+    ) const {
+        const int64_t samp_usage = smaps.data_in_kb[mmcu_smaps_sampler::PSS];
+        if (running_total) {
+            *running_total += samp_usage;
+            return *running_total;
+        }
+        return samp_usage;
     }
     //
     static void
@@ -135,13 +142,18 @@ public:
         type_id tid,
         double since
     ) {
+        int64_t mem_total = 0;
+        // To keep track of MPI usage, we have to sum the deltas. APP usage is
+        // calculated by just using the sample values at any given point.
+        int64_t *mtbp = (MPI == tid ? &mem_total : nullptr);
+
         for (const auto &d : data[tid]) {
             fprintf(
                 tof,
                 "%s %lf %" PRId64 "\n",
                 tid_name_tab[tid].c_str(),
                 d.get_capture_time() - since,
-                d.get_mem_usage_in_kb() * 1024
+                d.get_mem_usage_in_kb(mtbp) * 1024
             );
         }
     }
