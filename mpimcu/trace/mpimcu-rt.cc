@@ -1,3 +1,8 @@
+/*
+ * Copyright (c)      2017 Los Alamos National Security, LLC.
+ *                         All rights reserved.
+ */
+
 #include "mpimcu-rt.h"
 #include "mpimcu-timer.h"
 
@@ -145,12 +150,9 @@ void
 mmcu_rt::emit_header(void)
 {
     printf(
-        "\n"
-        "_|      _|  _|_|_|    _|_|_|  _|      _|    _|_|_|  _|    _|\n"
-        "_|_|  _|_|  _|    _|    _|    _|_|  _|_|  _|        _|    _|\n"
-        "_|  _|  _|  _|_|_|      _|    _|  _|  _|  _|        _|    _|\n"
-        "_|      _|  _|          _|    _|      _|  _|        _|    _|\n"
-        "_|      _|  _|        _|_|_|  _|      _|    _|_|_|    _|_|  \n"
+        "\n#########################################################"
+        "\n# memnesia analysis enabled #############################"
+        "\n#########################################################"
         "\n"
     );
 }
@@ -200,10 +202,10 @@ mmcu_rt::store_sample(
 
     mmcu_rt::sample_delta(happened_before, happened_after, delta);
 
-    samples[APP].push_back(happened_before);
-    samples[APP].push_back(happened_after);
+    dataset.push_back(mmcu_dataset::APP, happened_before);
+    dataset.push_back(mmcu_dataset::APP, happened_after);
 
-    samples[MPI].push_back(delta);
+    dataset.push_back(mmcu_dataset::MPI, delta);
 }
 
 /**
@@ -217,10 +219,12 @@ mmcu_rt::report(void)
     setbuf(stdout, NULL);
     //
     if (rank == 0) {
-        printf("\n#########################################################"
-                "\n# MPI Memory Consumption Analysis Complete ##############"
-                "\n#########################################################"
-                "\n");
+        printf(
+            "\n#########################################################"
+            "\n# memnesia memory consumption analysis complete #########"
+            "\n#########################################################"
+            "\n"
+        );
     }
     //
     char *output_dir = getenv("MMCU_REPORT_OUTPUT_PATH");
@@ -319,14 +323,14 @@ mmcu_rt::report(void)
         "# MPI Library Memory Usage (B) Over Time "
         "(Since MPI_Init):\n"
     );
-    mmcu_sample::report(reportf, samples[MPI], init_time);
+    dataset.report(reportf, mmcu_dataset::MPI, init_time);
 
     fprintf(
         reportf,
         "# Application Memory Usage (B) Over Time "
         "(Since MPI_Init):\n"
     );
-    mmcu_sample::report(reportf, samples[APP], init_time);
+    dataset.report(reportf, mmcu_dataset::APP, init_time);
 
     fclose(reportf);
 

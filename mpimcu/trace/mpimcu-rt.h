@@ -20,7 +20,7 @@ private:
     //
     char app_comm[PATH_MAX];
     //
-    std::map< sample_type, std::vector<mmcu_sample> > samples;
+    mmcu_dataset dataset;
     //
     mmcu_rt(void) = default;
     //

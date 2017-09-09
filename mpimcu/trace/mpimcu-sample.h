@@ -1,3 +1,8 @@
+/*
+ * Copyright (c)      2017 Los Alamos National Security, LLC.
+ *                         All rights reserved.
+ */
+
 #pragma once
 
 #include "mpimcu-timer.h"
@@ -20,7 +25,10 @@ class mmcu_sample {
     mmcu_smaps_sampler::sample smaps;
 
 public:
-
+    //
+    enum get_id {
+        MEM_USAGE = 0
+    };
     //
     mmcu_sample(void) = default;
     //
@@ -29,6 +37,21 @@ public:
     ) : target_func_name(func_name)
       , capture_time(mmcu_time())
       , smaps(mmcu_smaps_sampler::get_sample()) { }
+    //
+    double
+    get_capture_time(void) const {
+        return capture_time;
+    }
+    //
+    double
+    get_duration(void) const {
+        return duration;
+    }
+    //
+    int64_t
+    get_mem_usage_in_kb(void) const {
+        return smaps.data_in_kb[mmcu_smaps_sampler::PSS];
+    }
     //
     static void
     delta(
@@ -76,26 +99,50 @@ public:
         mmcu_smaps_sampler::sample::emit(s.smaps);
         cout << "# ###############################################" << endl;
     }
-#if 0
-"MPI_MEM_USAGE",
-"ALL_MEM_USAGE",
-#endif
-    // FIXME
-    static void
-    report(
-        FILE *tof,
-        const std::vector<mmcu_sample> &samples,
-        double since
-    ) {
-    }
 };
 
 class mmcu_dataset {
+public:
     //
-    enum type {
-        MPI,
-        APP
+    enum type_id {
+        MPI = 0,
+        APP,
+        LAST
     };
+
+private:
     //
-    std::map< sample_type, std::vector<mmcu_sample> > samples;
+    std::map< type_id, std::vector<mmcu_sample> > data;
+    //
+    std::vector<std::string> tid_name_tab {
+        "MPI_MEM_USAGE",
+        "ALL_MEM_USAGE"
+    };
+
+public:
+    //
+    void
+    push_back(
+        type_id tid,
+        const mmcu_sample &sample
+    ) {
+        data[tid].push_back(sample);
+    }
+    //
+    void
+    report(
+        FILE *tof,
+        type_id tid,
+        double since
+    ) {
+        for (const auto &d : data[tid]) {
+            fprintf(
+                tof,
+                "%s %lf %" PRId64 "\n",
+                tid_name_tab[tid].c_str(),
+                d.get_capture_time() - since,
+                d.get_mem_usage_in_kb() * 1024
+            );
+        }
+    }
 };

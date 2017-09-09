@@ -151,6 +151,7 @@ map<string, mmcu_smaps_sampler::entry_id> mmcu_smaps_sampler::tokid_tab = {
     make_pair("Referenced",      mmcu_smaps_sampler::REFERENCED),
     make_pair("Anonymous",       mmcu_smaps_sampler::ANONYMOUS),
     make_pair("AnonHugePages",   mmcu_smaps_sampler::ANONHUGEPAGES),
+    make_pair("ShmemPmdMapped",  mmcu_smaps_sampler::SHMEMPMDMAPPED),
     make_pair("Shared_Hugetlb",  mmcu_smaps_sampler::SHARED_HUGETLB),
     make_pair("Private_Hugetlb", mmcu_smaps_sampler::PRIVATE_HUGETLB),
     make_pair("Swap",            mmcu_smaps_sampler::SWAP),

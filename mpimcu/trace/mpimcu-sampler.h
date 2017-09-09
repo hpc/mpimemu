@@ -25,6 +25,7 @@ public:
         REFERENCED,
         ANONYMOUS,
         ANONHUGEPAGES,
+        SHMEMPMDMAPPED,
         SHARED_HUGETLB,
         PRIVATE_HUGETLB,
         SWAP,
