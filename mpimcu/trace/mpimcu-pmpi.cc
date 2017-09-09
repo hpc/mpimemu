@@ -56,7 +56,6 @@ MPI_Init(
     return rc;
 }
 
-#if 0
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Point to Point
@@ -77,7 +76,8 @@ MPI_Irecv(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Irecv(
         buf,
         count,
@@ -87,7 +87,8 @@ MPI_Irecv(
         comm,
         request
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -106,7 +107,8 @@ MPI_Send(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Send(
         buf,
         count,
@@ -115,7 +117,8 @@ MPI_Send(
         tag,
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -135,7 +138,8 @@ MPI_Recv(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Recv(
         buf,
         count,
@@ -145,7 +149,8 @@ MPI_Recv(
         comm,
         status
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -165,7 +170,8 @@ MPI_Isend(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Isend(
         buf,
         count,
@@ -175,7 +181,8 @@ MPI_Isend(
         comm,
         request
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -200,7 +207,8 @@ MPI_Sendrecv(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Sendrecv(
         sendbuf,
         sendcount,
@@ -215,7 +223,8 @@ MPI_Sendrecv(
         comm,
         status
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -230,12 +239,14 @@ MPI_Wait(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Wait(
         request,
         status
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -251,13 +262,15 @@ MPI_Waitall(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Waitall(
         count,
         array_of_requests,
         array_of_statuses
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -275,7 +288,8 @@ MPI_Iprobe(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Iprobe(
         source,
         tag,
@@ -283,7 +297,8 @@ MPI_Iprobe(
         flag,
         status
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -303,7 +318,8 @@ MPI_Issend(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Issend(
         buf,
         count,
@@ -313,7 +329,8 @@ MPI_Issend(
         comm,
         request
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -332,7 +349,8 @@ MPI_Ssend(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Ssend(
         buf,
         count,
@@ -341,7 +359,8 @@ MPI_Ssend(
         tag,
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -362,12 +381,14 @@ MPI_Comm_size(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_size(
         comm,
         size
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -382,12 +403,14 @@ MPI_Comm_rank(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_rank(
         comm,
         rank
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -401,11 +424,13 @@ MPI_Barrier(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Barrier(
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -424,7 +449,8 @@ MPI_Allreduce(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Allreduce(
         sendbuf,
         recvbuf,
@@ -433,7 +459,8 @@ MPI_Allreduce(
         op,
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -451,7 +478,8 @@ MPI_Bcast(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Bcast(
         buffer,
         count,
@@ -459,7 +487,8 @@ MPI_Bcast(
         root,
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -479,7 +508,8 @@ MPI_Reduce(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Reduce(
         sendbuf,
         recvbuf,
@@ -489,7 +519,8 @@ MPI_Reduce(
         root,
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -508,9 +539,11 @@ MPI_Wtime(void)
 {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     double res = PMPI_Wtime();
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return res;
 }
@@ -525,12 +558,14 @@ MPI_Address(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Address(
         location,
         address
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -547,14 +582,16 @@ MPI_Comm_split(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_split(
         comm,
         color,
         key,
         newcomm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -568,11 +605,13 @@ MPI_Comm_free(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_free(
         comm
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -587,12 +626,14 @@ MPI_Abort(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Abort(
         comm,
         errorcode
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -606,11 +647,13 @@ MPI_Type_commit(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Type_commit(
         type
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -624,11 +667,13 @@ MPI_Type_free(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Type_free(
         type
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -644,13 +689,15 @@ MPI_Type_contiguous(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Type_contiguous(
         count,
         oldtype,
         newtype
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -668,7 +715,8 @@ MPI_Type_struct(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Type_struct(
         count,
         array_of_blocklengths,
@@ -676,7 +724,8 @@ MPI_Type_struct(
         array_of_types,
         newtype
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
@@ -694,7 +743,8 @@ MPI_Type_vector(
 ) {
     static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
     //
-    rt->activate_all_mem_hooks();
+    mmcu_sample sbefore, safter;
+    mmcu_rt_sample(rt, sbefore);
     int rc = PMPI_Type_vector(
         count,
         blocklength,
@@ -702,11 +752,11 @@ MPI_Type_vector(
         oldtype,
         newtype
     );
-    rt->deactivate_all_mem_hooks();
+    mmcu_rt_sample(rt, safter);
+    rt->store_sample(sbefore, safter);
     //
     return rc;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
