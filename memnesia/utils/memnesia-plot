@@ -269,6 +269,7 @@ class Plotter:
         self.max_y = sys.float_info.min
         self.min_y = sys.float_info.max
         self.line_style = 'solid'
+        self.line_width = 0.75
         self.title_font_size = 12
         self.axis_font_size = 12
 
@@ -395,6 +396,7 @@ class Plotter:
         target_ax.plot(
             x, y,
             linestyle=self.line_style,
+            linewidth=self.line_width,
             color=clr,
             alpha=0.9
         )
