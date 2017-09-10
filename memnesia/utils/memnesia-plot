@@ -249,7 +249,7 @@ class Colorer:
 ###############################################################################
 class Plotter:
     def __init__(self, experiments_to_plot):
-        self.fname = self.get_usable_file_name('usage-plot', 'pdf')
+        self.fname = self.get_usable_file_name('memory-usage', 'pdf')
         self.experiments = experiments_to_plot
         self.numpes = set()
         self.fig, self.axs = plt.subplots(2, sharex=True)
