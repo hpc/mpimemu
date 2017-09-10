@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mpimcu.h"
-#include "mpimcu-sample.h"
+#include "memnesia.h"
+#include "memnesia-sample.h"
 
 #include <limits.h>
 
@@ -9,7 +9,7 @@
 #include <vector>
 #include <map>
 
-class mmcu_rt {
+class memnesia_rt {
 private:
     //
     double init_begin_time = 0.0;
@@ -20,19 +20,19 @@ private:
     //
     char app_comm[PATH_MAX];
     //
-    mmcu_dataset dataset;
+    memnesia_dataset dataset;
     //
-    mmcu_rt(void) {
+    memnesia_rt(void) {
         (void)memset(hostname, '\0', sizeof(hostname));
         (void)memset(app_comm, '\0', sizeof(app_comm));
     }
     //
-    ~mmcu_rt(void) = default;
+    ~memnesia_rt(void) = default;
     //
-    mmcu_rt(const mmcu_rt &that) = delete;
+    memnesia_rt(const memnesia_rt &that) = delete;
     //
-    mmcu_rt &
-    operator=(const mmcu_rt &) = delete;
+    memnesia_rt &
+    operator=(const memnesia_rt &) = delete;
     //
     void
     set_hostname(void);
@@ -45,8 +45,8 @@ public:
     //
     int numpe = 0;
     //
-    static mmcu_rt *
-    the_mmcu_rt(void);
+    static memnesia_rt *
+    the_memnesia_rt(void);
     //
     void
     emit_header(void);
@@ -78,32 +78,32 @@ public:
     void
     sample(
         const std::string &what,
-        mmcu_sample &res
+        memnesia_sample &res
     );
     //
     static void
     sample_delta(
-        const mmcu_sample &happened_before,
-        const mmcu_sample &happened_after,
-        mmcu_sample &delta
+        const memnesia_sample &happened_before,
+        const memnesia_sample &happened_after,
+        memnesia_sample &delta
     );
     //
     static void
     sample_emit(
-        const mmcu_sample &s
+        const memnesia_sample &s
     );
     //
     void
     store_sample(
-        const mmcu_sample &happened_before,
-        const mmcu_sample &happened_after
+        const memnesia_sample &happened_before,
+        const memnesia_sample &happened_after
     );
     //
     void
     report(void);
 };
 
-#define mmcu_rt_sample(mmcu_rtp, mmcu_samp_res)                                \
+#define memnesia_rt_sample(memnesia_rtp, memnesia_samp_res)                                \
 do {                                                                           \
-    mmcu_rtp->sample(MMCU_FUNC, mmcu_samp_res);                                \
+    memnesia_rtp->sample(MEMNESIA_FUNC, memnesia_samp_res);                                \
 } while (0)

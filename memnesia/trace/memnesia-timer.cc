@@ -3,7 +3,7 @@
  *                         All rights reserved.
  */
 
-#include "mpimcu-timer.h"
+#include "memnesia-timer.h"
 
 #include <chrono>
 
@@ -11,7 +11,7 @@
  *
  */
 double
-mmcu_time(void)
+memnesia_time(void)
 {
     using namespace std::chrono;
 

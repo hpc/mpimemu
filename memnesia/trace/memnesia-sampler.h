@@ -11,7 +11,7 @@
 #include <iostream>
 #include <map>
 
-class mmcu_smaps_sampler {
+class memnesia_smaps_sampler {
 public:
     //
     enum entry_id {
@@ -67,7 +67,7 @@ public:
             using namespace std;
 
             cout << "# smaps -----------------------------------------" << endl;
-            for (auto &i : mmcu_smaps_sampler::tokid_tab) {
+            for (auto &i : memnesia_smaps_sampler::tokid_tab) {
                 const auto idx = i.second;
                 if (idx == entry_id::LAST) break;
                 cout << i.first << ": " << s.data_in_kb[idx] << " kB" << endl;

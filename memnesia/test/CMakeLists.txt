@@ -19,8 +19,3 @@ add_executable(
     mpi-sendrecv
     mpi-sendrecv.c
 )
-
-target_compile_options(
-    mpi-init PRIVATE
-    -g -O0
-)

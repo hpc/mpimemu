@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "mpimcu-timer.h"
-#include "mpimcu-sampler.h"
+#include "memnesia-timer.h"
+#include "memnesia-sampler.h"
 
 #include <string>
 #include <cassert>
@@ -14,7 +14,7 @@
 #include <iostream>
 #include <vector>
 
-class mmcu_sample {
+class memnesia_sample {
     //
     std::string target_func_name;
     //
@@ -22,7 +22,7 @@ class mmcu_sample {
     // Only valid for deltas.
     double duration = 0.0;
     //
-    mmcu_smaps_sampler::sample smaps;
+    memnesia_smaps_sampler::sample smaps;
 
 public:
     //
@@ -30,13 +30,13 @@ public:
         MEM_USAGE = 0
     };
     //
-    mmcu_sample(void) = default;
+    memnesia_sample(void) = default;
     //
-    mmcu_sample(
+    memnesia_sample(
         std::string func_name
     ) : target_func_name(func_name)
-      , capture_time(mmcu_time())
-      , smaps(mmcu_smaps_sampler::get_sample()) { }
+      , capture_time(memnesia_time())
+      , smaps(memnesia_smaps_sampler::get_sample()) { }
     //
     double
     get_capture_time(void) const {
@@ -52,7 +52,7 @@ public:
     get_mem_usage_in_kb(
         int64_t *running_total = nullptr
     ) const {
-        const int64_t samp_usage = smaps.data_in_kb[mmcu_smaps_sampler::PSS];
+        const int64_t samp_usage = smaps.data_in_kb[memnesia_smaps_sampler::PSS];
         if (running_total) {
             *running_total += samp_usage;
             return *running_total;
@@ -62,9 +62,9 @@ public:
     //
     static void
     delta(
-        const mmcu_sample &happened_before,
-        const mmcu_sample &happened_after,
-        mmcu_sample &delta
+        const memnesia_sample &happened_before,
+        const memnesia_sample &happened_after,
+        memnesia_sample &delta
     ) {
         using namespace std;
 
@@ -86,7 +86,7 @@ public:
         delta.capture_time = after.capture_time;
         delta.duration = after.capture_time - before.capture_time;
         //
-        mmcu_smaps_sampler::sample::delta(
+        memnesia_smaps_sampler::sample::delta(
             before.smaps,
             after.smaps,
             delta.smaps
@@ -95,7 +95,7 @@ public:
     //
     static void
     emit(
-        const mmcu_sample &s
+        const memnesia_sample &s
     ) {
         using namespace std;
 
@@ -103,12 +103,12 @@ public:
         cout << "# Function Name: " << s.target_func_name << endl;
         cout << "# Capture Time : " << s.capture_time << endl;
         cout << "# Duration     : " << s.duration << endl;
-        mmcu_smaps_sampler::sample::emit(s.smaps);
+        memnesia_smaps_sampler::sample::emit(s.smaps);
         cout << "# ###############################################" << endl;
     }
 };
 
-class mmcu_dataset {
+class memnesia_dataset {
 public:
     //
     enum type_id {
@@ -119,7 +119,7 @@ public:
 
 private:
     //
-    std::map< type_id, std::vector<mmcu_sample> > data;
+    std::map< type_id, std::vector<memnesia_sample> > data;
     //
     std::vector<std::string> tid_name_tab {
         "MPI_MEM_USAGE",
@@ -131,7 +131,7 @@ public:
     void
     push_back(
         type_id tid,
-        const mmcu_sample &sample
+        const memnesia_sample &sample
     ) {
         data[tid].push_back(sample);
     }

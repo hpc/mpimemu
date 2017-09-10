@@ -6,4 +6,4 @@
 #pragma once
 
 double
-mmcu_time(void);
+memnesia_time(void);

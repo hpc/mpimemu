@@ -3,7 +3,7 @@
  *                         All rights reserved.
  */
 
-#include "mpimcu-rt.h"
+#include "memnesia-rt.h"
 
 #include <iostream>
 
@@ -25,14 +25,14 @@ MPI_Init(
     int *argc,
     char ***argv
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     // Set init time.
     rt->set_init_begin_time_now();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Init(argc, argv);
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     // Set init end time.
     rt->set_init_end_time_now();
     // Store the results.
@@ -75,10 +75,10 @@ MPI_Irecv(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Irecv(
         buf,
         count,
@@ -88,7 +88,7 @@ MPI_Irecv(
         comm,
         request
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -106,10 +106,10 @@ MPI_Send(
     int tag,
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Send(
         buf,
         count,
@@ -118,7 +118,7 @@ MPI_Send(
         tag,
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -137,10 +137,10 @@ MPI_Recv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Recv(
         buf,
         count,
@@ -150,7 +150,7 @@ MPI_Recv(
         comm,
         status
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -169,10 +169,10 @@ MPI_Isend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Isend(
         buf,
         count,
@@ -182,7 +182,7 @@ MPI_Isend(
         comm,
         request
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -206,10 +206,10 @@ MPI_Sendrecv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Sendrecv(
         sendbuf,
         sendcount,
@@ -224,7 +224,7 @@ MPI_Sendrecv(
         comm,
         status
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -238,15 +238,15 @@ MPI_Wait(
     MPI_Request *request,
     MPI_Status *status
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Wait(
         request,
         status
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -261,16 +261,16 @@ MPI_Waitall(
     MPI_Request array_of_requests[],
     MPI_Status *array_of_statuses
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Waitall(
         count,
         array_of_requests,
         array_of_statuses
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -287,10 +287,10 @@ MPI_Iprobe(
     int *flag,
     MPI_Status *status
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Iprobe(
         source,
         tag,
@@ -298,7 +298,7 @@ MPI_Iprobe(
         flag,
         status
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -317,10 +317,10 @@ MPI_Issend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Issend(
         buf,
         count,
@@ -330,7 +330,7 @@ MPI_Issend(
         comm,
         request
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -348,10 +348,10 @@ MPI_Ssend(
     int tag,
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Ssend(
         buf,
         count,
@@ -360,7 +360,7 @@ MPI_Ssend(
         tag,
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -380,15 +380,15 @@ MPI_Comm_size(
     MPI_Comm comm,
     int *size
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_size(
         comm,
         size
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -402,15 +402,15 @@ MPI_Comm_rank(
     MPI_Comm comm,
     int *rank
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_rank(
         comm,
         rank
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -423,14 +423,14 @@ int
 MPI_Barrier(
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Barrier(
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -448,10 +448,10 @@ MPI_Allreduce(
     MPI_Op op,
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Allreduce(
         sendbuf,
         recvbuf,
@@ -460,7 +460,7 @@ MPI_Allreduce(
         op,
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -477,10 +477,10 @@ MPI_Bcast(
     int root,
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Bcast(
         buffer,
         count,
@@ -488,7 +488,7 @@ MPI_Bcast(
         root,
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -507,10 +507,10 @@ MPI_Reduce(
     int root,
     MPI_Comm comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Reduce(
         sendbuf,
         recvbuf,
@@ -520,7 +520,7 @@ MPI_Reduce(
         root,
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -538,12 +538,12 @@ MPI_Reduce(
 double
 MPI_Wtime(void)
 {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     double res = PMPI_Wtime();
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return res;
@@ -557,15 +557,15 @@ MPI_Address(
     void *location,
     MPI_Aint *address
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Address(
         location,
         address
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -581,17 +581,17 @@ MPI_Comm_split(
     int key,
     MPI_Comm *newcomm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_split(
         comm,
         color,
         key,
         newcomm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -604,14 +604,14 @@ int
 MPI_Comm_free(
     MPI_Comm *comm
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Comm_free(
         comm
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -625,15 +625,15 @@ MPI_Abort(
     MPI_Comm comm,
     int errorcode
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Abort(
         comm,
         errorcode
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -646,14 +646,14 @@ int
 MPI_Type_commit(
     MPI_Datatype *type
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Type_commit(
         type
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -666,14 +666,14 @@ int
 MPI_Type_free(
     MPI_Datatype *type
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Type_free(
         type
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -688,16 +688,16 @@ MPI_Type_contiguous(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Type_contiguous(
         count,
         oldtype,
         newtype
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -714,10 +714,10 @@ MPI_Type_struct(
     MPI_Datatype array_of_types[],
     MPI_Datatype *newtype
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Type_struct(
         count,
         array_of_blocklengths,
@@ -725,7 +725,7 @@ MPI_Type_struct(
         array_of_types,
         newtype
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -742,10 +742,10 @@ MPI_Type_vector(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     //
-    mmcu_sample sbefore, safter;
-    mmcu_rt_sample(rt, sbefore);
+    memnesia_sample sbefore, safter;
+    memnesia_rt_sample(rt, sbefore);
     int rc = PMPI_Type_vector(
         count,
         blocklength,
@@ -753,7 +753,7 @@ MPI_Type_vector(
         oldtype,
         newtype
     );
-    mmcu_rt_sample(rt, safter);
+    memnesia_rt_sample(rt, safter);
     rt->store_sample(sbefore, safter);
     //
     return rc;
@@ -770,7 +770,7 @@ MPI_Type_vector(
 int
 MPI_Finalize(void)
 {
-    static mmcu_rt *rt = mmcu_rt::the_mmcu_rt();
+    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
     // Sync.
     PMPI_Barrier(MPI_COMM_WORLD);
     // Report.

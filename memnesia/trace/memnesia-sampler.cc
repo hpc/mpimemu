@@ -3,7 +3,7 @@
  *                         All rights reserved.
  */
 
-#include "mpimcu-sampler.h"
+#include "memnesia-sampler.h"
 
 #include <limits.h>
 
@@ -57,7 +57,7 @@ class smaps_parser {
     static bool
     parse_rest(
         FILE *smapsf,
-        mmcu_smaps_sampler::sample &sample
+        memnesia_smaps_sampler::sample &sample
     ) {
         char lbuff[lbuff_size];
         bool hit_last = false;
@@ -74,12 +74,12 @@ class smaps_parser {
             string value = toks[vidx];
             // Remove '\n'
             string units = toks[uidx].substr(0, toks[uidx].length() - 1);
-            auto got = mmcu_smaps_sampler::tokid_tab.find(key);
+            auto got = memnesia_smaps_sampler::tokid_tab.find(key);
             // We found a key that we care about.
-            if (got != mmcu_smaps_sampler::tokid_tab.end()) {
-                const mmcu_smaps_sampler::entry_id idx = got->second;
+            if (got != memnesia_smaps_sampler::tokid_tab.end()) {
+                const memnesia_smaps_sampler::entry_id idx = got->second;
                 // Done!
-                if (mmcu_smaps_sampler::LAST == idx) {
+                if (memnesia_smaps_sampler::LAST == idx) {
                     hit_last = true;
                     break;
                 }
@@ -113,7 +113,7 @@ class smaps_parser {
 public:
 
     //
-    static mmcu_smaps_sampler::sample
+    static memnesia_smaps_sampler::sample
     parse(void)
     {
         static const char *f_name = "/proc/self/smaps";
@@ -124,7 +124,7 @@ public:
             exit(EXIT_FAILURE);
         }
 
-        mmcu_smaps_sampler::sample result;
+        memnesia_smaps_sampler::sample result;
         while (true) {
             if (eop == parse_header(smapsf)) break;
             if (eop == parse_rest(smapsf, result)) break;
@@ -138,34 +138,34 @@ public:
 
 } // namespace
 
-map<string, mmcu_smaps_sampler::entry_id> mmcu_smaps_sampler::tokid_tab = {
-    make_pair("Size",            mmcu_smaps_sampler::SIZE),
-    make_pair("Rss",             mmcu_smaps_sampler::RSS),
-    make_pair("Pss",             mmcu_smaps_sampler::PSS),
-    make_pair("Shared_Clean",    mmcu_smaps_sampler::SHARED_CLEAN),
-    make_pair("Shared_Dirty",    mmcu_smaps_sampler::SHARED_DIRTY),
-    make_pair("Private_Clean",   mmcu_smaps_sampler::PRIVATE_CLEAN),
-    make_pair("Private_Dirty",   mmcu_smaps_sampler::PRIVATE_DIRTY),
-    make_pair("Referenced",      mmcu_smaps_sampler::REFERENCED),
-    make_pair("Anonymous",       mmcu_smaps_sampler::ANONYMOUS),
-    make_pair("AnonHugePages",   mmcu_smaps_sampler::ANONHUGEPAGES),
-    make_pair("ShmemPmdMapped",  mmcu_smaps_sampler::SHMEMPMDMAPPED),
-    make_pair("Shared_Hugetlb",  mmcu_smaps_sampler::SHARED_HUGETLB),
-    make_pair("Private_Hugetlb", mmcu_smaps_sampler::PRIVATE_HUGETLB),
-    make_pair("Swap",            mmcu_smaps_sampler::SWAP),
-    make_pair("SwapPss",         mmcu_smaps_sampler::SWAPPSS),
-    make_pair("KernelPageSize",  mmcu_smaps_sampler::KERNELPAGESIZE),
-    make_pair("MMUPageSize",     mmcu_smaps_sampler::MMUPAGESIZE),
-    make_pair("Locked",          mmcu_smaps_sampler::LOCKED),
+map<string, memnesia_smaps_sampler::entry_id> memnesia_smaps_sampler::tokid_tab = {
+    make_pair("Size",            memnesia_smaps_sampler::SIZE),
+    make_pair("Rss",             memnesia_smaps_sampler::RSS),
+    make_pair("Pss",             memnesia_smaps_sampler::PSS),
+    make_pair("Shared_Clean",    memnesia_smaps_sampler::SHARED_CLEAN),
+    make_pair("Shared_Dirty",    memnesia_smaps_sampler::SHARED_DIRTY),
+    make_pair("Private_Clean",   memnesia_smaps_sampler::PRIVATE_CLEAN),
+    make_pair("Private_Dirty",   memnesia_smaps_sampler::PRIVATE_DIRTY),
+    make_pair("Referenced",      memnesia_smaps_sampler::REFERENCED),
+    make_pair("Anonymous",       memnesia_smaps_sampler::ANONYMOUS),
+    make_pair("AnonHugePages",   memnesia_smaps_sampler::ANONHUGEPAGES),
+    make_pair("ShmemPmdMapped",  memnesia_smaps_sampler::SHMEMPMDMAPPED),
+    make_pair("Shared_Hugetlb",  memnesia_smaps_sampler::SHARED_HUGETLB),
+    make_pair("Private_Hugetlb", memnesia_smaps_sampler::PRIVATE_HUGETLB),
+    make_pair("Swap",            memnesia_smaps_sampler::SWAP),
+    make_pair("SwapPss",         memnesia_smaps_sampler::SWAPPSS),
+    make_pair("KernelPageSize",  memnesia_smaps_sampler::KERNELPAGESIZE),
+    make_pair("MMUPageSize",     memnesia_smaps_sampler::MMUPAGESIZE),
+    make_pair("Locked",          memnesia_smaps_sampler::LOCKED),
     // We rely on this being the last element for a given entry.
-    make_pair("VmFlags",         mmcu_smaps_sampler::LAST)
+    make_pair("VmFlags",         memnesia_smaps_sampler::LAST)
 };
 
 /**
  *
  */
-mmcu_smaps_sampler::sample
-mmcu_smaps_sampler::get_sample_impl(void)
+memnesia_smaps_sampler::sample
+memnesia_smaps_sampler::get_sample_impl(void)
 {
     return smaps_parser::parse();
 }

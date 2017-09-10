@@ -12,36 +12,36 @@
 
 ################################################################################
 add_library(
-    mpimcu-rt STATIC
-    mpimcu.h
-    mpimcu-sample.h
-    mpimcu-sampler.h mpimcu-sampler.cc
-    mpimcu-timer.h mpimcu-timer.cc
-    mpimcu-rt.h mpimcu-rt.cc
+    memnesia-rt STATIC
+    memnesia.h
+    memnesia-sample.h
+    memnesia-sampler.h memnesia-sampler.cc
+    memnesia-timer.h memnesia-timer.cc
+    memnesia-rt.h memnesia-rt.cc
 )
 
 set_property(
     TARGET
-    mpimcu-rt
+    memnesia-rt
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 add_library(
-    mpimcu-trace SHARED
-    mpimcu-pmpi.cc
+    memnesia-trace SHARED
+    memnesia-pmpi.cc
 )
 set_property(
     TARGET
-    mpimcu-trace
+    memnesia-trace
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
 ################################################################################
 target_link_libraries(
-    mpimcu-trace
-    mpimcu-rt
+    memnesia-trace
+    memnesia-rt
 )
 
 # Remove the 'lib' prefix.
-set_target_properties(mpimcu-trace PROPERTIES PREFIX "")
+set_target_properties(memnesia-trace PROPERTIES PREFIX "")

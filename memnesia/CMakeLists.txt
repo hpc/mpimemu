@@ -10,7 +10,7 @@
 # Government nor LANS makes any warranty, express or implied, or assumes any
 # liability or responsibility for the use of this software.
 
-project(mpimcu)
+project(memnesia)
 
 cmake_minimum_required(VERSION 3.1)
 
@@ -18,16 +18,24 @@ cmake_minimum_required(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -Wall -Wextra -g -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -Wno-deprecated-declarations"
+    "${CMAKE_CXX_FLAGS} -Wall -Wextra -g \
+    -D_GNU_SOURCE -D__STDC_FORMAT_MACROS \
+    -Wno-deprecated-declarations"
 )
 
 set(
     CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS} -Wall -Wextra -g -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -Wno-deprecated-declarations"
+    "${CMAKE_C_FLAGS} -Wall -Wextra -g \
+    -D_GNU_SOURCE -D__STDC_FORMAT_MACROS \
+    -Wno-deprecated-declarations"
 )
 
 # rpath everything.
-option(CMAKE_INSTALL_RPATH_USE_LINK_PATH "Add rpath for all dependencies." TRUE)
+option(
+    CMAKE_INSTALL_RPATH_USE_LINK_PATH
+    "Add rpath for all dependencies."
+    TRUE
+)
 
 function(emit_package_status name)
   if (${name}_FOUND)

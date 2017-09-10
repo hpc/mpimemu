@@ -3,8 +3,8 @@
  *                         All rights reserved.
  */
 
-#include "mpimcu-rt.h"
-#include "mpimcu-timer.h"
+#include "memnesia-rt.h"
+#include "memnesia-timer.h"
 
 #include <iostream>
 #include <cstdio>
@@ -17,10 +17,10 @@
 /**
  *
  */
-mmcu_rt *
-mmcu_rt::the_mmcu_rt(void)
+memnesia_rt *
+memnesia_rt::the_memnesia_rt(void)
 {
-    static mmcu_rt singleton;
+    static memnesia_rt singleton;
     return &singleton;
 }
 
@@ -28,25 +28,25 @@ mmcu_rt::the_mmcu_rt(void)
  *
  */
 void
-mmcu_rt::set_init_begin_time_now(void)
+memnesia_rt::set_init_begin_time_now(void)
 {
-    init_begin_time = mmcu_time();
+    init_begin_time = memnesia_time();
 }
 
 /**
  *
  */
 void
-mmcu_rt::set_init_end_time_now(void)
+memnesia_rt::set_init_end_time_now(void)
 {
-    init_end_time = mmcu_time();
+    init_end_time = memnesia_time();
 }
 
 /**
  *
  */
 void
-mmcu_rt::set_hostname(void)
+memnesia_rt::set_hostname(void)
 {
     if (0 != gethostname(hostname, sizeof(hostname))) {
         perror("gethostname");
@@ -58,7 +58,7 @@ mmcu_rt::set_hostname(void)
  *
  */
 std::string
-mmcu_rt::get_hostname(void)
+memnesia_rt::get_hostname(void)
 {
     return std::string(hostname, sizeof(hostname));
 }
@@ -67,7 +67,7 @@ mmcu_rt::get_hostname(void)
  *
  */
 void
-mmcu_rt::set_target_cmdline(void)
+memnesia_rt::set_target_cmdline(void)
 {
     FILE *commf = fopen("/proc/self/comm", "r");
     if (!commf) {
@@ -92,7 +92,7 @@ mmcu_rt::set_target_cmdline(void)
  *
  */
 std::string
-mmcu_rt::get_app_name(void)
+memnesia_rt::get_app_name(void)
 {
     return std::string(app_comm, sizeof(app_comm));
 }
@@ -101,7 +101,7 @@ mmcu_rt::get_app_name(void)
  *
  */
 void
-mmcu_rt::gather_target_metadata(void)
+memnesia_rt::gather_target_metadata(void)
 {
     set_hostname();
     set_target_cmdline();
@@ -111,7 +111,7 @@ mmcu_rt::gather_target_metadata(void)
  *
  */
 double
-mmcu_rt::get_init_begin_time(void)
+memnesia_rt::get_init_begin_time(void)
 {
     return init_begin_time;
 }
@@ -120,7 +120,7 @@ mmcu_rt::get_init_begin_time(void)
  *
  */
 double
-mmcu_rt::get_init_end_time(void)
+memnesia_rt::get_init_end_time(void)
 {
     return init_end_time;
 }
@@ -129,7 +129,7 @@ mmcu_rt::get_init_end_time(void)
  *
  */
 std::string
-mmcu_rt::get_date_time_str_now(void)
+memnesia_rt::get_date_time_str_now(void)
 {
     char tsb[64];
     struct tm *bd_time_ptr = NULL;
@@ -147,7 +147,7 @@ mmcu_rt::get_date_time_str_now(void)
  *
  */
 void
-mmcu_rt::emit_header(void)
+memnesia_rt::emit_header(void)
 {
     printf(
         "\n\n"
@@ -164,58 +164,58 @@ mmcu_rt::emit_header(void)
  *
  */
 void
-mmcu_rt::sample(
+memnesia_rt::sample(
     const std::string &what,
-    mmcu_sample &res
+    memnesia_sample &res
 ) {
-    res = mmcu_sample(what);
+    res = memnesia_sample(what);
 }
 
 /**
  *
  */
 void
-mmcu_rt::sample_delta(
-    const mmcu_sample &happened_before,
-    const mmcu_sample &happened_after,
-    mmcu_sample &delta
+memnesia_rt::sample_delta(
+    const memnesia_sample &happened_before,
+    const memnesia_sample &happened_after,
+    memnesia_sample &delta
 ) {
-    mmcu_sample::delta(happened_before, happened_after, delta);
+    memnesia_sample::delta(happened_before, happened_after, delta);
 }
 
 /**
  *
  */
 void
-mmcu_rt::sample_emit(
-    const mmcu_sample &s
+memnesia_rt::sample_emit(
+    const memnesia_sample &s
 ) {
-    mmcu_sample::emit(s);
+    memnesia_sample::emit(s);
 }
 
 /**
  *
  */
 void
-mmcu_rt::store_sample(
-    const mmcu_sample &happened_before,
-    const mmcu_sample &happened_after
+memnesia_rt::store_sample(
+    const memnesia_sample &happened_before,
+    const memnesia_sample &happened_after
 ) {
-    mmcu_sample delta;
+    memnesia_sample delta;
 
-    mmcu_rt::sample_delta(happened_before, happened_after, delta);
+    memnesia_rt::sample_delta(happened_before, happened_after, delta);
 
-    dataset.push_back(mmcu_dataset::APP, happened_before);
-    dataset.push_back(mmcu_dataset::APP, happened_after);
+    dataset.push_back(memnesia_dataset::APP, happened_before);
+    dataset.push_back(memnesia_dataset::APP, happened_after);
 
-    dataset.push_back(mmcu_dataset::MPI, delta);
+    dataset.push_back(memnesia_dataset::MPI, delta);
 }
 
 /**
  *
  */
 void
-mmcu_rt::report(void)
+memnesia_rt::report(void)
 {
     using namespace std;
     //
@@ -231,7 +231,7 @@ mmcu_rt::report(void)
         );
     }
     //
-    char *output_dir = getenv("MMCU_REPORT_OUTPUT_PATH");
+    char *output_dir = getenv(MEMNESIA_ENV_REPORT_OUTPUT_PATH);
     // Not set, so output to pwd.
     if (!output_dir) {
         output_dir = getenv("PWD");
@@ -244,7 +244,7 @@ mmcu_rt::report(void)
     char report_name[PATH_MAX];
     snprintf(
         report_name, sizeof(report_name) - 1, "%s/%d.%s",
-        output_dir, rank, "mmcu"
+        output_dir, rank, "memnesia"
     );
 
     FILE *reportf = fopen(report_name, "w+");
@@ -327,14 +327,14 @@ mmcu_rt::report(void)
         "# MPI Library Memory Usage (B) Over Time "
         "(Since MPI_Init):\n"
     );
-    dataset.report(reportf, mmcu_dataset::MPI, init_time);
+    dataset.report(reportf, memnesia_dataset::MPI, init_time);
 
     fprintf(
         reportf,
         "# Application Memory Usage (B) Over Time "
         "(Since MPI_Init):\n"
     );
-    dataset.report(reportf, mmcu_dataset::APP, init_time);
+    dataset.report(reportf, memnesia_dataset::APP, init_time);
 
     fclose(reportf);
 
