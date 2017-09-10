@@ -112,9 +112,7 @@ class smaps_parser {
 
 public:
 
-    /**
-     *
-     */
+    //
     static mmcu_smaps_sampler::sample
     parse(void)
     {

@@ -39,15 +39,16 @@ MPI_Init(
     rt->store_sample(sbefore, safter);
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
-    //
-    rt->gather_target_meta();
-    PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
+    // Synchronize.
     //
     const int nsyncs = 2;
     for (int i = 0; i < nsyncs; ++i) {
         PMPI_Barrier(MPI_COMM_WORLD);
     }
+    // Gather some information for tool use.
+    rt->gather_target_metadata();
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
     // Emit obnoxious header that lets the user know something is happening.
     if (rt->rank == 0) {
         rt->emit_header();

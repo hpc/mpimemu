@@ -22,7 +22,10 @@ private:
     //
     mmcu_dataset dataset;
     //
-    mmcu_rt(void) = default;
+    mmcu_rt(void) {
+        (void)memset(hostname, '\0', sizeof(hostname));
+        (void)memset(app_comm, '\0', sizeof(app_comm));
+    }
     //
     ~mmcu_rt(void) = default;
     //
@@ -64,7 +67,7 @@ public:
     get_app_name(void);
     //
     void
-    gather_target_meta(void);
+    gather_target_metadata(void);
     //
     double
     get_init_begin_time(void);

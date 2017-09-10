@@ -76,9 +76,9 @@ mmcu_rt::set_target_cmdline(void)
     }
 
     char lb[PATH_MAX];
-    while (fgets(lb, sizeof(lb) - 1, commf)) {
-        break;
-    }
+    char *gets = fgets(lb, sizeof(lb) - 1, commf);
+    if (!gets) return;
+
     char *nl = nullptr;
     if ((nl = strchr(lb, '\n')) != NULL) {
         *nl = '\0';
@@ -101,7 +101,7 @@ mmcu_rt::get_app_name(void)
  *
  */
 void
-mmcu_rt::gather_target_meta(void)
+mmcu_rt::gather_target_metadata(void)
 {
     set_hostname();
     set_target_cmdline();
@@ -150,10 +150,13 @@ void
 mmcu_rt::emit_header(void)
 {
     printf(
-        "\n#########################################################"
-        "\n# memnesia analysis enabled #############################"
-        "\n#########################################################"
-        "\n"
+        "\n\n"
+        "                                               _____             \n"
+        " _______ _______________ _________________________(_)_____ _     \n"
+        " __  __ `__ \\  _ \\_  __ `__ \\_  __ \\  _ \\_  ___/_  /_  __ `/\n"
+        " _  / / / / /  __/  / / / / /  / / /  __/(__  )_  / / /_/ /      \n"
+        " /_/ /_/ /_/\\___//_/ /_/ /_//_/ /_/\\___//____/ /_/  \\__,_/    \n"
+        "\n\n"
     );
 }
 
@@ -220,9 +223,10 @@ mmcu_rt::report(void)
     //
     if (rank == 0) {
         printf(
-            "\n#########################################################"
-            "\n# memnesia memory consumption analysis complete #########"
-            "\n#########################################################"
+            "\n"
+            "\n#"
+            "\n# memnesia memory consumption analysis complete..."
+            "\n#"
             "\n"
         );
     }
