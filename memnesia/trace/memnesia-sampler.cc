@@ -29,18 +29,6 @@ class smaps_parser {
         return int64_t(std::stoll(str, 0, 10));
     }
     //
-    static bool
-    parse_header(FILE *smapsf) {
-        // TODO skip our instrumentation stuff and let parse_rest know.
-        char lbuff[lbuff_size];
-
-        char *gets = fgets(lbuff, gets_size, smapsf);
-
-        if (!gets) return eop;
-
-        return !eop;
-    }
-    //
     static void
     tok_it(
         char *buff,
@@ -55,8 +43,53 @@ class smaps_parser {
     }
     //
     static bool
+    has_suffix(
+        const std::string &str,
+        const std::string &suffix
+    ) {
+        return str.size() >= suffix.size() &&
+               str.compare(
+                    str.size() - suffix.size(),
+                    suffix.size(), suffix
+                ) == 0;
+    }
+    //
+    static bool
+    skip_entry(char *header)
+    {
+        // Format
+        // address           perms offset   dev   inode   pathname
+        // 08048000-08056000 r-xp  00000000 03:0c 64593   /usr/sbin/gpm
+        deque<string> toks;
+        tok_it(header, " ", toks);
+        string pathname = toks.back();
+        // Remove '\n'
+        pathname = pathname.substr(0, pathname.length() - 1);
+        // Skip all entries that end with memnesia-trace.so
+        static const string trace_lib("memnesia-trace.so");
+        return has_suffix(pathname, trace_lib);
+    }
+    //
+    static bool
+    parse_header(
+        FILE *smapsf,
+        bool &add_entry_to_tally
+    ) {
+        char lbuff[lbuff_size];
+
+        char *gets = fgets(lbuff, gets_size, smapsf);
+
+        if (!gets) return eop;
+
+        add_entry_to_tally = !skip_entry(gets);
+
+        return !eop;
+    }
+    //
+    static bool
     parse_rest(
         FILE *smapsf,
+        bool add_entry_to_tally,
         memnesia_smaps_sampler::sample &sample
     ) {
         char lbuff[lbuff_size];
@@ -84,7 +117,9 @@ class smaps_parser {
                     break;
                 }
                 // Else, continue processing.
-                sample.data_in_kb[idx] += to_int64(value);
+                if (add_entry_to_tally) {
+                    sample.data_in_kb[idx] += to_int64(value);
+                }
                 // Sanity
                 static const string exp_units("kB");
                 if (exp_units != units) {
@@ -125,9 +160,10 @@ public:
         }
 
         memnesia_smaps_sampler::sample result;
+        bool add_entry_to_tally = false;
         while (true) {
-            if (eop == parse_header(smapsf)) break;
-            if (eop == parse_rest(smapsf, result)) break;
+            if (eop == parse_header(smapsf, add_entry_to_tally)) break;
+            if (eop == parse_rest(smapsf, add_entry_to_tally, result)) break;
         }
 
         fclose(smapsf);
@@ -138,7 +174,8 @@ public:
 
 } // namespace
 
-map<string, memnesia_smaps_sampler::entry_id> memnesia_smaps_sampler::tokid_tab = {
+map<string, memnesia_smaps_sampler::entry_id>
+memnesia_smaps_sampler::tokid_tab = {
     make_pair("Size",            memnesia_smaps_sampler::SIZE),
     make_pair("Rss",             memnesia_smaps_sampler::RSS),
     make_pair("Pss",             memnesia_smaps_sampler::PSS),
