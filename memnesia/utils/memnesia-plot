@@ -383,6 +383,11 @@ class Plotter:
                 format=tick_format
             )
             cbar.set_ticks([0, num_colors])
+            tick_labels = [0, num_colors - 1]
+            if (num_colors == 1):
+                cbar.set_ticklabels([tick_labels[0]])
+            else:
+                cbar.set_ticklabels(tick_labels)
             cbar.set_label('Process Identifier Map', rotation='vertical')
 
     def add_plot(self, target_ax, colorer, rank, time_series):
