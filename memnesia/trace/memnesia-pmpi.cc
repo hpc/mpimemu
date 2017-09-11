@@ -29,18 +29,16 @@ MPI_Init(
     // Set init time.
     rt->set_init_begin_time_now();
     //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Init(argc, argv);
-    memnesia_rt_sample(rt, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Init(argc, argv);
+    }
     // Set init end time.
     rt->set_init_end_time_now();
-    // Store the results.
-    rt->store_sample(sbefore, safter);
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
     // Synchronize.
-    //
     const int nsyncs = 2;
     for (int i = 0; i < nsyncs; ++i) {
         PMPI_Barrier(MPI_COMM_WORLD);
@@ -75,21 +73,19 @@ MPI_Irecv(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Irecv(
-        buf,
-        count,
-        datatype,
-        source,
-        tag,
-        comm,
-        request
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Irecv(
+            buf,
+            count,
+            datatype,
+            source,
+            tag,
+            comm,
+            request
+        );
+    }
     //
     return rc;
 }
@@ -106,20 +102,18 @@ MPI_Send(
     int tag,
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Send(
-        buf,
-        count,
-        datatype,
-        dest,
-        tag,
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Send(
+            buf,
+            count,
+            datatype,
+            dest,
+            tag,
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -137,21 +131,19 @@ MPI_Recv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Recv(
-        buf,
-        count,
-        datatype,
-        source,
-        tag,
-        comm,
-        status
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Recv(
+            buf,
+            count,
+            datatype,
+            source,
+            tag,
+            comm,
+            status
+        );
+    }
     //
     return rc;
 }
@@ -169,21 +161,19 @@ MPI_Isend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Isend(
-        buf,
-        count,
-        datatype,
-        dest,
-        tag,
-        comm,
-        request
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Isend(
+            buf,
+            count,
+            datatype,
+            dest,
+            tag,
+            comm,
+            request
+        );
+    }
     //
     return rc;
 }
@@ -206,26 +196,24 @@ MPI_Sendrecv(
     MPI_Comm comm,
     MPI_Status *status
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Sendrecv(
-        sendbuf,
-        sendcount,
-        sendtype,
-        dest,
-        sendtag,
-        recvbuf,
-        recvcount,
-        recvtype,
-        source,
-        recvtag,
-        comm,
-        status
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Sendrecv(
+            sendbuf,
+            sendcount,
+            sendtype,
+            dest,
+            sendtag,
+            recvbuf,
+            recvcount,
+            recvtype,
+            source,
+            recvtag,
+            comm,
+            status
+        );
+    }
     //
     return rc;
 }
@@ -238,16 +226,14 @@ MPI_Wait(
     MPI_Request *request,
     MPI_Status *status
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Wait(
-        request,
-        status
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Wait(
+            request,
+            status
+        );
+    }
     //
     return rc;
 }
@@ -261,17 +247,15 @@ MPI_Waitall(
     MPI_Request array_of_requests[],
     MPI_Status *array_of_statuses
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Waitall(
-        count,
-        array_of_requests,
-        array_of_statuses
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Waitall(
+            count,
+            array_of_requests,
+            array_of_statuses
+        );
+    }
     //
     return rc;
 }
@@ -287,19 +271,17 @@ MPI_Iprobe(
     int *flag,
     MPI_Status *status
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Iprobe(
-        source,
-        tag,
-        comm,
-        flag,
-        status
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Iprobe(
+            source,
+            tag,
+            comm,
+            flag,
+            status
+        );
+    }
     //
     return rc;
 }
@@ -317,21 +299,19 @@ MPI_Issend(
     MPI_Comm comm,
     MPI_Request *request
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Issend(
-        buf,
-        count,
-        datatype,
-        dest,
-        tag,
-        comm,
-        request
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Issend(
+            buf,
+            count,
+            datatype,
+            dest,
+            tag,
+            comm,
+            request
+        );
+    }
     //
     return rc;
 }
@@ -348,20 +328,18 @@ MPI_Ssend(
     int tag,
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Ssend(
-        buf,
-        count,
-        datatype,
-        dest,
-        tag,
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Ssend(
+            buf,
+            count,
+            datatype,
+            dest,
+            tag,
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -380,16 +358,14 @@ MPI_Comm_size(
     MPI_Comm comm,
     int *size
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Comm_size(
-        comm,
-        size
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Comm_size(
+            comm,
+            size
+        );
+    }
     //
     return rc;
 }
@@ -402,16 +378,14 @@ MPI_Comm_rank(
     MPI_Comm comm,
     int *rank
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Comm_rank(
-        comm,
-        rank
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Comm_rank(
+            comm,
+            rank
+        );
+    }
     //
     return rc;
 }
@@ -423,15 +397,13 @@ int
 MPI_Barrier(
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Barrier(
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Barrier(
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -448,20 +420,18 @@ MPI_Allreduce(
     MPI_Op op,
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Allreduce(
-        sendbuf,
-        recvbuf,
-        count,
-        datatype,
-        op,
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Allreduce(
+            sendbuf,
+            recvbuf,
+            count,
+            datatype,
+            op,
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -477,19 +447,17 @@ MPI_Bcast(
     int root,
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Bcast(
-        buffer,
-        count,
-        datatype,
-        root,
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Bcast(
+            buffer,
+            count,
+            datatype,
+            root,
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -507,21 +475,19 @@ MPI_Reduce(
     int root,
     MPI_Comm comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Reduce(
-        sendbuf,
-        recvbuf,
-        count,
-        datatype,
-        op,
-        root,
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Reduce(
+            sendbuf,
+            recvbuf,
+            count,
+            datatype,
+            op,
+            root,
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -538,13 +504,11 @@ MPI_Reduce(
 double
 MPI_Wtime(void)
 {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    double res = PMPI_Wtime();
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    double res = 0.0;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        res = PMPI_Wtime();
+    }
     //
     return res;
 }
@@ -557,16 +521,14 @@ MPI_Address(
     void *location,
     MPI_Aint *address
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Address(
-        location,
-        address
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Address(
+            location,
+            address
+        );
+    }
     //
     return rc;
 }
@@ -581,18 +543,16 @@ MPI_Comm_split(
     int key,
     MPI_Comm *newcomm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Comm_split(
-        comm,
-        color,
-        key,
-        newcomm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Comm_split(
+            comm,
+            color,
+            key,
+            newcomm
+        );
+    }
     //
     return rc;
 }
@@ -604,15 +564,13 @@ int
 MPI_Comm_free(
     MPI_Comm *comm
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Comm_free(
-        comm
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Comm_free(
+            comm
+        );
+    }
     //
     return rc;
 }
@@ -625,16 +583,14 @@ MPI_Abort(
     MPI_Comm comm,
     int errorcode
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Abort(
-        comm,
-        errorcode
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Abort(
+            comm,
+            errorcode
+        );
+    }
     //
     return rc;
 }
@@ -646,15 +602,13 @@ int
 MPI_Type_commit(
     MPI_Datatype *type
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Type_commit(
-        type
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Type_commit(
+            type
+        );
+    }
     //
     return rc;
 }
@@ -666,15 +620,13 @@ int
 MPI_Type_free(
     MPI_Datatype *type
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Type_free(
-        type
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Type_free(
+            type
+        );
+    }
     //
     return rc;
 }
@@ -688,17 +640,15 @@ MPI_Type_contiguous(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Type_contiguous(
-        count,
-        oldtype,
-        newtype
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Type_contiguous(
+            count,
+            oldtype,
+            newtype
+        );
+    }
     //
     return rc;
 }
@@ -714,19 +664,17 @@ MPI_Type_struct(
     MPI_Datatype array_of_types[],
     MPI_Datatype *newtype
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Type_struct(
-        count,
-        array_of_blocklengths,
-        array_of_displacements,
-        array_of_types,
-        newtype
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Type_struct(
+            count,
+            array_of_blocklengths,
+            array_of_displacements,
+            array_of_types,
+            newtype
+        );
+    }
     //
     return rc;
 }
@@ -742,19 +690,17 @@ MPI_Type_vector(
     MPI_Datatype oldtype,
     MPI_Datatype *newtype
 ) {
-    static memnesia_rt *rt = memnesia_rt::the_memnesia_rt();
-    //
-    memnesia_sample sbefore, safter;
-    memnesia_rt_sample(rt, sbefore);
-    int rc = PMPI_Type_vector(
-        count,
-        blocklength,
-        stride,
-        oldtype,
-        newtype
-    );
-    memnesia_rt_sample(rt, safter);
-    rt->store_sample(sbefore, safter);
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        rc = PMPI_Type_vector(
+            count,
+            blocklength,
+            stride,
+            oldtype,
+            newtype
+        );
+    }
     //
     return rc;
 }

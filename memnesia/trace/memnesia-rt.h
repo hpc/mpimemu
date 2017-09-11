@@ -11,6 +11,12 @@
 
 class memnesia_rt {
 private:
+    // Number of samples collected for every request.
+    int64_t sample_rate = 1;
+    //
+    int64_t n_samples_requested = 0;
+    //
+    int64_t n_samples_collected = 0;
     //
     double init_begin_time = 0.0;
     //
@@ -39,6 +45,13 @@ private:
     //
     void
     set_target_cmdline(void);
+    //
+    static void
+    sample_delta(
+        const memnesia_sample &happened_before,
+        const memnesia_sample &happened_after,
+        memnesia_sample &delta
+    );
 
 public:
     int rank = 0;
@@ -82,28 +95,57 @@ public:
     );
     //
     static void
-    sample_delta(
-        const memnesia_sample &happened_before,
-        const memnesia_sample &happened_after,
-        memnesia_sample &delta
-    );
-    //
-    static void
     sample_emit(
         const memnesia_sample &s
     );
     //
     void
-    store_sample(
+    add_samples_to_dataset(
         const memnesia_sample &happened_before,
         const memnesia_sample &happened_after
     );
     //
     void
     report(void);
+    //
+    bool
+    collect_sample(void);
 };
 
-#define memnesia_rt_sample(memnesia_rtp, memnesia_samp_res)                                \
+class memnesia_scoped_data_collector {
+    //
+    memnesia_rt *rt = nullptr;
+    //
+    std::string callers_name;
+    //
+    bool collect_sample = false;
+    //
+    memnesia_sample before, after, delta;
+    //
+    memnesia_scoped_data_collector(void) = default;
+public:
+    //
+    memnesia_scoped_data_collector(
+        const std::string &callers_name
+    ) : rt(memnesia_rt::the_memnesia_rt())
+      , callers_name(callers_name)
+      , collect_sample(rt->collect_sample())
+    {
+        if (!collect_sample) return;
+        rt->sample(callers_name, before);
+    }
+    //
+    ~memnesia_scoped_data_collector(void)
+    {
+        if (!collect_sample) return;
+        rt->sample(callers_name, after);
+        rt->add_samples_to_dataset(before, after);
+    }
+};
+
+// TODO RM
+#define memnesia_rt_sample(memnesia_rtp, memnesia_samp_res)                    \
 do {                                                                           \
-    memnesia_rtp->sample(MEMNESIA_FUNC, memnesia_samp_res);                                \
+    memnesia_rtp->sample(MEMNESIA_FUNC, memnesia_samp_res);                    \
 } while (0)
+

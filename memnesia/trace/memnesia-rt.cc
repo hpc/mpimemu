@@ -197,7 +197,7 @@ memnesia_rt::sample_emit(
  *
  */
 void
-memnesia_rt::store_sample(
+memnesia_rt::add_samples_to_dataset(
     const memnesia_sample &happened_before,
     const memnesia_sample &happened_after
 ) {
@@ -209,6 +209,17 @@ memnesia_rt::store_sample(
     dataset.push_back(memnesia_dataset::APP, happened_after);
 
     dataset.push_back(memnesia_dataset::MPI, delta);
+}
+
+/**
+ *
+ */
+bool
+memnesia_rt::collect_sample(void)
+{
+    const bool collect = (n_samples_requested++ % sample_rate == 0);
+    if (collect) n_samples_collected++;
+    return collect;
 }
 
 /**

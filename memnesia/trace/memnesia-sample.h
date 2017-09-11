@@ -26,10 +26,6 @@ class memnesia_sample {
 
 public:
     //
-    enum get_id {
-        MEM_USAGE = 0
-    };
-    //
     memnesia_sample(void) = default;
     //
     memnesia_sample(
