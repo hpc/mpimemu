@@ -230,7 +230,10 @@ class Colorer:
         self.pmax = self.pvalues[-1]
 
     def norm(self, pval):
-        return (pval - self.pmin) / float(self.pmax - self.pmin)
+        denom = float(self.pmax - self.pmin)
+        if (self.pmin == self.pmax):
+            denom = 1.0
+        return (pval - self.pmin) / denom
 
     def get_color(self):
         cm = Colorer.get_cm()
