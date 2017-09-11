@@ -7,8 +7,6 @@
 
 #include <iostream>
 
-#include <signal.h>
-
 #include "mpi.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,21 +34,9 @@ MPI_Init(
     }
     // Set init end time.
     rt->set_init_end_time_now();
-    // Reset any signal handlers that may have been set in MPI_Init.
-    (void)signal(SIGSEGV, SIG_DFL);
-    // Synchronize.
-    const int nsyncs = 2;
-    for (int i = 0; i < nsyncs; ++i) {
-        PMPI_Barrier(MPI_COMM_WORLD);
-    }
-    // Gather some information for tool use.
-    rt->gather_target_metadata();
-    PMPI_Comm_rank(MPI_COMM_WORLD, &rt->rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &rt->numpe);
-    // Emit obnoxious header that lets the user know something is happening.
-    if (rt->rank == 0) {
-        rt->emit_header();
-    }
+    // Now that MPI has been initialized, do tool-specific parallel
+    // infrastructure initialization.
+    rt->pinit();
     //
     return rc;
 }

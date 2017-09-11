@@ -11,8 +11,11 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <signal.h>
 #include <unistd.h>
 #include <string.h>
+
+#include "mpi.h"
 
 /**
  *
@@ -123,6 +126,27 @@ double
 memnesia_rt::get_init_end_time(void)
 {
     return init_end_time;
+}
+
+//
+void
+memnesia_rt::pinit(void)
+{
+    // Reset any signal handlers that may have been set in MPI_Init.
+    (void)signal(SIGSEGV, SIG_DFL);
+    // Synchronize.
+    const int nsyncs = 2;
+    for (int i = 0; i < nsyncs; ++i) {
+        PMPI_Barrier(MPI_COMM_WORLD);
+    }
+    // Gather some information for tool use.
+    gather_target_metadata();
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &numpe);
+    // Emit obnoxious header that lets the user know something is happening.
+    if (rank == 0) {
+        emit_header();
+    }
 }
 
 /**

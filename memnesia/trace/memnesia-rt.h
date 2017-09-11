@@ -83,6 +83,9 @@ public:
     get_init_end_time(void);
     //
     void
+    pinit(void);
+    //
+    void
     sample(
         const std::string &what,
         memnesia_sample &res
