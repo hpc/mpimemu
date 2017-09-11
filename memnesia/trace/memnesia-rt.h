@@ -103,7 +103,7 @@ public:
     report(void);
 };
 
-class memnesia_scoped_data_collector {
+class memnesia_scoped_caliper {
     //
     memnesia_rt *rt = nullptr;
     //
@@ -111,11 +111,11 @@ class memnesia_scoped_data_collector {
     //
     memnesia_sample before, after, delta;
     //
-    memnesia_scoped_data_collector(void) = default;
+    memnesia_scoped_caliper(void) = default;
 
 public:
     //
-    memnesia_scoped_data_collector(
+    memnesia_scoped_caliper(
         const std::string &callers_name
     ) : rt(memnesia_rt::the_memnesia_rt())
       , callers_name(callers_name)
@@ -123,7 +123,7 @@ public:
         rt->sample(callers_name, before);
     }
     //
-    ~memnesia_scoped_data_collector(void)
+    ~memnesia_scoped_caliper(void)
     {
         rt->sample(callers_name, after);
         rt->add_samples_to_dataset(before, after);

@@ -31,7 +31,7 @@ MPI_Init(
     //
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Init(argc, argv);
     }
     // Set init end time.
@@ -75,7 +75,7 @@ MPI_Irecv(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Irecv(
             buf,
             count,
@@ -104,7 +104,7 @@ MPI_Send(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Send(
             buf,
             count,
@@ -133,7 +133,7 @@ MPI_Recv(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Recv(
             buf,
             count,
@@ -163,7 +163,7 @@ MPI_Isend(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Isend(
             buf,
             count,
@@ -198,7 +198,7 @@ MPI_Sendrecv(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Sendrecv(
             sendbuf,
             sendcount,
@@ -228,7 +228,7 @@ MPI_Wait(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Wait(
             request,
             status
@@ -249,7 +249,7 @@ MPI_Waitall(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Waitall(
             count,
             array_of_requests,
@@ -273,7 +273,7 @@ MPI_Iprobe(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Iprobe(
             source,
             tag,
@@ -301,7 +301,7 @@ MPI_Issend(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Issend(
             buf,
             count,
@@ -330,7 +330,7 @@ MPI_Ssend(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Ssend(
             buf,
             count,
@@ -360,7 +360,7 @@ MPI_Comm_size(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Comm_size(
             comm,
             size
@@ -380,7 +380,7 @@ MPI_Comm_rank(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Comm_rank(
             comm,
             rank
@@ -399,7 +399,7 @@ MPI_Barrier(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Barrier(
             comm
         );
@@ -422,7 +422,7 @@ MPI_Allreduce(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Allreduce(
             sendbuf,
             recvbuf,
@@ -449,7 +449,7 @@ MPI_Bcast(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Bcast(
             buffer,
             count,
@@ -477,7 +477,7 @@ MPI_Reduce(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Reduce(
             sendbuf,
             recvbuf,
@@ -498,6 +498,7 @@ MPI_Reduce(
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 /**
  *
  */
@@ -506,12 +507,13 @@ MPI_Wtime(void)
 {
     double res = 0.0;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         res = PMPI_Wtime();
     }
     //
     return res;
 }
+#endif
 
 /**
  *
@@ -523,7 +525,7 @@ MPI_Address(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Address(
             location,
             address
@@ -545,7 +547,7 @@ MPI_Comm_split(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Comm_split(
             comm,
             color,
@@ -566,7 +568,7 @@ MPI_Comm_free(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Comm_free(
             comm
         );
@@ -575,6 +577,7 @@ MPI_Comm_free(
     return rc;
 }
 
+#if 0
 /**
  *
  */
@@ -585,7 +588,7 @@ MPI_Abort(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Abort(
             comm,
             errorcode
@@ -594,6 +597,7 @@ MPI_Abort(
     //
     return rc;
 }
+#endif
 
 /**
  *
@@ -604,7 +608,7 @@ MPI_Type_commit(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Type_commit(
             type
         );
@@ -622,7 +626,7 @@ MPI_Type_free(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Type_free(
             type
         );
@@ -642,7 +646,7 @@ MPI_Type_contiguous(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Type_contiguous(
             count,
             oldtype,
@@ -666,7 +670,7 @@ MPI_Type_struct(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Type_struct(
             count,
             array_of_blocklengths,
@@ -692,7 +696,7 @@ MPI_Type_vector(
 ) {
     int rc = MPI_ERR_UNKNOWN;
     {
-        memnesia_scoped_data_collector collector(MEMNESIA_FUNC);
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
         rc = PMPI_Type_vector(
             count,
             blocklength,
