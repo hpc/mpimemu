@@ -11,12 +11,6 @@
 
 class memnesia_rt {
 private:
-    // Number of samples collected for every request.
-    int64_t sample_rate = 1;
-    //
-    int64_t n_samples_requested = 0;
-    //
-    int64_t n_samples_collected = 0;
     //
     double init_begin_time = 0.0;
     //
@@ -107,9 +101,6 @@ public:
     //
     void
     report(void);
-    //
-    bool
-    collect_sample(void);
 };
 
 class memnesia_scoped_data_collector {
@@ -118,34 +109,23 @@ class memnesia_scoped_data_collector {
     //
     std::string callers_name;
     //
-    bool collect_sample = false;
-    //
     memnesia_sample before, after, delta;
     //
     memnesia_scoped_data_collector(void) = default;
+
 public:
     //
     memnesia_scoped_data_collector(
         const std::string &callers_name
     ) : rt(memnesia_rt::the_memnesia_rt())
       , callers_name(callers_name)
-      , collect_sample(rt->collect_sample())
     {
-        if (!collect_sample) return;
         rt->sample(callers_name, before);
     }
     //
     ~memnesia_scoped_data_collector(void)
     {
-        if (!collect_sample) return;
         rt->sample(callers_name, after);
         rt->add_samples_to_dataset(before, after);
     }
 };
-
-// TODO RM
-#define memnesia_rt_sample(memnesia_rtp, memnesia_samp_res)                    \
-do {                                                                           \
-    memnesia_rtp->sample(MEMNESIA_FUNC, memnesia_samp_res);                    \
-} while (0)
-

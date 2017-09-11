@@ -214,17 +214,6 @@ memnesia_rt::add_samples_to_dataset(
 /**
  *
  */
-bool
-memnesia_rt::collect_sample(void)
-{
-    const bool collect = (n_samples_requested++ % sample_rate == 0);
-    if (collect) n_samples_collected++;
-    return collect;
-}
-
-/**
- *
- */
 void
 memnesia_rt::report(void)
 {
