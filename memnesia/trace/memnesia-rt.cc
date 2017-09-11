@@ -238,6 +238,15 @@ memnesia_rt::add_samples_to_dataset(
 /**
  *
  */
+int64_t
+memnesia_rt::get_num_smaps_captures(void)
+{
+    return dataset.length(memnesia_dataset::APP);
+}
+
+/**
+ *
+ */
 void
 memnesia_rt::report(void)
 {
@@ -295,50 +304,24 @@ memnesia_rt::report(void)
 
     fprintf(
         reportf,
-        "# Number of Operation Captures Performed: %" PRIu64 "\n",
-        0uL
-    );
-
-    fprintf(
-        reportf,
-        "# Number of Memory Operations Recorded: %" PRIu64 "\n",
-        0uL
-    );
-
-    fprintf(
-        reportf,
-        "# Number of Allocation-Related Operations Recorded: %" PRIu64 "\n",
-        0uL
-    );
-
-    fprintf(
-        reportf,
-        "# Number of Deallocation-Related Operations Recorded: %" PRIu64 "\n",
-        0uL
-    );
-
-    fprintf(
-        reportf,
-        "# Number of MPI Library PSS Samples Collected: %" PRIu64 "\n",
-        0uL
-    );
-
-    fprintf(
-        reportf,
-        "# Number of Application PSS Samples Collected: %" PRIu64 "\n",
-        0uL
+        "# Number of smaps Captures Performed: %" PRIu64 "\n",
+        get_num_smaps_captures()
     );
 
     fprintf(
         reportf,
         "# High Memory Usage Watermark (MPI) (MB): %lf\n",
-        0.0
+        memnesia_kb2mb(
+            dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::MPI)
+        )
     );
 
     fprintf(
         reportf,
         "# High Memory Usage Watermark (Application + MPI) (MB): %lf\n",
-        0.0
+        memnesia_kb2mb(
+            dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::APP)
+        )
     );
 
     fprintf(reportf, "# [Run Info End]\n");
@@ -348,15 +331,19 @@ memnesia_rt::report(void)
 
     fprintf(
         reportf,
-        "# MPI Library Memory Usage (B) Over Time "
+        "# MPI Library Memory Usage (MB) Over Time "
         "(Since MPI_Init):\n"
+        "# Format:\n"
+        "# KEY Function Time Usage\n"
     );
     dataset.report(reportf, memnesia_dataset::MPI, init_time);
 
     fprintf(
         reportf,
-        "# Application Memory Usage (B) Over Time "
+        "# Application Memory Usage (MB) Over Time "
         "(Since MPI_Init):\n"
+        "# Format:\n"
+        "# KEY Function Time Usage\n"
     );
     dataset.report(reportf, memnesia_dataset::APP, init_time);
 

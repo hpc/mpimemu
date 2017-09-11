@@ -102,6 +102,9 @@ public:
         const memnesia_sample &happened_after
     );
     //
+    int64_t
+    get_num_smaps_captures(void);
+    //
     void
     report(void);
 };

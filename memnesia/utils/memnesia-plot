@@ -44,12 +44,7 @@ class RunMetadata:
             'MPI_COMM_WORLD Rank': long(0),
             'MPI_COMM_WORLD Size': long(0),
             'MPI Init Time (s)': float(0),
-            'Number of Operation Captures Performed': long(0),
-            'Number of Memory Operations Recorded': long(0),
-            'Number of Allocation-Related Operations Recorded': long(0),
-            'Number of Deallocation-Related Operations Recorded': long(0),
-            'Number of MPI Library PSS Samples Collected': long(0),
-            'Number of Application PSS Samples Collected': long(0),
+            'Number of smaps Captures Performed': long(0),
             'High Memory Usage Watermark (MPI) (MB)': float(0),
             'High Memory Usage Watermark (Application + MPI) (MB)': float(0)
         }
@@ -213,8 +208,9 @@ class Experiment:
                 for l in content:
                     ldata = l.split(' ')
                     dtype = ldata[0]
-                    dtime = float(ldata[1])
-                    dmem = long(ldata[2])
+                    dfunc = ldata[1]
+                    dtime = float(ldata[2])
+                    dmem = float(ldata[3])
                     ts[dtype].push(dtime, dmem)
 
                 self.rank_to_time_series[rank] = ts
@@ -394,7 +390,7 @@ class Plotter:
         x = time_series.get('times')
         self.max_x = max(self.max_x, max(x))
 
-        y = map(Util.btomb, time_series.get('svals'))
+        y = time_series.get('svals')
         self.min_y = min(self.min_y, min(y))
         self.max_y = max(self.max_y, max(y))
 

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "memnesia.h"
 #include "memnesia-timer.h"
 #include "memnesia-sampler.h"
 
@@ -34,13 +35,21 @@ public:
       , capture_time(memnesia_time())
       , smaps(memnesia_smaps_sampler::get_sample()) { }
     //
+    std::string
+    get_target_func_name(void) const
+    {
+        return target_func_name;
+    }
+    //
     double
-    get_capture_time(void) const {
+    get_capture_time(void) const
+    {
         return capture_time;
     }
     //
     double
-    get_duration(void) const {
+    get_duration(void) const
+    {
         return duration;
     }
     //
@@ -132,6 +141,13 @@ public:
         data[tid].push_back(sample);
     }
     //
+    int64_t
+    length(
+        type_id tid
+    ) {
+        return int64_t(data[tid].size());
+    }
+    //
     void
     report(
         FILE *tof,
@@ -146,11 +162,27 @@ public:
         for (const auto &d : data[tid]) {
             fprintf(
                 tof,
-                "%s %lf %" PRId64 "\n",
+                "%s %s %lf %lf\n",
                 tid_name_tab[tid].c_str(),
+                d.get_target_func_name().c_str(),
                 d.get_capture_time() - since,
-                d.get_mem_usage_in_kb(mtbp) * 1024
+                memnesia_kb2mb(d.get_mem_usage_in_kb(mtbp))
             );
         }
+    }
+    //
+    int64_t
+    get_high_mem_usage_watermark_in_kb(
+        type_id tid
+    ) {
+        int64_t maxv = 0, mem_total = 0;
+        int64_t *mtbp = (MPI == tid ? &mem_total : nullptr);
+
+        for (const auto &d : data[tid]) {
+            const auto cval = d.get_mem_usage_in_kb(mtbp);
+            maxv = cval > maxv ? cval : maxv;
+        }
+
+        return maxv;
     }
 };
