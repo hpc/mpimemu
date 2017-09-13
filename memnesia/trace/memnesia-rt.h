@@ -54,7 +54,7 @@ private:
     void
     fill_report_buffer(std::stringstream &ss);
     //
-    void
+    std::string
     aggregate_local_data(void);
 
 public:

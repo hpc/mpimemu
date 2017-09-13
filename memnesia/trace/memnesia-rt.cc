@@ -63,7 +63,7 @@ memnesia_rt::set_hostname(void)
 std::string
 memnesia_rt::get_hostname(void)
 {
-    return std::string(hostname, strlen(hostname) + 1);
+    return std::string(hostname, strlen(hostname));
 }
 
 /**
@@ -97,7 +97,7 @@ memnesia_rt::set_target_cmdline(void)
 std::string
 memnesia_rt::get_app_name(void)
 {
-    return std::string(app_comm, strlen(app_comm) + 1);
+    return std::string(app_comm, strlen(app_comm));
 }
 
 /**
@@ -235,14 +235,70 @@ memnesia_rt::fill_report_buffer(
 /**
  *
  */
-void
+std::string
 memnesia_rt::aggregate_local_data(void)
 {
     stringstream ss;
 
     fill_report_buffer(ss);
 
-    cout << ss.str();
+    const bool root = (node_rank == 0);
+    int report_len = int(ss.str().length());
+    int *recv_sizes = nullptr;
+    if (root) {
+        recv_sizes = new int[node_numpe];
+    }
+
+    if (MPI_SUCCESS != PMPI_Gather(
+        &report_len, 1, MPI_INT, recv_sizes, 1, MPI_INT, 0, node_comm
+    )) {
+        perror("PMPI_Gather");
+        exit(EXIT_FAILURE);
+    }
+    //
+    int *displs = nullptr;
+    int node_report_len = 0;
+    char *node_report_buff = nullptr;
+    if (root) {
+        displs = new int[node_numpe];
+
+        node_report_len += recv_sizes[0];
+        displs[0] = 0;
+
+        for (int i = 1; i < node_numpe; ++i) {
+            node_report_len += recv_sizes[i];
+            displs[i] = displs[i - 1] + recv_sizes[i - 1];
+        }
+
+        node_report_buff = new char[node_report_len];
+    }
+    //
+    string my_report_buff = ss.str();
+    if (MPI_SUCCESS != PMPI_Gatherv(
+        my_report_buff.c_str(),
+        report_len,
+        MPI_CHAR,
+        node_report_buff,
+        recv_sizes,
+        displs,
+        MPI_CHAR,
+        0,
+        node_comm
+    )) {
+        perror("PMPI_Gatherv");
+        exit(EXIT_FAILURE);
+    }
+    //
+    string node_report;
+    if (root) {
+        node_report = string(node_report_buff, node_report_len);
+    }
+    //
+    if (recv_sizes) delete[] recv_sizes;
+    if (displs) delete[] displs;
+    if (node_report_buff) delete[] node_report_buff;
+    //
+    return node_report;
 }
 
 /**
@@ -280,7 +336,7 @@ memnesia_rt::get_date_time_str_now(void)
 
     strftime(tsb, sizeof(tsb) - 1, "%Y%m%d-%H%M%S", bd_time_ptr);
     //
-    return std::string(tsb, strlen(tsb) + 1);
+    return std::string(tsb, strlen(tsb));
 }
 
 /**
@@ -397,7 +453,7 @@ memnesia_rt::report(void)
         );
     }
     //
-    aggregate_local_data();
+    string node_report = aggregate_local_data();
     // Only one MPI process will write the report.
     if (node_rank != 0) return;
 
@@ -406,8 +462,8 @@ memnesia_rt::report(void)
     char report_name[PATH_MAX];
     // TODO change report prefix to hostname.
     snprintf(
-        report_name, sizeof(report_name) - 1, "%s/%d.%s",
-        output_dir.c_str(), rank, "memnesia"
+        report_name, sizeof(report_name) - 1, "%s/%s.%s",
+        output_dir.c_str(), get_hostname().c_str(), "memnesia"
     );
 
     FILE *reportf = fopen(report_name, "w+");
@@ -416,6 +472,7 @@ memnesia_rt::report(void)
         return;
     }
 
+    fprintf(reportf, "%s", node_report.c_str());
 
     fclose(reportf);
 
