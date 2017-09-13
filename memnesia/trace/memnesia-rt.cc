@@ -132,7 +132,7 @@ memnesia_rt::get_init_end_time(void)
 void
 memnesia_rt::pinit(void)
 {
-    //
+    // TODO create tool communicator.
     setbuf(stdout, NULL);
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
@@ -143,30 +143,11 @@ memnesia_rt::pinit(void)
     }
     // Gather some information for tool use.
     gather_target_metadata();
-    // Create communicators for processes co-loated on a compute node.
-    if (MPI_SUCCESS != PMPI_Comm_split_type(
-                           MPI_COMM_WORLD,
-                           MPI_COMM_TYPE_SHARED,
-                           0,
-                           MPI_INFO_NULL,
-                           &node_comm
-                        )) {
-        perror("PMPI_Comm_split_type");
-        exit(EXIT_FAILURE);
-    }
     if (MPI_SUCCESS != PMPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
         perror("PMPI_Comm_rank");
         exit(EXIT_FAILURE);
     }
     if (MPI_SUCCESS != PMPI_Comm_size(MPI_COMM_WORLD, &numpe)) {
-        perror("PMPI_Comm_size");
-        exit(EXIT_FAILURE);
-    }
-    if (MPI_SUCCESS != PMPI_Comm_rank(node_comm, &node_rank)) {
-        perror("PMPI_Comm_rank");
-        exit(EXIT_FAILURE);
-    }
-    if (MPI_SUCCESS != PMPI_Comm_size(node_comm, &node_numpe)) {
         perror("PMPI_Comm_size");
         exit(EXIT_FAILURE);
     }
@@ -236,41 +217,41 @@ memnesia_rt::fill_report_buffer(
  *
  */
 std::string
-memnesia_rt::aggregate_local_data(void)
+memnesia_rt::aggregate_data(void)
 {
     stringstream ss;
 
     fill_report_buffer(ss);
 
-    const bool root = (node_rank == 0);
+    const bool root = (rank == 0);
     int report_len = int(ss.str().length());
     int *recv_sizes = nullptr;
     if (root) {
-        recv_sizes = new int[node_numpe];
+        recv_sizes = new int[numpe];
     }
 
     if (MPI_SUCCESS != PMPI_Gather(
-        &report_len, 1, MPI_INT, recv_sizes, 1, MPI_INT, 0, node_comm
+        &report_len, 1, MPI_INT, recv_sizes, 1, MPI_INT, 0, MPI_COMM_WORLD
     )) {
         perror("PMPI_Gather");
         exit(EXIT_FAILURE);
     }
     //
     int *displs = nullptr;
-    int node_report_len = 0;
+    int full_report_len = 0;
     char *node_report_buff = nullptr;
     if (root) {
-        displs = new int[node_numpe];
+        displs = new int[numpe];
 
-        node_report_len += recv_sizes[0];
+        full_report_len += recv_sizes[0];
         displs[0] = 0;
 
-        for (int i = 1; i < node_numpe; ++i) {
-            node_report_len += recv_sizes[i];
+        for (int i = 1; i < numpe; ++i) {
+            full_report_len += recv_sizes[i];
             displs[i] = displs[i - 1] + recv_sizes[i - 1];
         }
 
-        node_report_buff = new char[node_report_len];
+        node_report_buff = new char[full_report_len];
     }
     //
     string my_report_buff = ss.str();
@@ -283,7 +264,7 @@ memnesia_rt::aggregate_local_data(void)
         displs,
         MPI_CHAR,
         0,
-        node_comm
+        MPI_COMM_WORLD
     )) {
         perror("PMPI_Gatherv");
         exit(EXIT_FAILURE);
@@ -291,7 +272,7 @@ memnesia_rt::aggregate_local_data(void)
     //
     string node_report;
     if (root) {
-        node_report = string(node_report_buff, node_report_len);
+        node_report = string(node_report_buff, full_report_len);
     }
     //
     if (recv_sizes) delete[] recv_sizes;
@@ -307,18 +288,7 @@ memnesia_rt::aggregate_local_data(void)
 void
 memnesia_rt::pfini(void)
 {
-    int rc = MPI_ERR_UNKNOWN;
-    if (MPI_SUCCESS != (rc = PMPI_Comm_free(&node_comm))) {
-        // We are already at the end, so it would be a shame to abort the run
-        // for this, so just let the user know something went south towards the
-        // end.
-        fprintf(
-            stderr,
-            "WARNING: %s returns %d (not MPI_SUCCESS)\n",
-            "PMPI_Comm_free",
-            rc
-        );
-    }
+    // Nothing to do.
 }
 
 /**
@@ -453,17 +423,21 @@ memnesia_rt::report(void)
         );
     }
     //
-    string node_report = aggregate_local_data();
+    string node_report = aggregate_data();
     // Only one MPI process will write the report.
-    if (node_rank != 0) return;
+    if (rank != 0) return;
 
     std::string output_dir = get_output_path();
     //
     char report_name[PATH_MAX];
     // TODO change report prefix to hostname.
     snprintf(
-        report_name, sizeof(report_name) - 1, "%s/%s.%s",
-        output_dir.c_str(), get_hostname().c_str(), "memnesia"
+        report_name,
+        sizeof(report_name) - 1,
+        "%s/%s.%s",
+        output_dir.c_str(),
+        get_date_time_str_now().c_str(),
+        "memnesia"
     );
 
     FILE *reportf = fopen(report_name, "w+");

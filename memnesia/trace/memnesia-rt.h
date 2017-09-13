@@ -55,19 +55,13 @@ private:
     fill_report_buffer(std::stringstream &ss);
     //
     std::string
-    aggregate_local_data(void);
+    aggregate_data(void);
 
 public:
     //
     int rank = 0;
     //
     int numpe = 0;
-    //
-    int node_rank = 0;
-    //
-    int node_numpe = 0;
-    //
-    MPI_Comm node_comm;
     //
     static memnesia_rt *
     the_memnesia_rt(void);
