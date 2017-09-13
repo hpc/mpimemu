@@ -35,7 +35,9 @@ class Util:
 
 ###############################################################################
 class RunMetadata:
-    def __init__(self, data_path):
+    def __init__(self, data):
+
+        self.lines_consumed = 0
 
         self.data = {
             'Report Date Time': '',
@@ -48,29 +50,28 @@ class RunMetadata:
             'High Memory Usage Watermark (MPI) (MB)': float(0),
             'High Memory Usage Watermark (Application + MPI) (MB)': float(0)
         }
+        assert(data[0] == '# [Run Info Begin]')
+        # Skip header
+        self.lines_consumed = 1
+        meta_lines = []
+        while True:
+            if data[self.lines_consumed] == '# [Run Info End]':
+                break
+            meta_lines.append(data[self.lines_consumed].strip('# '))
+            self.lines_consumed += 1
 
-        with open(data_path, 'r') as f:
-            lines = [x.strip('\n') for x in f.readlines()]
+        for ml in meta_lines:
+            kv = [x.strip(' ') for x in ml.split(':')]
+            assert(len(kv) == 2)
+            key = kv[0]
+            val_str = kv[1]
+            if key not in self.data:
+                print("ERROR: '{}' not a recognized key...".format(key))
+                assert(False)
+            self.data[key] = self.cast(type(self.data[key]), val_str)
 
-            assert(lines[0] == '# [Run Info Begin]')
-
-            lidx = 1
-            meta_lines = []
-            while True:
-                if lines[lidx] == '# [Run Info End]':
-                    break
-                meta_lines.append(lines[lidx].strip('# '))
-                lidx += 1
-
-            for ml in meta_lines:
-                kv = [x.strip(' ') for x in ml.split(':')]
-                assert(len(kv) == 2)
-                key = kv[0]
-                val_str = kv[1]
-                if key not in self.data:
-                    print("ERROR: '{}' not a recognized key...".format(key))
-                    assert(False)
-                self.data[key] = self.cast(type(self.data[key]), val_str)
+    def get_lines_consumed(self):
+        return self.lines_consumed
 
     def cast(self, val_type, string):
         return val_type(string)
@@ -95,7 +96,7 @@ class RunMetadata:
             for k in mpi_keys:
                 print('# {}: {}'.format(k, meta_list[0].data[k]))
 
-        print('# Number of Output Files Analyzed: {}'.format(len(meta_list)))
+        print('# Number of Process Data Analyzed: {}'.format(len(meta_list)))
 
         for kprefix in ['Number of', 'High Memory Usage Watermark']:
             stat_keys = [k for k in meta_list[0].data.keys()
@@ -144,68 +145,50 @@ class TimeSeries:
 
 ###############################################################################
 class Experiment:
-    def __init__(self, log_path):
-        self.log_path = log_path
-        self.log_files = self.get_log_files(log_path)
-        self.run_meta = self.get_run_meta()
+    def __init__(self, log_file):
+        self.log_path = os.path.dirname(os.path.abspath(log_file))
+        self.log_file_name = log_file
+        self.log_file = '{}/{}'.format(self.log_path, self.log_file_name)
+        self.run_meta = []
         '''
         Two level dict maps rank to usage type to time series.
         '''
         self.rank_to_time_series = collections.defaultdict(dict)
 
-        self.data_sanity()
-
-        RunMetadata.emit_stats(self.run_meta)
-
     def get_num_species(self):
         return len(self.rank_to_time_series)
 
-    def get_log_files(self, log_path):
-        (_, _, file_names) = os.walk(log_path).next()
-        logs = [f for f in file_names if f.endswith('.memnesia')]
-        return Util.sort_human(logs)
-
     def get_run_meta(self):
         meta = []
-        for log in self.log_files:
-            data_path = '{}/{}'.format(self.log_path, log)
-            meta.append(RunMetadata(data_path))
+        meta.append(RunMetadata(self.log_file))
         return meta
 
-    def data_sanity(self):
-        app_name = None
-        numpe = None
-        for idx, meta in enumerate(self.run_meta):
-            cur_app_name = meta.data['Application Name']
-            cur_numpe = meta.data['MPI_COMM_WORLD Size']
-            if app_name is None:
-                app_name = cur_app_name
-            elif app_name != cur_app_name:
-                print("ERROR: Application name mismatch!")
-                assert(False)
-            if numpe is None:
-                numpe = cur_numpe
-            elif numpe != cur_numpe:
-                print("ERROR: Application numpe mismatch!")
-                assert(False)
-            rank = meta.data['MPI_COMM_WORLD Rank']
-            assert(rank == idx)
-
     def crunch(self):
-        for log in self.log_files:
-            rank = int(log.split('.')[0])
-            fpath = '{}/{}'.format(self.log_path, log)
+        with open(self.log_file, 'r') as f:
+            content = [x.rstrip() for x in f.readlines()]
+            num_lines = len(content)
+            line_num = 0
 
-            with open(fpath, 'r') as f:
-                content = [x.strip('\n') for x in f.readlines()
-                           if not x.strip().startswith('#')]
+            while (line_num < num_lines):
+                rmeta = RunMetadata(content[line_num : ])
+                self.run_meta.append(rmeta)
+                line_num += rmeta.get_lines_consumed()
+
+                rank = rmeta.data['MPI_COMM_WORLD Rank']
 
                 ts = {
                     'MPI_MEM_USAGE': TimeSeries(),
                     'ALL_MEM_USAGE': TimeSeries()
                 }
 
-                for l in content:
+                while (line_num < num_lines and
+                       content[line_num] != '# [Run Info Begin]'):
+                    l = content[line_num]
+                    # Skip comments.
+                    if (l.startswith('#')):
+                        line_num += 1
+                        continue
+
                     ldata = l.split(' ')
                     dtype = ldata[0]
                     dfunc = ldata[1]
@@ -213,7 +196,11 @@ class Experiment:
                     dmem = float(ldata[3])
                     ts[dtype].push(dtime, dmem)
 
+                    line_num += 1
+
                 self.rank_to_time_series[rank] = ts
+
+        RunMetadata.emit_stats(self.run_meta)
 
 
 ###############################################################################
@@ -434,19 +421,19 @@ def check_args(argv):
         exit(os.EX_USAGE)
 
     for arg in argv[1:]:
-        if not os.path.isdir(arg):
-            print("'{}' is not a directory. Cannot continue.".format(arg))
+        if not os.path.isfile(arg):
+            print("'{}' is not a file. Cannot continue.".format(arg))
             usage()
             exit(os.EX_USAGE)
 
 
 ###############################################################################
-def process_experiment_data(data_dirs):
+def process_experiment_data(data_files):
     experiments = []
 
-    for data_dir in data_dirs:
-        print('# Processing files in {}'.format(data_dir))
-        e = Experiment(data_dir)
+    for data_file in data_files:
+        print('# Processing {}'.format(data_file))
+        e = Experiment(data_file)
         e.crunch()
         experiments.append(e)
 
