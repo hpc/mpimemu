@@ -163,6 +163,9 @@ class Experiment:
         meta.append(RunMetadata(self.log_file))
         return meta
 
+    def get_app_name(self):
+        return self.run_meta[0].data['Application Name']
+
     def crunch(self):
         with open(self.log_file, 'r') as f:
             content = [x.rstrip() for x in f.readlines()]
@@ -234,45 +237,51 @@ class Colorer:
 
 ###############################################################################
 class Plotter:
-    def __init__(self, experiments_to_plot):
-        self.fname = self.get_usable_file_name('memory-usage', 'pdf')
-        self.experiments = experiments_to_plot
-        self.numpes = set()
-        self.fig, self.axs = plt.subplots(2, sharex=True)
-        self.ts2ax = {
-            'ALL_MEM_USAGE': self.axs[0],
-            'MPI_MEM_USAGE': self.axs[1]
-        }
-        self.ts2colorer = {
-            'ALL_MEM_USAGE': None,
-            'MPI_MEM_USAGE': None
-        }
-        self.ts2title = {
-            'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
-            'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
-        }
-        self.max_x = sys.float_info.min
-        self.max_y = sys.float_info.min
-        self.min_y = sys.float_info.max
-        self.line_style = 'solid'
-        self.line_width = 0.75
-        self.title_font_size = 12
-        self.axis_font_size = 12
+    def __init__(self, e_to_plot):
+        for e in e_to_plot:
+            self.app_name = e.get_app_name()
+            self.fname = self.get_usable_file_name(
+                             '{}-{}'.format(self.app_name, 'memnesia-report'),
+                             'pdf'
+                         )
+            self.experiment = e
+            self.numpes = set()
+            self.fig, self.axs = plt.subplots(2, sharex=True)
+            self.ts2ax = {
+                'ALL_MEM_USAGE': self.axs[0],
+                'MPI_MEM_USAGE': self.axs[1]
+            }
+            self.ts2colorer = {
+                'ALL_MEM_USAGE': None,
+                'MPI_MEM_USAGE': None
+            }
+            self.ts2title = {
+                'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
+                'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
+            }
+            self.max_x = sys.float_info.min
+            self.max_y = sys.float_info.min
+            self.min_y = sys.float_info.max
+            self.line_style = 'solid'
+            self.line_width = 0.75
+            self.title_font_size = 12
+            self.axis_font_size = 12
+
+            self.plot()
 
     def plot(self):
         ''' Color maps setup '''
-        num_colors = max([e.get_num_species() for e in self.experiments])
+        num_colors = self.experiment.get_num_species()
         for key in self.ts2colorer:
             self.ts2colorer[key] = Colorer(num_colors)
 
         print('plotting to {}'.format(self.fname))
 
-        for e in self.experiments:
-            for rank, ts in e.rank_to_time_series.iteritems():
-                for tsk, tsi in ts.iteritems():
-                    self.add_plot(
-                        self.ts2ax[tsk], self.ts2colorer[tsk], rank, tsi
-                    )
+        for rank, ts in self.experiment.rank_to_time_series.iteritems():
+            for tsk, tsi in ts.iteritems():
+                self.add_plot(
+                    self.ts2ax[tsk], self.ts2colorer[tsk], rank, tsi
+                )
 
         '''
         plt.title('Memory Usage Over Time')
@@ -334,11 +343,10 @@ class Plotter:
 
     def add_mpi_init_shading_to_subplots(self):
         max_time = sys.float_info.min
-        for e in self.experiments:
-            for meta in e.run_meta:
-                max_time = max(max_time, meta.data['MPI Init Time (s)'])
-            for ax in self.axs:
-                ax.axvspan(0, max_time, alpha=0.5, color='#f1f1f1')
+        for meta in self.experiment.run_meta:
+            max_time = max(max_time, meta.data['MPI Init Time (s)'])
+        for ax in self.axs:
+            ax.axvspan(0, max_time, alpha=0.5, color='#f1f1f1')
 
     def add_colorbar_to_subplots(self, num_colors):
         # To number of ranks.
@@ -449,8 +457,7 @@ def main(argv=None):
 
     experiments = process_experiment_data(argv[1:])
 
-    plotter = Plotter(experiments)
-    plotter.plot()
+    Plotter(experiments)
 
     return os.EX_OK
 
