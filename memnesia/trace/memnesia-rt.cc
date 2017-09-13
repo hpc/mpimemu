@@ -53,7 +53,7 @@ memnesia_rt::set_hostname(void)
 {
     if (0 != gethostname(hostname, sizeof(hostname))) {
         perror("gethostname");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
 }
 
@@ -75,7 +75,7 @@ memnesia_rt::set_target_cmdline(void)
     FILE *commf = fopen("/proc/self/comm", "r");
     if (!commf) {
         perror("fopen /proc/self/comm");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
 
     char lb[PATH_MAX];
@@ -145,11 +145,11 @@ memnesia_rt::pinit(void)
     gather_target_metadata();
     if (MPI_SUCCESS != PMPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
         perror("PMPI_Comm_rank");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
     if (MPI_SUCCESS != PMPI_Comm_size(MPI_COMM_WORLD, &numpe)) {
         perror("PMPI_Comm_size");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
     // Emit obnoxious header that lets the user know something is happening.
     if (rank == 0) {
@@ -226,6 +226,7 @@ memnesia_rt::aggregate_data(void)
     const bool root = (rank == 0);
     int report_len = int(ss.str().length());
     int *recv_sizes = nullptr;
+
     if (root) {
         recv_sizes = new int[numpe];
     }
@@ -234,7 +235,7 @@ memnesia_rt::aggregate_data(void)
         &report_len, 1, MPI_INT, recv_sizes, 1, MPI_INT, 0, MPI_COMM_WORLD
     )) {
         perror("PMPI_Gather");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
     //
     int *displs = nullptr;
@@ -267,7 +268,7 @@ memnesia_rt::aggregate_data(void)
         MPI_COMM_WORLD
     )) {
         perror("PMPI_Gatherv");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
     //
     string node_report;
@@ -363,7 +364,7 @@ memnesia_rt::get_output_path(void)
     }
     if (!output_dir) {
         fprintf(stderr, "Error saving report.\n");
-        exit(EXIT_FAILURE);
+        memnesia_exit_failure();
     }
 
     return std::string(output_dir);
@@ -434,8 +435,9 @@ memnesia_rt::report(void)
     snprintf(
         report_name,
         sizeof(report_name) - 1,
-        "%s/%s.%s",
+        "%s/%s-%s.%s",
         output_dir.c_str(),
+        get_app_name().c_str(),
         get_date_time_str_now().c_str(),
         "memnesia"
     );
@@ -451,6 +453,9 @@ memnesia_rt::report(void)
     fclose(reportf);
 
     if (rank == 0) {
-        printf("# Report written to %s\n", output_dir.c_str());
+        printf(
+            "# Report written to %s\n",
+            report_name
+        );
     }
 }
