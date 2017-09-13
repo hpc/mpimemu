@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <string.h>
 
+using namespace std;
+
 /**
  *
  */
@@ -61,7 +63,7 @@ memnesia_rt::set_hostname(void)
 std::string
 memnesia_rt::get_hostname(void)
 {
-    return std::string(hostname, sizeof(hostname));
+    return std::string(hostname, strlen(hostname) + 1);
 }
 
 /**
@@ -95,7 +97,7 @@ memnesia_rt::set_target_cmdline(void)
 std::string
 memnesia_rt::get_app_name(void)
 {
-    return std::string(app_comm, sizeof(app_comm));
+    return std::string(app_comm, strlen(app_comm) + 1);
 }
 
 /**
@@ -130,6 +132,8 @@ memnesia_rt::get_init_end_time(void)
 void
 memnesia_rt::pinit(void)
 {
+    //
+    setbuf(stdout, NULL);
     // Reset any signal handlers that may have been set in MPI_Init.
     (void)signal(SIGSEGV, SIG_DFL);
     // Synchronize.
@@ -176,6 +180,75 @@ memnesia_rt::pinit(void)
  *
  */
 void
+memnesia_rt::fill_report_buffer(
+    std::stringstream &ss
+) {
+    ss << "# [Run Info Begin]"      << endl;
+
+    ss << "# Report Date Time: "    << get_date_time_str_now() << endl;
+
+    ss << "# Application Name: "    << get_app_name() << endl;
+
+    ss << "# Hostname: "            << get_hostname() << endl;
+
+    ss << "# MPI_COMM_WORLD Rank: " << rank << endl;
+
+    ss << "# MPI_COMM_WORLD Size: " << numpe << endl;
+
+    ss << "# Number of smaps Captures Performed: "
+       << get_num_smaps_captures() << endl;
+
+    ss << "# High Memory Usage Watermark (MPI) (MB): "
+       <<  memnesia_util_kb2mb(
+               dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::MPI)
+           )
+       << endl;
+
+    ss << "# High Memory Usage Watermark (Application + MPI) (MB): "
+       <<  memnesia_util_kb2mb(
+               dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::APP)
+           )
+       << endl;
+
+    ss << "# [Run Info End]" << endl;
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    const double init_time = get_init_begin_time();
+
+    ss << "# MPI Library Memory Usage (MB) Over Time (Since MPI_Init):"
+       << endl
+       << "# Format:"
+       << endl
+       << "# KEY Function Time Usage"
+       << endl;
+    dataset.report(ss, memnesia_dataset::MPI, init_time);
+
+    ss << "# Application Memory Usage (MB) Over Time (Since MPI_Init):"
+       << endl
+       << "# Format:"
+       << endl
+       << "# KEY Function Time Usage"
+       << endl;
+    dataset.report(ss, memnesia_dataset::APP, init_time);
+}
+
+/**
+ *
+ */
+void
+memnesia_rt::aggregate_local_data(void)
+{
+    stringstream ss;
+
+    fill_report_buffer(ss);
+
+    cout << ss.str();
+}
+
+/**
+ *
+ */
+void
 memnesia_rt::pfini(void)
 {
     int rc = MPI_ERR_UNKNOWN;
@@ -207,7 +280,7 @@ memnesia_rt::get_date_time_str_now(void)
 
     strftime(tsb, sizeof(tsb) - 1, "%Y%m%d-%H%M%S", bd_time_ptr);
     //
-    return std::string(tsb, sizeof(tsb));
+    return std::string(tsb, strlen(tsb) + 1);
 }
 
 /**
@@ -253,6 +326,26 @@ memnesia_rt::sample_delta(
 /**
  *
  */
+std::string
+memnesia_rt::get_output_path(void)
+{
+    //
+    char *output_dir = getenv(MEMNESIA_ENV_REPORT_OUTPUT_PATH);
+    // Not set, so output to pwd.
+    if (!output_dir) {
+        output_dir = getenv("PWD");
+    }
+    if (!output_dir) {
+        fprintf(stderr, "Error saving report.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return std::string(output_dir);
+}
+
+/**
+ *
+ */
 void
 memnesia_rt::sample_emit(
     const memnesia_sample &s
@@ -293,9 +386,6 @@ memnesia_rt::get_num_smaps_captures(void)
 void
 memnesia_rt::report(void)
 {
-    using namespace std;
-    //
-    setbuf(stdout, NULL);
     //
     if (rank == 0) {
         printf(
@@ -307,20 +397,17 @@ memnesia_rt::report(void)
         );
     }
     //
-    char *output_dir = getenv(MEMNESIA_ENV_REPORT_OUTPUT_PATH);
-    // Not set, so output to pwd.
-    if (!output_dir) {
-        output_dir = getenv("PWD");
-    }
-    if (!output_dir) {
-        fprintf(stderr, "Error saving report.\n");
-        return;
-    }
+    aggregate_local_data();
+    // Only one MPI process will write the report.
+    if (node_rank != 0) return;
 
+    std::string output_dir = get_output_path();
+    //
     char report_name[PATH_MAX];
+    // TODO change report prefix to hostname.
     snprintf(
         report_name, sizeof(report_name) - 1, "%s/%d.%s",
-        output_dir, rank, "memnesia"
+        output_dir.c_str(), rank, "memnesia"
     );
 
     FILE *reportf = fopen(report_name, "w+");
@@ -329,70 +416,10 @@ memnesia_rt::report(void)
         return;
     }
 
-    fprintf(reportf, "# [Run Info Begin]\n");
-
-    fprintf(
-        reportf,
-        "# Report Date Time: %s\n",
-        get_date_time_str_now().c_str()
-    );
-
-    fprintf(reportf, "# Application Name: %s\n", get_app_name().c_str());
-
-    fprintf(reportf, "# Hostname: %s\n", get_hostname().c_str());
-
-    fprintf(reportf, "# MPI_COMM_WORLD Rank: %d\n", rank);
-
-    fprintf(reportf, "# MPI_COMM_WORLD Size: %d\n", numpe);
-
-    fprintf(
-        reportf,
-        "# Number of smaps Captures Performed: %" PRIu64 "\n",
-        get_num_smaps_captures()
-    );
-
-    fprintf(
-        reportf,
-        "# High Memory Usage Watermark (MPI) (MB): %lf\n",
-        memnesia_util_kb2mb(
-            dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::MPI)
-        )
-    );
-
-    fprintf(
-        reportf,
-        "# High Memory Usage Watermark (Application + MPI) (MB): %lf\n",
-        memnesia_util_kb2mb(
-            dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::APP)
-        )
-    );
-
-    fprintf(reportf, "# [Run Info End]\n");
-    ////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
-    const double init_time = get_init_begin_time();
-
-    fprintf(
-        reportf,
-        "# MPI Library Memory Usage (MB) Over Time "
-        "(Since MPI_Init):\n"
-        "# Format:\n"
-        "# KEY Function Time Usage\n"
-    );
-    dataset.report(reportf, memnesia_dataset::MPI, init_time);
-
-    fprintf(
-        reportf,
-        "# Application Memory Usage (MB) Over Time "
-        "(Since MPI_Init):\n"
-        "# Format:\n"
-        "# KEY Function Time Usage\n"
-    );
-    dataset.report(reportf, memnesia_dataset::APP, init_time);
 
     fclose(reportf);
 
     if (rank == 0) {
-        printf("# Report written to %s\n", output_dir);
+        printf("# Report written to %s\n", output_dir.c_str());
     }
 }

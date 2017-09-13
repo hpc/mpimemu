@@ -6,6 +6,7 @@
 #include <limits.h>
 
 #include <string>
+#include <sstream>
 
 #include "mpi.h"
 
@@ -46,6 +47,15 @@ private:
         const memnesia_sample &happened_after,
         memnesia_sample &delta
     );
+    //
+    std::string
+    get_output_path(void);
+    //
+    void
+    fill_report_buffer(std::stringstream &ss);
+    //
+    void
+    aggregate_local_data(void);
 
 public:
     //
