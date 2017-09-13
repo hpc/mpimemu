@@ -711,6 +711,8 @@ MPI_Finalize(void)
     PMPI_Barrier(MPI_COMM_WORLD);
     // Report.
     rt->report();
+    // Cleanup and shutdown tool runtime.
+    rt->pfini();
     //
     return PMPI_Finalize();
 }

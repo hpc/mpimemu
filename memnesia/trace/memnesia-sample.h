@@ -166,7 +166,7 @@ public:
                 tid_name_tab[tid].c_str(),
                 d.get_target_func_name().c_str(),
                 d.get_capture_time() - since,
-                memnesia_kb2mb(d.get_mem_usage_in_kb(mtbp))
+                memnesia_util_kb2mb(d.get_mem_usage_in_kb(mtbp))
             );
         }
     }

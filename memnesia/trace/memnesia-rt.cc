@@ -15,8 +15,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "mpi.h"
-
 /**
  *
  */
@@ -141,11 +139,56 @@ memnesia_rt::pinit(void)
     }
     // Gather some information for tool use.
     gather_target_metadata();
-    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    PMPI_Comm_size(MPI_COMM_WORLD, &numpe);
+    // Create communicators for processes co-loated on a compute node.
+    if (MPI_SUCCESS != PMPI_Comm_split_type(
+                           MPI_COMM_WORLD,
+                           MPI_COMM_TYPE_SHARED,
+                           0,
+                           MPI_INFO_NULL,
+                           &node_comm
+                        )) {
+        perror("PMPI_Comm_split_type");
+        exit(EXIT_FAILURE);
+    }
+    if (MPI_SUCCESS != PMPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
+        perror("PMPI_Comm_rank");
+        exit(EXIT_FAILURE);
+    }
+    if (MPI_SUCCESS != PMPI_Comm_size(MPI_COMM_WORLD, &numpe)) {
+        perror("PMPI_Comm_size");
+        exit(EXIT_FAILURE);
+    }
+    if (MPI_SUCCESS != PMPI_Comm_rank(node_comm, &node_rank)) {
+        perror("PMPI_Comm_rank");
+        exit(EXIT_FAILURE);
+    }
+    if (MPI_SUCCESS != PMPI_Comm_size(node_comm, &node_numpe)) {
+        perror("PMPI_Comm_size");
+        exit(EXIT_FAILURE);
+    }
     // Emit obnoxious header that lets the user know something is happening.
     if (rank == 0) {
         emit_header();
+    }
+}
+
+/**
+ *
+ */
+void
+memnesia_rt::pfini(void)
+{
+    int rc = MPI_ERR_UNKNOWN;
+    if (MPI_SUCCESS != (rc = PMPI_Comm_free(&node_comm))) {
+        // We are already at the end, so it would be a shame to abort the run
+        // for this, so just let the user know something went south towards the
+        // end.
+        fprintf(
+            stderr,
+            "WARNING: %s returns %d (not MPI_SUCCESS)\n",
+            "PMPI_Comm_free",
+            rc
+        );
     }
 }
 
@@ -311,7 +354,7 @@ memnesia_rt::report(void)
     fprintf(
         reportf,
         "# High Memory Usage Watermark (MPI) (MB): %lf\n",
-        memnesia_kb2mb(
+        memnesia_util_kb2mb(
             dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::MPI)
         )
     );
@@ -319,7 +362,7 @@ memnesia_rt::report(void)
     fprintf(
         reportf,
         "# High Memory Usage Watermark (Application + MPI) (MB): %lf\n",
-        memnesia_kb2mb(
+        memnesia_util_kb2mb(
             dataset.get_high_mem_usage_watermark_in_kb(memnesia_dataset::APP)
         )
     );

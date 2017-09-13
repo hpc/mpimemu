@@ -6,8 +6,8 @@
 #include <limits.h>
 
 #include <string>
-#include <vector>
-#include <map>
+
+#include "mpi.h"
 
 class memnesia_rt {
 private:
@@ -48,9 +48,16 @@ private:
     );
 
 public:
+    //
     int rank = 0;
     //
     int numpe = 0;
+    //
+    int node_rank = 0;
+    //
+    int node_numpe = 0;
+    //
+    MPI_Comm node_comm;
     //
     static memnesia_rt *
     the_memnesia_rt(void);
@@ -84,6 +91,9 @@ public:
     //
     void
     pinit(void);
+    //
+    void
+    pfini(void);
     //
     void
     sample(

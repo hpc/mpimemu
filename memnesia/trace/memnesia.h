@@ -6,6 +6,6 @@
 
 template<typename T>
 static inline double
-memnesia_kb2mb(T kb) {
+memnesia_util_kb2mb(T kb) {
     return double(kb) / 1024.0;
 }
