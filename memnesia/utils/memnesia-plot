@@ -379,7 +379,7 @@ class Plotter:
                 cbar.set_ticklabels([tick_labels[0]])
             else:
                 cbar.set_ticklabels(tick_labels)
-            cbar.set_label('Process Identifier Map', rotation='vertical')
+            cbar.set_label('Global Process Identifier', rotation='vertical')
 
     def add_plot(self, target_ax, colorer, rank, time_series):
         x = time_series.get('times')

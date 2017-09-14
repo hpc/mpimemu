@@ -63,7 +63,7 @@ class Plotter:
             norm=cnorm
         )
         cbar = plt.colorbar(
-            label='Point-to-Point Data Transmission Map (MB)'
+            label='Point-to-Point Data Transmission (MB)'
         )
         cax = cbar.ax
         text = cax.yaxis.label
@@ -71,10 +71,10 @@ class Plotter:
         text.set_font_properties(font)
 
         self.ax.set_xlabel(
-            'Process Identifier (Receiver)', fontsize=self.axis_font_size
+            'Global Process Identifier (Receiver)', fontsize=self.axis_font_size
         )
         self.ax.set_ylabel(
-            'Process Identifier (Sender)', fontsize=self.axis_font_size
+            'Global Process Identifier (Sender)', fontsize=self.axis_font_size
         )
 
         self.fig.savefig(
