@@ -419,7 +419,7 @@ class Plotter:
 
 ###############################################################################
 def usage():
-    print('usage: plot-xhpcg-weak [DATADIR]...')
+    print('usage: memnesia-plot out.memnesia [another.memnesia ...]')
 
 
 ###############################################################################
