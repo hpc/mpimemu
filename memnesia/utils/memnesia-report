@@ -8,6 +8,7 @@
 import os
 import sys
 import operator
+import shutil
 import collections
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
@@ -173,7 +174,7 @@ class Experiment:
             line_num = 0
 
             while (line_num < num_lines):
-                rmeta = RunMetadata(content[line_num : ])
+                rmeta = RunMetadata(content[line_num:])
                 self.run_meta.append(rmeta)
                 line_num += rmeta.get_lines_consumed()
 
@@ -194,7 +195,7 @@ class Experiment:
 
                     ldata = l.split(' ')
                     dtype = ldata[0]
-                    dfunc = ldata[1]
+                    # dfunc = ldata[1]
                     dtime = float(ldata[2])
                     dmem = float(ldata[3])
                     ts[dtype].push(dtime, dmem)
@@ -232,7 +233,8 @@ class Colorer:
     @staticmethod
     def get_cm():
         # return plt.cm.copper
-        return plt.cm.viridis
+        # return plt.cm.viridis
+        return plt.cm.inferno
 
 
 ###############################################################################
@@ -240,52 +242,60 @@ class Plotter:
     def __init__(self, e_to_plot):
         for e in e_to_plot:
             self.app_name = e.get_app_name()
-            self.fname = self.get_usable_file_name(
-                             '{}-{}'.format(self.app_name, 'memnesia-report'),
-                             'pdf'
+            self.dname = self.get_usable_dir_name(
+                             '{}-{}'.format(self.app_name, 'memnesia-report')
                          )
+            # Create report directory.
+            os.makedirs(self.dname)
+            # Copy input data into directory.
+            shutil.copy(e.log_file, self.dname)
+
             self.experiment = e
+
             self.numpes = set()
-            self.fig, self.axs = plt.subplots(2, sharex=True)
-            self.ts2ax = {
-                'ALL_MEM_USAGE': self.axs[0],
-                'MPI_MEM_USAGE': self.axs[1]
-            }
-            self.ts2colorer = {
-                'ALL_MEM_USAGE': None,
-                'MPI_MEM_USAGE': None
+
+            self.key2plot = {
+                'ALL_MEM_USAGE': 'application-mem-usage-timeline.pdf',
+                'MPI_MEM_USAGE': 'mpi-mem-usage-timeline.pdf'
             }
             self.ts2title = {
                 'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
                 'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
             }
+
+            self.fig = None
+            self.ax = None
+
             self.max_x = sys.float_info.min
             self.max_y = sys.float_info.min
             self.min_y = sys.float_info.max
             self.line_style = 'solid'
-            self.line_width = 0.75
+            self.line_width = 1.0
             self.title_font_size = 12
             self.axis_font_size = 12
+            self.fig_width = 10
+            self.fig_height = 3
+            self.figsize = (self.fig_width, self.fig_height)
 
-            self.plot()
+            for plotk in self.key2plot.iterkeys():
+                self.plot(plotk)
 
-    def plot(self):
+    def plot(self, plot_key):
+        self.fig, self.ax = plt.subplots(figsize=self.figsize)
         ''' Color maps setup '''
         num_colors = self.experiment.get_num_species()
-        for key in self.ts2colorer:
-            self.ts2colorer[key] = Colorer(num_colors)
 
-        print('plotting to {}'.format(self.fname))
+        print('# saving {} to {}'.format(
+            self.key2plot[plot_key],
+            self.dname
+        ))
 
+        colorer = Colorer(num_colors)
         for rank, ts in self.experiment.rank_to_time_series.iteritems():
-            for tsk, tsi in ts.iteritems():
-                self.add_plot(
-                    self.ts2ax[tsk], self.ts2colorer[tsk], rank, tsi
-                )
-
-        '''
-        plt.title('Memory Usage Over Time')
-        '''
+            tsi = ts[plot_key]
+            self.add_plot(
+                self.ax, colorer, rank, tsi
+            )
 
         scalf = 1.05
         xmin = 0
@@ -294,25 +304,23 @@ class Plotter:
         ymin = self.min_y / scalf
         ymax = self.max_y * scalf
         '''
-        for ax in self.axs.flat:
-            ax.set_xlim(xmin, xmax)
-            # Show grids.
-            ax.grid(True)
-            # Set y labels.
-            ax.set_ylabel(
-                'Memory Usage (MB)', fontsize=self.axis_font_size
-            )
-            # Set y-tick format.
-            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        self.ax.set_xlim(xmin, xmax)
+        # Show grids.
+        self.ax.grid(True)
+        # Set y labels.
+        self.ax.set_ylabel(
+            'Memory Usage (MB)', fontsize=self.axis_font_size
+        )
+        # Set y-tick format.
+        self.ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
-        for axk, axi in self.ts2ax.iteritems():
-            axi.set_title(
-                self.ts2title[axk],
-                fontsize=self.title_font_size
-            )
+        self.ax.set_title(
+            self.ts2title[plot_key],
+            fontsize=self.title_font_size
+        )
 
-        self.add_colorbar_to_subplots(num_colors)
-        self.add_mpi_init_shading_to_subplots()
+        self.add_colorbar_to_plot(num_colors)
+        # self.add_mpi_init_shading_to_subplots()
         '''
         Set common y label.
         self.fig.text(
@@ -326,7 +334,7 @@ class Plotter:
         '''
         Only bottom-most axis will have x label.
         '''
-        self.axs[-1].set_xlabel(
+        self.ax.set_xlabel(
             'Wall Time Since Initialization (s)', fontsize=self.axis_font_size
         )
 
@@ -335,7 +343,7 @@ class Plotter:
         '''
 
         self.fig.savefig(
-            self.fname,
+            '{}/{}'.format(self.dname, self.key2plot[plot_key]),
             format='pdf',
             bbox_inches='tight',
             pad_inches=0.03
@@ -345,41 +353,39 @@ class Plotter:
         max_time = sys.float_info.min
         for meta in self.experiment.run_meta:
             max_time = max(max_time, meta.data['MPI Init Time (s)'])
-        for ax in self.axs:
-            ax.axvspan(0, max_time, alpha=0.5, color='#f1f1f1')
+        self.ax.axvspan(0, max_time, alpha=0.5, color='#f1f1f1')
 
-    def add_colorbar_to_subplots(self, num_colors):
+    def add_colorbar_to_plot(self, num_colors):
         # To number of ranks.
         normalize = mcolors.Normalize(vmin=0, vmax=num_colors)
         smappaple = cm.ScalarMappable(norm=normalize, cmap=Colorer.get_cm())
         smappaple.set_array(num_colors)
 
-        # Create an axes on the right side of ax. The width of cax will be 2%
+        # Create an axis on the right side of ax. The width of cax will be 2%
         # of ax and the padding between cax and ax will be fixed at 0.05 inch.
-        for ax in self.axs:
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes(
-                "right",
-                size="2%",
-                pad=0.05
-            )
+        divider = make_axes_locatable(self.ax)
+        cax = divider.append_axes(
+            "right",
+            size="2%",
+            pad=0.05
+        )
 
-            tick_format = '%d'
-            if (num_colors > 99):
-                tick_format = '%.0e'
+        tick_format = '%d'
+        if (num_colors > 99):
+            tick_format = '%.0e'
 
-            cbar = plt.colorbar(
-                smappaple,
-                cax=cax,
-                format=tick_format
-            )
-            cbar.set_ticks([0, num_colors])
-            tick_labels = [0, num_colors - 1]
-            if (num_colors == 1):
-                cbar.set_ticklabels([tick_labels[0]])
-            else:
-                cbar.set_ticklabels(tick_labels)
-            cbar.set_label('Global Process Identifier', rotation='vertical')
+        cbar = plt.colorbar(
+            smappaple,
+            cax=cax,
+            format=tick_format
+        )
+        cbar.set_ticks([0, num_colors])
+        tick_labels = [0, num_colors - 1]
+        if (num_colors == 1):
+            cbar.set_ticklabels([tick_labels[0]])
+        else:
+            cbar.set_ticklabels(tick_labels)
+        cbar.set_label('Global Process Identifier', rotation='vertical')
 
     def add_plot(self, target_ax, colorer, rank, time_series):
         x = time_series.get('times')
@@ -406,20 +412,20 @@ class Plotter:
         )
         '''
 
-    def get_usable_file_name(self, name, extension):
+    def get_usable_dir_name(self, name):
         fidx = 1
         cwd = os.getcwd()
-        target_fname = '{}/{}.{}'.format(cwd, name, extension)
-        while (os.path.isfile(target_fname)):
-            target_fname = '{}/{}-{}.{}'.format(cwd, name, fidx, extension)
+        target_dname = '{}/{}'.format(cwd, name)
+        while (os.path.exists(target_dname)):
+            target_dname = '{}/{}-{}'.format(cwd, name, fidx)
             fidx += 1
 
-        return target_fname
+        return target_dname
 
 
 ###############################################################################
 def usage():
-    print('usage: memnesia-plot out.memnesia [another.memnesia ...]')
+    print('usage: memnesia-report out.memnesia [another.memnesia ...]')
 
 
 ###############################################################################

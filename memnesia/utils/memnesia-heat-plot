@@ -34,7 +34,7 @@ class HeatMatrix:
             content = [x.rstrip() for x in f.readlines()]
             for i, l in enumerate(content):
                 if (i == 0):
-                    self.numpe = np.long(l.split(' ')[0])
+                    self.numpe = long(l.split(' ')[0])
                     self.data = np.zeros((self.numpe, self.numpe),
                                          dtype=np.double)
                     continue
