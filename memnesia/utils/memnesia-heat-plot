@@ -7,6 +7,7 @@
 
 import os
 import sys
+import matplotlib as mp
 import matplotlib.pyplot as plt
 from matplotlib.colors import PowerNorm
 import numpy as np
@@ -47,7 +48,7 @@ class HeatMatrix:
 class Plotter:
 
     def __init__(self, heat_mat):
-        self.axis_font_size = 12
+        self.axis_font_size = 14
         self.heat_mat = heat_mat
         self.fig, self.ax = plt.subplots()
 
@@ -61,9 +62,13 @@ class Plotter:
             cmap='inferno',
             norm=cnorm
         )
-        plt.colorbar(
+        cbar = plt.colorbar(
             label='Point-to-Point Data Transmission Map (MB)'
         )
+        cax = cbar.ax
+        text = cax.yaxis.label
+        font = mp.font_manager.FontProperties(size=self.axis_font_size)
+        text.set_font_properties(font)
 
         self.ax.set_xlabel(
             'Process Identifier (Receiver)', fontsize=self.axis_font_size
