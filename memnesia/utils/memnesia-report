@@ -44,12 +44,12 @@ class RunMetadata:
             'Report Date Time': '',
             'Application Name': '',
             'Hostname': '',
-            'MPI_COMM_WORLD Rank': int(0),
-            'MPI_COMM_WORLD Size': int(0),
-            'MPI Init Time (s)': float(0),
-            'Number of smaps Captures Performed': int(0),
-            'High Memory Usage Watermark (MPI) (MB)': float(0),
-            'High Memory Usage Watermark (Application + MPI) (MB)': float(0)
+            'MPI_COMM_WORLD Rank': 0,
+            'MPI_COMM_WORLD Size': 0,
+            'MPI Init Time (s)': 0.,
+            'Number of smaps Captures Performed': 0,
+            'High Memory Usage Watermark (MPI) (MB)': 0.,
+            'High Memory Usage Watermark (Application + MPI) (MB)': 0.
         }
         assert(data[0] == '# [Run Info Begin]')
         # Skip header
@@ -78,15 +78,16 @@ class RunMetadata:
         return val_type(string)
 
     @staticmethod
-    def emit_stats(meta_list):
-        header = '# Run Statistics '
-        print('{}{}'.format(header, '#' * (80 - len(header))))
+    def emit_stats(meta_list, statf):
 
-        print('# Report Date Time: {}'.format(
+        header = '# Run Statistics '
+        statf.write('{}{}\n'.format(header, '#' * (80 - len(header))))
+
+        statf.write('# Report Date Time: {}\n'.format(
             meta_list[0].data['Report Date Time'])
         )
 
-        print('# Application: {}'.format(
+        statf.write('# Application: {}\n'.format(
             meta_list[0].data['Application Name'])
         )
 
@@ -95,19 +96,21 @@ class RunMetadata:
                         if k.startswith(kprefix)]
 
             for k in mpi_keys:
-                print('# {}: {}'.format(k, meta_list[0].data[k]))
+                statf.write('# {}: {}\n'.format(k, meta_list[0].data[k]))
 
-        print('# Number of Process Data Analyzed: {}'.format(len(meta_list)))
+        statf.write(
+            '# Number of Process Data Analyzed: {}\n'.format(len(meta_list))
+        )
 
         for kprefix in ['Number of', 'High Memory Usage Watermark']:
             stat_keys = [k for k in meta_list[0].data.keys()
                          if k.startswith(kprefix)]
-            RunMetadata.emit_min_max_aves(meta_list, stat_keys)
+            RunMetadata.emit_min_max_aves(meta_list, stat_keys, statf)
 
     @staticmethod
-    def emit_min_max_aves(meta_list, keys):
+    def emit_min_max_aves(meta_list, keys, statf):
         for k in keys:
-            print('# {}'.format(k))
+            statf.write('# {}\n'.format(k))
 
             vals = [meta.data[k] for meta in meta_list]
 
@@ -118,13 +121,13 @@ class RunMetadata:
             max_where = meta_list[maxidx].data['Hostname']
             ave = Util.mean(vals)
 
-            print('- Min: {}, Who: {}, Where: {}'.format(
+            statf.write('- Min: {}, Who: {}, Where: {}\n'.format(
                 minval, minidx, min_where)
             )
-            print('- Max: {}, Who: {}, Where: {}'.format(
+            statf.write('- Max: {}, Who: {}, Where: {}\n'.format(
                 maxval, maxidx, max_where)
             )
-            print('- Ave: {0:0.3f}'.format(ave))
+            statf.write('- Ave: {0:0.3f}\n'.format(ave))
 
 
 ###############################################################################
@@ -204,7 +207,7 @@ class Experiment:
 
                 self.rank_to_time_series[rank] = ts
 
-        RunMetadata.emit_stats(self.run_meta)
+        RunMetadata.emit_stats(self.run_meta, sys.stdout)
 
 
 ###############################################################################
@@ -238,7 +241,7 @@ class Colorer:
 
 
 ###############################################################################
-class Plotter:
+class Reporter:
     def __init__(self, e_to_plot):
         for e in e_to_plot:
             self.app_name = e.get_app_name()
@@ -251,6 +254,12 @@ class Plotter:
             shutil.copy(e.log_file, self.dname)
 
             self.experiment = e
+            # Crunch and capture experiment data.
+            with open('{}/{}.txt'.format(
+                          self.dname,
+                          'statistics'
+                      ), 'w') as statf:
+                RunMetadata.emit_stats(self.experiment.run_meta, statf)
 
             self.numpes = set()
 
@@ -284,11 +293,6 @@ class Plotter:
         self.fig, self.ax = plt.subplots(figsize=self.figsize)
         ''' Color maps setup '''
         num_colors = self.experiment.get_num_species()
-
-        print('# saving {} to {}'.format(
-            self.key2plot[plot_key],
-            self.dname
-        ))
 
         colorer = Colorer(num_colors)
         for rank, ts in self.experiment.rank_to_time_series.iteritems():
@@ -463,7 +467,8 @@ def main(argv=None):
 
     experiments = process_experiment_data(argv[1:])
 
-    Plotter(experiments)
+    r = Reporter(experiments)
+    print('# Report written to {}'.format(r.dname))
 
     return os.EX_OK
 
