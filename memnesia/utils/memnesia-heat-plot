@@ -34,7 +34,7 @@ class HeatMatrix:
             content = [x.rstrip() for x in f.readlines()]
             for i, l in enumerate(content):
                 if (i == 0):
-                    self.numpe = long(l.split(' ')[0])
+                    self.numpe = int(l.split(' ')[0])
                     self.data = np.zeros((self.numpe, self.numpe),
                                          dtype=np.double)
                     continue
@@ -71,10 +71,12 @@ class Plotter:
         text.set_font_properties(font)
 
         self.ax.set_xlabel(
-            'Global Process Identifier (Receiver)', fontsize=self.axis_font_size
+            'Global Process Identifier (Receiver)',
+            fontsize=self.axis_font_size
         )
         self.ax.set_ylabel(
-            'Global Process Identifier (Sender)', fontsize=self.axis_font_size
+            'Global Process Identifier (Sender)',
+            fontsize=self.axis_font_size
         )
 
         self.fig.savefig(

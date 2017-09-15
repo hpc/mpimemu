@@ -44,10 +44,10 @@ class RunMetadata:
             'Report Date Time': '',
             'Application Name': '',
             'Hostname': '',
-            'MPI_COMM_WORLD Rank': long(0),
-            'MPI_COMM_WORLD Size': long(0),
+            'MPI_COMM_WORLD Rank': int(0),
+            'MPI_COMM_WORLD Size': int(0),
             'MPI Init Time (s)': float(0),
-            'Number of smaps Captures Performed': long(0),
+            'Number of smaps Captures Performed': int(0),
             'High Memory Usage Watermark (MPI) (MB)': float(0),
             'High Memory Usage Watermark (Application + MPI) (MB)': float(0)
         }
