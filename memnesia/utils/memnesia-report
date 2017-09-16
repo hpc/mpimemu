@@ -77,6 +77,9 @@ class RunMetadata:
     def cast(self, val_type, string):
         return val_type(string)
 
+    def get_numpe(self):
+        return self.data['MPI_COMM_WORLD Size']
+
     @staticmethod
     def emit_stats(meta_list, statf):
 
@@ -244,16 +247,20 @@ class Colorer:
 class Reporter:
     def __init__(self, e_to_plot):
         for e in e_to_plot:
+            self.experiment = e
+            self.e_numpe = e.run_meta[0].get_numpe()
             self.app_name = e.get_app_name()
             self.dname = self.get_usable_dir_name(
-                             '{}-{}'.format(self.app_name, 'memnesia-report')
+                             '{}-{}PE-{}'.format(
+                                 self.app_name,
+                                 self.e_numpe,
+                                 'memnesia-report')
                          )
             # Create report directory.
             os.makedirs(self.dname)
             # Copy input data into directory.
             shutil.copy(e.log_file, self.dname)
 
-            self.experiment = e
             # Crunch and capture experiment data.
             with open('{}/{}.txt'.format(
                           self.dname,
@@ -282,7 +289,7 @@ class Reporter:
             self.line_width = 1.0
             self.title_font_size = 12
             self.axis_font_size = 12
-            self.fig_width = 10
+            self.fig_width = 6
             self.fig_height = 3
             self.figsize = (self.fig_width, self.fig_height)
 

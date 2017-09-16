@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+###############################################################################
+# Copyright (c)      2017 Los Alamos National Security, LLC.
+#                         All rights reserved.
+###############################################################################
+
+import os
+import sys
+import imp
+
+
+###############################################################################
+class RunConfiguration:
+    def __init__(self, config_path):
+        self.config_path = config_path
+        self.mod_name = self.get_mod_name(config_path)
+        self.user_config_mod = self.import_name(self.mod_name, config_path)
+        self.user_config = self.user_config_mod.MemnesiaStudyConfig()
+        self.user_config.emit_config(sys.stdout)
+
+    def import_name(self, mod_name, config_path):
+        mod = None
+        try:
+            mod = imp.load_source(
+                mod_name,
+                config_path
+            )
+        except ImportError as e:
+            print('Cannot import configuration file: {}'.format(e.message))
+            return None
+        return mod
+
+    def get_mod_name(self, config_path):
+        file_name = os.path.basename(config_path)
+        if (file_name.endswith('.py')):
+            return file_name[:-3]
+
+
+###############################################################################
+def usage():
+    print('usage: memnesia-run-scaling-study config_file.py')
+
+
+###############################################################################
+def check_args(argv):
+    if len(argv) != 2:
+        usage()
+        exit(os.EX_USAGE)
+
+    configf = argv[1]
+
+    if not os.path.isfile(configf) or not configf.endswith('.py'):
+        print("'{}' is not a config file. Cannot continue.".format(configf))
+        usage()
+        exit(os.EX_USAGE)
+
+
+###############################################################################
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    check_args(argv)
+
+    RunConfiguration(argv[1])
+
+    return os.EX_OK
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+if __name__ == "__main__":
+    sys.exit(main())
