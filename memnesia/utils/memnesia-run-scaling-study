@@ -18,14 +18,13 @@ class RunConfiguration:
         self.user_config_mod = self.import_name(self.mod_name, config_path)
         self.user_config = self.user_config_mod.MemnesiaStudyConfig()
         self.user_config.emit_config(sys.stdout)
+        for numpe, rcmd in sorted(self.user_config.numpe_runcmd.iteritems()):
+            print(rcmd)
 
     def import_name(self, mod_name, config_path):
         mod = None
         try:
-            mod = imp.load_source(
-                mod_name,
-                config_path
-            )
+            mod = imp.load_source(mod_name, config_path)
         except ImportError as e:
             print('Cannot import configuration file: {}'.format(e.message))
             return None
