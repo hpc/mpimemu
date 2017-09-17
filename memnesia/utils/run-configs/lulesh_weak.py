@@ -10,7 +10,8 @@ class MemnesiaStudyConfig:
             'mpi': 'MPICH',
             'app': 'Lulesh',
             'exec_path_env': 'LULESH_EXEC',
-            'app_exec': ''
+            'app_exec': '',
+            'app_exec_opts': '-i 10 -s 50 -p'
         }
 
         self.numpes = self.gen_numpes()
@@ -23,7 +24,7 @@ class MemnesiaStudyConfig:
         execp = ''
         try:
             execp = os.environ[exec_env]
-        except Exception as e:
+        except KeyError as e:
             print('Application exec path not set: {}'.format(e.message))
             sys.exit(os.EX_CONFIG)
         return execp
@@ -32,13 +33,15 @@ class MemnesiaStudyConfig:
         '''
         Lulesh only wants cubed numpes.
         '''
-        return [x**3 for x in [1, 2, 3, 4, 5]]
+        # return [x**3 for x in [1, 2, 3, 4, 5]]
+        return [x**3 for x in [1, 2]]
 
     def gen_runcmds(self):
         res = {}
         app_exec = self.experiment['app_exec']
+        app_exec_opts = self.experiment['app_exec_opts']
         for n in self.numpes:
-            res[n] = 'mpirun -n {} {}'.format(n, app_exec)
+            res[n] = 'mpirun -n {} {} {}'.format(n, app_exec, app_exec_opts)
         return res
 
     def emit_config(self, to):

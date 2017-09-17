@@ -8,6 +8,7 @@
 import os
 import sys
 import imp
+import subprocess
 
 
 ###############################################################################
@@ -17,9 +18,6 @@ class RunConfiguration:
         self.mod_name = self.get_mod_name(config_path)
         self.user_config_mod = self.import_name(self.mod_name, config_path)
         self.user_config = self.user_config_mod.MemnesiaStudyConfig()
-        self.user_config.emit_config(sys.stdout)
-        for numpe, rcmd in sorted(self.user_config.numpe_runcmd.iteritems()):
-            print(rcmd)
 
     def import_name(self, mod_name, config_path):
         mod = None
@@ -34,6 +32,40 @@ class RunConfiguration:
         file_name = os.path.basename(config_path)
         if (file_name.endswith('.py')):
             return file_name[:-3]
+
+
+class Runner:
+    def __init__(self, run_config):
+        self.run_config = run_config.user_config
+
+    def run(self, test=False):
+        print('# Running the following Study')
+        self.run_config.emit_config(sys.stdout)
+
+        numpe_runcmd = self.run_config.numpe_runcmd
+
+        for numpe, rcmd in sorted(numpe_runcmd.iteritems()):
+            if (test):
+                print('run: {}'.format(rcmd))
+                continue
+            # Else actually run the thing.
+            p = subprocess.Popen(
+                    rcmd,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT
+                )
+            # Show progress.
+            while (True):
+                o = p.stdout.readline()
+                sys.stdout.write(o)
+
+                if o == '' and p.poll() is not None:
+                    break
+
+            retval = p.wait()
+            if (retval != 0):
+                print('RUN FAILURE: {}'.format(rcmd))
 
 
 ###############################################################################
@@ -62,7 +94,8 @@ def main(argv=None):
 
     check_args(argv)
 
-    RunConfiguration(argv[1])
+    runner = Runner(RunConfiguration(argv[1]))
+    runner.run()
 
     return os.EX_OK
 
