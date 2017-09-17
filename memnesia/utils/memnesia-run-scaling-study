@@ -8,15 +8,20 @@
 import os
 import sys
 import imp
+import time
 import subprocess
+import argparse
 
 
 ###############################################################################
 class RunConfiguration:
-    def __init__(self, config_path):
-        self.config_path = config_path
-        self.mod_name = self.get_mod_name(config_path)
-        self.user_config_mod = self.import_name(self.mod_name, config_path)
+    def __init__(self, arg_dict):
+        self.config_path = arg_dict['config']
+        self.mod_name = self.get_mod_name(self.config_path)
+        self.user_config_mod = self.import_name(
+            self.mod_name,
+            self.config_path
+        )
         self.user_config = self.user_config_mod.MemnesiaStudyConfig()
 
     def import_name(self, mod_name, config_path):
@@ -37,6 +42,10 @@ class RunConfiguration:
 class Runner:
     def __init__(self, run_config):
         self.run_config = run_config.user_config
+        self.output_path = self.get_output_path()
+
+    def get_output_path(self):
+        os.environ["MEMNESIA_REPORT_OUTPUT_PATH"] = "1"
 
     def run(self, test=False):
         print('# Running the following Study')
@@ -49,6 +58,13 @@ class Runner:
                 print('run: {}'.format(rcmd))
                 continue
             # Else actually run the thing.
+            print('')
+            for i in range(0, 2):
+                print('$' * 80)
+            print('')
+
+            os.environ["MEMNESIA_REPORT_OUTPUT_PATH"] = "1"
+
             p = subprocess.Popen(
                     rcmd,
                     shell=True,
@@ -66,24 +82,30 @@ class Runner:
             retval = p.wait()
             if (retval != 0):
                 print('RUN FAILURE: {}'.format(rcmd))
+            # Take the day off, boss.
+            time.sleep(2)
 
 
 ###############################################################################
-def usage():
-    print('usage: memnesia-run-scaling-study config_file.py')
-
-
-###############################################################################
-def check_args(argv):
-    if len(argv) != 2:
-        usage()
-        exit(os.EX_USAGE)
-
-    configf = argv[1]
+def check_args(parser, arg_dict):
+    configf = arg_dict['config']
+    base_outp = arg_dict['output']
+    res_name = arg_dict['name']
+    full_out = '{}/{}'.format(base_outp, res_name)
 
     if not os.path.isfile(configf) or not configf.endswith('.py'):
         print("'{}' is not a config file. Cannot continue.".format(configf))
-        usage()
+        parser.print_help()
+        exit(os.EX_USAGE)
+
+    if not os.path.isdir(base_outp):
+        print("'{}' is not a directory. Cannot continue.".format(base_outp))
+        parser.print_help()
+        exit(os.EX_USAGE)
+
+    if os.path.isdir(full_out):
+        print("'{}' already exists. Cannot continue.".format(full_out))
+        parser.print_help()
         exit(os.EX_USAGE)
 
 
@@ -92,9 +114,30 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    check_args(argv)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--config',
+        type=str,
+        help='Path to user configuration file.',
+        required=True
+    )
+    parser.add_argument(
+        '--output',
+        type=str,
+        help='Base path to result output.',
+        required=True
+    )
+    parser.add_argument(
+        '--name',
+        type=str,
+        help='Result output directory name.',
+        required=True
+    )
+    arg_dict = vars(parser.parse_args())
 
-    runner = Runner(RunConfiguration(argv[1]))
+    check_args(parser, arg_dict)
+
+    runner = Runner(RunConfiguration(arg_dict))
     runner.run()
 
     return os.EX_OK
