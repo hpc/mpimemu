@@ -429,16 +429,20 @@ memnesia_rt::report(void)
     if (rank != 0) return;
 
     std::string output_dir = get_output_path();
+    std::string s_output_name = get_app_name() + "-"
+                              + get_date_time_str_now();
+    char *output_name = getenv(MEMNESIA_ENV_REPORT_NAME);
+    if (output_name) {
+        s_output_name = std::string(output_name);
+    }
     //
     char report_name[PATH_MAX];
-    // TODO change report prefix to hostname.
     snprintf(
         report_name,
         sizeof(report_name) - 1,
-        "%s/%s-%s.%s",
+        "%s/%s.%s",
         output_dir.c_str(),
-        get_app_name().c_str(),
-        get_date_time_str_now().c_str(),
+        s_output_name.c_str(),
         "memnesia"
     );
 

@@ -154,7 +154,7 @@ class TimeSeries:
 class Experiment:
     def __init__(self, log_file):
         self.log_path = os.path.dirname(os.path.abspath(log_file))
-        self.log_file_name = log_file
+        self.log_file_name = os.path.basename(log_file)
         self.log_file = '{}/{}'.format(self.log_path, self.log_file_name)
         self.run_meta = []
         '''

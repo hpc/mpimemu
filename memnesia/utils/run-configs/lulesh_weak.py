@@ -1,7 +1,3 @@
-import os
-import sys
-
-
 class MemnesiaStudyConfig:
     def __init__(self):
         self.experiment = {
@@ -9,25 +5,13 @@ class MemnesiaStudyConfig:
             'arch': 'Cray XC40',
             'mpi': 'MPICH',
             'app': 'Lulesh',
-            'exec_path_env': 'LULESH_EXEC',
-            'app_exec': '',
+            'app_exec': '/home/samuel/devel/parallel-motifs/'
+                        'unstructured-grids/lulesh/lulesh2.0',
             'app_exec_opts': '-i 10 -s 50 -p'
         }
 
         self.numpes = self.gen_numpes()
-        self.experiment['app_exec'] = self.get_app_exec()
-
         self.numpe_runcmd = self.gen_runcmds()
-
-    def get_app_exec(self):
-        exec_env = self.experiment['exec_path_env']
-        execp = ''
-        try:
-            execp = os.environ[exec_env]
-        except KeyError as e:
-            print('Application exec path not set: {}'.format(e.message))
-            sys.exit(os.EX_CONFIG)
-        return execp
 
     def gen_numpes(self):
         '''
