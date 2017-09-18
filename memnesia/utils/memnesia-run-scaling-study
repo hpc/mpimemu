@@ -44,21 +44,43 @@ class RunConfiguration:
         if (file_name.endswith('.py')):
             return file_name[:-3]
 
+    def dry_run(self):
+        return self.args['dry_run']
+
+    def disable_trace(self):
+        return self.args['disable_trace']
+
 
 class Runner:
     def __init__(self, run_config):
         self.run_config = run_config
         self.user_config = self.run_config.user_config
+        self.dry_run = self.run_config.dry_run()
+        self.disable_trace = self.run_config.disable_trace()
         self.setup_env()
         self.make_data_dirs()
 
     def setup_env(self):
+        if (self.dry_run):
+            print(
+                '--> setting {} to {}'.format(
+                    'MEMNESIA_REPORT_OUTPUT_PATH',
+                    self.run_config.output_path)
+            )
+            return
+
         os.environ["MEMNESIA_REPORT_OUTPUT_PATH"] = self.run_config.output_path
 
     def make_data_dirs(self):
+        if (self.dry_run):
+            print(
+                '--> making dir {}'.format(self.run_config.output_path)
+            )
+            return
+
         os.makedirs(self.run_config.output_path, 0o750)
 
-    def run(self, with_trace=True, test=False):
+    def run(self):
         print('# Running the following Study')
         self.user_config.emit_config(sys.stdout)
 
@@ -66,18 +88,21 @@ class Runner:
         ld_preload = 'LD_PRELOAD={}'.format(self.run_config.args['trace_lib'])
 
         for numpe, appcmd in sorted(numpe_runcmd.iteritems()):
+            log_file = '{}/{}PE.log'.format(self.run_config.output_path, numpe)
             os.environ['MEMNESIA_REPORT_NAME'] = '{}PE'.format(numpe)
             rcmd = appcmd
-            if with_trace:
+            if not self.disable_trace:
                 rcmd = '{} {}'.format(ld_preload, appcmd)
 
-            if (test):
-                print('run: {}'.format(rcmd))
+            if (self.dry_run):
+                print('--> running {}'.format(rcmd))
                 continue
             # Else actually run the thing.
             for i in range(0, 3):
                 print('')
             print('Running: {}'.format(rcmd))
+
+            logf = open(log_file, 'w')
 
             p = subprocess.Popen(
                     rcmd,
@@ -89,6 +114,7 @@ class Runner:
             while (True):
                 o = p.stdout.readline()
                 sys.stdout.write(o)
+                logf.write(o)
 
                 if o == '' and p.poll() is not None:
                     break
@@ -164,15 +190,26 @@ def main(argv=None):
         help='Path to memneisa trace library.',
         required=True
     )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Enable dry run.',
+        required=False
+    )
+    parser.add_argument(
+        '--disable-trace',
+        action='store_true',
+        help='Disable tracing for runs.',
+        required=False
+    )
 
     arg_dict = vars(parser.parse_args())
 
     check_args(parser, arg_dict)
 
     runner = Runner(RunConfiguration(arg_dict))
-    with_trace = True
-    test = False
-    runner.run(with_trace, test)
+
+    runner.run()
 
     return os.EX_OK
 
