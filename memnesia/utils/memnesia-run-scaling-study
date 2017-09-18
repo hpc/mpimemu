@@ -75,8 +75,7 @@ class Runner:
                 print('run: {}'.format(rcmd))
                 continue
             # Else actually run the thing.
-            print('')
-            for i in range(0, 2):
+            for i in range(0, 3):
                 print('')
             print('Running: {}'.format(rcmd))
 

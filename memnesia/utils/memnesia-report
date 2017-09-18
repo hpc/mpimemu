@@ -211,6 +211,7 @@ class Experiment:
                 self.rank_to_time_series[rank] = ts
 
         RunMetadata.emit_stats(self.run_meta, sys.stdout)
+        print('')
 
 
 ###############################################################################
@@ -295,6 +296,8 @@ class Reporter:
 
             for plotk in self.key2plot.iterkeys():
                 self.plot(plotk)
+
+            print('# Report written to {}'.format(self.dname))
 
     def plot(self, plot_key):
         self.fig, self.ax = plt.subplots(figsize=self.figsize)
@@ -474,8 +477,7 @@ def main(argv=None):
 
     experiments = process_experiment_data(argv[1:])
 
-    r = Reporter(experiments)
-    print('# Report written to {}'.format(r.dname))
+    Reporter(experiments)
 
     return os.EX_OK
 
