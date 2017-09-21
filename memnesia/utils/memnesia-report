@@ -320,6 +320,7 @@ class Reporter:
         '''
         self.ax.set_xlim(xmin, xmax)
         # Show grids.
+        self.ax.grid(linestyle='dotted')
         self.ax.grid(True)
         # Set y labels.
         self.ax.set_ylabel(
