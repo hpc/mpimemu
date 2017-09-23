@@ -352,12 +352,10 @@ class Reporter:
                 'AGG_MPI_MEM_USAGE': 'aggregate-mpi-mem-usage-timeline.pdf'
             }
             self.ts2title = {
-                'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
-                'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
-                'AGG_ALL_MEM_USAGE': 'Aggregate Application '
-                                     'Memory Usage Over Time',
-                'AGG_MPI_MEM_USAGE': 'Aggregate MPI Library'
-                                     'Memory Usage Over Time',
+                'ALL_MEM_USAGE': 'Application Memory Usage',
+                'MPI_MEM_USAGE': 'MPI Library Memory Usage',
+                'AGG_ALL_MEM_USAGE': 'Aggregate Application Memory Usage',
+                'AGG_MPI_MEM_USAGE': 'Aggregate MPI Library Memory Usage',
             }
 
             self.fig = None
@@ -418,7 +416,9 @@ class Reporter:
             'Memory Usage (MB)', fontsize=self.axis_font_size
         )
         # Set y-tick format.
-        self.ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        # self.ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+        plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
         self.ax.set_title(
             self.ts2title[plot_key],
