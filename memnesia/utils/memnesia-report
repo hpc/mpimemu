@@ -151,6 +151,77 @@ class TimeSeries:
 
 
 ###############################################################################
+class TimeSeriesAccumulator:
+
+    @staticmethod
+    def deltas(tva):
+        res = []
+        for i in range(0, len(tva)):
+            if i == 0:
+                res.append(tva[i])
+                continue
+            t = tva[i][0]
+            v = tva[i][1]
+            v_prev = tva[i - 1][1]
+            res.append((t, v - v_prev))
+
+        return res
+
+    @staticmethod
+    def accumulate(e):
+        res = {
+            'MPI_MEM_USAGE': TimeSeries(),
+            'ALL_MEM_USAGE': TimeSeries()
+        }
+        ut_map = {
+            'MPI_MEM_USAGE': {},
+            'ALL_MEM_USAGE': {}
+        }
+        delta_map = {
+            'MPI_MEM_USAGE': [],
+            'ALL_MEM_USAGE': []
+        }
+        for _, ts in e.rank_to_time_series.iteritems():
+            for tsk, tsi in ts.iteritems():
+                tva = zip(tsi.data['times'], tsi.data['svals'])
+                delta_map[tsk] += TimeSeriesAccumulator.deltas(tva)
+
+        for k, v in delta_map.iteritems():
+            ut = ut_map[k]
+            for i in v:
+                t = i[0]
+                u = i[1]
+                if t in ut:
+                    ut[t] += u
+                else:
+                    ut[t] = u
+
+        tus_map = {
+            'MPI_MEM_USAGE': [],
+            'ALL_MEM_USAGE': []
+        }
+        for mk, mv in ut_map.iteritems():
+            tu = ut_map[mk]
+            tus = tus_map[mk]
+            first = True
+            for t, u in sorted(tu.iteritems()):
+                if first:
+                    tus.append((t, u))
+                    first = False
+                    continue
+                prev = tus[-1]
+                tui = (t, prev[1] + u)
+                tus.append(tui)
+
+        for k, v in sorted(tus_map.iteritems()):
+            ts = res[k]
+            for i in v:
+                ts.push(i[0], i[1])
+
+        return res
+
+
+###############################################################################
 class Experiment:
     def __init__(self, log_file):
         self.log_path = os.path.dirname(os.path.abspath(log_file))
@@ -161,6 +232,7 @@ class Experiment:
         Two level dict maps rank to usage type to time series.
         '''
         self.rank_to_time_series = collections.defaultdict(dict)
+        self.agg_ts = None
 
     def get_num_species(self):
         return len(self.rank_to_time_series)
@@ -209,6 +281,8 @@ class Experiment:
                     line_num += 1
 
                 self.rank_to_time_series[rank] = ts
+
+        self.agg_ts = TimeSeriesAccumulator.accumulate(self)
 
         RunMetadata.emit_stats(self.run_meta, sys.stdout)
         print('')
@@ -272,12 +346,18 @@ class Reporter:
             self.numpes = set()
 
             self.key2plot = {
-                'ALL_MEM_USAGE': 'application-mem-usage-timeline.pdf',
-                'MPI_MEM_USAGE': 'mpi-mem-usage-timeline.pdf'
+                'ALL_MEM_USAGE': 'app-mem-usage-timeline.pdf',
+                'MPI_MEM_USAGE': 'mpi-mem-usage-timeline.pdf',
+                'AGG_ALL_MEM_USAGE': 'aggregate-app-mem-usage-timeline.pdf',
+                'AGG_MPI_MEM_USAGE': 'aggregate-mpi-mem-usage-timeline.pdf'
             }
             self.ts2title = {
                 'ALL_MEM_USAGE': 'Application Memory Usage Over Time',
                 'MPI_MEM_USAGE': 'MPI Library Memory Usage Over Time',
+                'AGG_ALL_MEM_USAGE': 'Aggregate Application '
+                                     'Memory Usage Over Time',
+                'AGG_MPI_MEM_USAGE': 'Aggregate MPI Library'
+                                     'Memory Usage Over Time',
             }
 
             self.fig = None
@@ -303,13 +383,24 @@ class Reporter:
         self.fig, self.ax = plt.subplots(figsize=self.figsize)
         ''' Color maps setup '''
         num_colors = self.experiment.get_num_species()
+        if (plot_key in ['AGG_ALL_MEM_USAGE', 'AGG_MPI_MEM_USAGE']):
+            num_colors = 1
 
         colorer = Colorer(num_colors)
-        for rank, ts in self.experiment.rank_to_time_series.iteritems():
-            tsi = ts[plot_key]
+        if (plot_key in ['AGG_ALL_MEM_USAGE', 'AGG_MPI_MEM_USAGE']):
+            real_key = 'ALL_MEM_USAGE'
+            if plot_key == 'AGG_MPI_MEM_USAGE':
+                real_key = 'MPI_MEM_USAGE'
+            tsi = self.experiment.agg_ts[real_key]
             self.add_plot(
-                self.ax, colorer, rank, tsi
+                self.ax, colorer, tsi
             )
+        else:
+            for rank, ts in self.experiment.rank_to_time_series.iteritems():
+                tsi = ts[plot_key]
+                self.add_plot(
+                    self.ax, colorer, tsi
+                )
 
         scalf = 1.05
         xmin = 0
@@ -402,7 +493,7 @@ class Reporter:
             cbar.set_ticklabels(tick_labels)
         cbar.set_label('Global Process Identifier', rotation='vertical')
 
-    def add_plot(self, target_ax, colorer, rank, time_series):
+    def add_plot(self, target_ax, colorer, time_series):
         x = time_series.get('times')
         self.max_x = max(self.max_x, max(x))
 
