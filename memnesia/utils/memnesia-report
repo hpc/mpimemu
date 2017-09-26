@@ -13,7 +13,6 @@ import collections
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
@@ -352,9 +351,9 @@ class Reporter:
                 'AGG_MPI_MEM_USAGE': 'aggregate-mpi-mem-usage-timeline.pdf'
             }
             self.ts2title = {
-                'ALL_MEM_USAGE': 'Application Memory Usage',
+                'ALL_MEM_USAGE': 'Total Memory Usage',
                 'MPI_MEM_USAGE': 'MPI Library Memory Usage',
-                'AGG_ALL_MEM_USAGE': 'Aggregate Application Memory Usage',
+                'AGG_ALL_MEM_USAGE': 'Aggregate Total Memory Usage',
                 'AGG_MPI_MEM_USAGE': 'Aggregate MPI Library Memory Usage',
             }
 
