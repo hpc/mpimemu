@@ -1,12 +1,16 @@
 #include "mpi.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 
 int
 main(int argc, char **argv)
 {
-    static const int BIGB = 1024 * 1024;
+    static const int SML = 512;
+    static const int BIG = 1024 * 1024;
+    int sizes[] = {SML, BIG};
+
     MPI_Init(&argc, &argv);
 
     int myid, numprocs;
@@ -14,20 +18,25 @@ main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 
-    static const int n_txrx = 10;
+    static const int n_txrx = 50;
 
     for (int l = 0; l < n_txrx; ++l) {
-        int *buffer = malloc(sizeof(int) * BIGB * numprocs);
+        const int size = sizes[l % 2];
+        int *buffer = malloc(sizeof(int) * size * numprocs);
         assert(buffer);
-        int *buffer2 = malloc(sizeof(int) * BIGB * numprocs);
+        int *buffer2 = malloc(sizeof(int) * size * numprocs);
         assert(buffer2);
+
+        if (myid == 0) {
+            printf("# alltoall size: %d B\n", (int)(size * sizeof(int)));
+        }
 
         int rc = MPI_Alltoall(
             buffer,
-            BIGB,
+            size,
             MPI_INT,
             buffer2,
-            BIGB,
+            size,
             MPI_INT,
             MPI_COMM_WORLD
         );
