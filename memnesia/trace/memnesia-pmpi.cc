@@ -478,6 +478,36 @@ MPI_Reduce(
     return rc;
 }
 
+/**
+ *
+ */
+int
+MPI_Alltoall(
+    const void *sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void *recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
+    MPI_Comm comm
+) {
+    int rc = MPI_ERR_UNKNOWN;
+    {
+        memnesia_scoped_caliper caliper(MEMNESIA_FUNC);
+        rc = PMPI_Alltoall(
+            sendbuf,
+            sendcount,
+            sendtype,
+            recvbuf,
+            recvcount,
+            recvtype,
+            comm
+        );
+    }
+    //
+    return rc;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Other

@@ -1,5 +1,9 @@
 #include "mpi.h"
 #include <unistd.h>
+#include <stdlib.h>
+
+#define BIGB 4 * 1024 * 1024
+#define SMLB 1024
 
 int
 main(int argc, char **argv)
@@ -14,8 +18,8 @@ main(int argc, char **argv)
     static const int n_txrx = 1024;
 
     for (int i = 0; i < n_txrx; ++i) {
-        int buffer[100], buffer2[100];
-
+        int *buffer = malloc(sizeof(int) * BIGB);
+        int *buffer2 = malloc(sizeof(int) * BIGB);
 
         right = (myid + 1) % numprocs;
         left = myid - 1;
@@ -23,24 +27,26 @@ main(int argc, char **argv)
 
         MPI_Sendrecv(
             buffer,
-            100,
+            BIGB,
             MPI_INT,
             left,
             i,
             buffer2,
-            100,
+            BIGB,
             MPI_INT,
             right,
             i,
             MPI_COMM_WORLD,
             MPI_STATUS_IGNORE
         );
+        free(buffer);
+        free(buffer2);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     for (int i = 0; i < n_txrx; ++i) {
-        int buffer[10], buffer2[10];
+        int buffer[SMLB], buffer2[SMLB];
 
 
         right = (myid + 1) % numprocs;
@@ -49,12 +55,12 @@ main(int argc, char **argv)
 
         MPI_Sendrecv(
             buffer,
-            10,
+            SMLB,
             MPI_INT,
             right,
             i,
             buffer2,
-            10,
+            SMLB,
             MPI_INT,
             left,
             i,

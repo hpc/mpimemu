@@ -19,3 +19,13 @@ add_executable(
     mpi-sendrecv
     mpi-sendrecv.c
 )
+
+add_executable(
+    mpi-alltoall
+    mpi-alltoall.c
+)
+
+add_executable(
+    smaps-bench
+    smaps-bench.cc
+)
