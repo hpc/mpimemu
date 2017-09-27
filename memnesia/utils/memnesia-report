@@ -416,8 +416,10 @@ class Reporter:
         )
         # Set y-tick format.
         # self.ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-        plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-        plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+        plt.ticklabel_format(style='sci', axis='both', scilimits=(0, 0))
+        # For 'x10^i'
+        self.ax.xaxis.major.formatter._useMathText = True
+        self.ax.yaxis.major.formatter._useMathText = True
 
         self.ax.set_title(
             self.ts2title[plot_key],
