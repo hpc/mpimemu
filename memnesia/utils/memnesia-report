@@ -345,9 +345,9 @@ class Reporter:
             self.numpes = set()
 
             self.key2plot = {
-                'ALL_MEM_USAGE': 'app-mem-usage-timeline.pdf',
+                'ALL_MEM_USAGE': 'total-mem-usage-timeline.pdf',
                 'MPI_MEM_USAGE': 'mpi-mem-usage-timeline.pdf',
-                'AGG_ALL_MEM_USAGE': 'aggregate-app-mem-usage-timeline.pdf',
+                'AGG_ALL_MEM_USAGE': 'aggregate-total-mem-usage-timeline.pdf',
                 'AGG_MPI_MEM_USAGE': 'aggregate-mpi-mem-usage-timeline.pdf'
             }
             self.ts2title = {
@@ -424,7 +424,8 @@ class Reporter:
             fontsize=self.title_font_size
         )
 
-        self.add_colorbar_to_plot(num_colors)
+        if (plot_key not in ['AGG_ALL_MEM_USAGE', 'AGG_MPI_MEM_USAGE']):
+            self.add_colorbar_to_plot(num_colors)
         # self.add_mpi_init_shading_to_subplots()
         '''
         Set common y label.
