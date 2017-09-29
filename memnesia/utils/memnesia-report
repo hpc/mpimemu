@@ -385,6 +385,10 @@ class Reporter:
 
         colorer = Colorer(num_colors)
         if (plot_key in ['AGG_ALL_MEM_USAGE', 'AGG_MPI_MEM_USAGE']):
+            colorer = Colorer(4)
+            for burn in range(0, 2):
+                # burn a color
+                colorer.get_color()
             real_key = 'ALL_MEM_USAGE'
             if plot_key == 'AGG_MPI_MEM_USAGE':
                 real_key = 'MPI_MEM_USAGE'
