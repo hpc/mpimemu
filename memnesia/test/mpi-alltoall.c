@@ -27,6 +27,12 @@ main(int argc, char **argv)
         int *buffer2 = malloc(sizeof(int) * size * numprocs);
         assert(buffer2);
 
+        // Touch allocated pages.
+        for (int i = 0; i < size * numprocs; ++i) {
+            buffer[i] = myid;
+            buffer2[i] = 0;
+        }
+
         if (myid == 0) {
             printf("# alltoall size: %d B\n", (int)(size * sizeof(int)));
         }
@@ -40,13 +46,13 @@ main(int argc, char **argv)
             MPI_INT,
             MPI_COMM_WORLD
         );
-
         assert(rc == MPI_SUCCESS);
-
-        MPI_Barrier(MPI_COMM_WORLD);
 
         free(buffer);
         free(buffer2);
+
+        MPI_Barrier(MPI_COMM_WORLD);
+
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
