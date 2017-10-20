@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <utility>
 #include <deque>
+#include <vector>
 #include <iostream>
 
 using namespace std;
@@ -20,6 +21,8 @@ class smaps_parser {
     static constexpr size_t lbuff_size = 2 * PATH_MAX;
     //
     static constexpr size_t gets_size = lbuff_size - 1;
+    //
+    static constexpr size_t max_toks = 32;
     //
     static constexpr bool eop = true;
     //
@@ -33,7 +36,7 @@ class smaps_parser {
     tok_it(
         char *buff,
         const string &delim,
-        deque<string> &toks
+        vector<string> &toks
     ) {
         char *tokp = nullptr, *strp = buff;
         while ((tokp = strtok(strp, delim.c_str()))) {
@@ -60,7 +63,8 @@ class smaps_parser {
         // Format
         // address           perms offset   dev   inode   pathname
         // 08048000-08056000 r-xp  00000000 03:0c 64593   /usr/sbin/gpm
-        deque<string> toks;
+        vector<string> toks(max_toks);
+        toks.reserve(max_toks);
         tok_it(header, " ", toks);
         string pathname = toks.back();
         // Remove '\n'
@@ -99,7 +103,8 @@ class smaps_parser {
         // 0                     1    2
         // Key:                  Size Units
         while (fgets(lbuff, gets_size, smapsf)) {
-            deque<string> toks;
+            vector<string> toks;
+            toks.reserve(max_toks);
             tok_it(lbuff, " ", toks);
             // Remove ':'
             string key   = toks[kidx].substr(0, toks[kidx].length() - 1);
