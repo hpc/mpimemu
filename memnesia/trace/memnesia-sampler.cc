@@ -90,7 +90,7 @@ class smaps_parser {
     }
     //
     static bool
-    parse_rest(
+    parse_body(
         FILE *smapsf,
         bool add_entry_to_tally,
         memnesia_smaps_sampler::sample &sample
@@ -167,7 +167,7 @@ public:
         bool add_entry_to_tally = false;
         while (true) {
             if (eop == parse_header(smapsf, add_entry_to_tally)) break;
-            if (eop == parse_rest(smapsf, add_entry_to_tally, result)) break;
+            if (eop == parse_body(smapsf, add_entry_to_tally, result)) break;
         }
 
         fclose(smapsf);
