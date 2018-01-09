@@ -1,0 +1,1 @@
+- Consider using std::array where it makes sense.
