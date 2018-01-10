@@ -1,1 +1,2 @@
 - Consider using std::array where it makes sense.
+- Implement and integrate generic pager.
