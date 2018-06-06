@@ -1,5 +1,5 @@
 /*
- * Copyright (c)      2017 Los Alamos National Security, LLC.
+ * Copyright (c) 2017-2018 Los Alamos National Security, LLC.
  *                         All rights reserved.
  */
 
@@ -31,7 +31,7 @@ public:
     memnesia_sample(void) = default;
     //
     memnesia_sample(
-        std::string func_name
+        const std::string &func_name
     ) : target_func_name(func_name)
       , capture_time(memnesia_time())
       , smaps(memnesia_smaps_sampler::get_sample()
