@@ -286,7 +286,9 @@ get_sample(mmu_memory_t *mem,
 {
     int rc = MMU_SUCCESS;
     char *info_path = NULL;
-    char current_line_buf[256];
+    //TODO(skg) Why wasn't this buffer size not specifically called out as being
+    //too small?
+    char current_line_buf[1024];
     char current_key_buf[MMU_MEMORY_KEY_LEN_MAX];
     int key_index = 0;
     FILE *fp = NULL;
