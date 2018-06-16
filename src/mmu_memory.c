@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2013 Los Alamos National Security, LLC.
+ * Copyright (c) 2010-2018 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -50,6 +50,8 @@
 
 /* max key length */
 #define MMU_MEMORY_KEY_LEN_MAX 64
+/* max line length used for /proc entry parsing. */
+#define MMU_MEMORY_LINE_LEN_MAX 2048
 
 enum {
     VMPEAK = 0,
@@ -288,7 +290,7 @@ get_sample(mmu_memory_t *mem,
     char *info_path = NULL;
     //TODO(skg) Why wasn't this buffer size not specifically called out as being
     //too small?
-    char current_line_buf[1024];
+    char current_line_buf[MMU_MEMORY_LINE_LEN_MAX];
     char current_key_buf[MMU_MEMORY_KEY_LEN_MAX];
     int key_index = 0;
     FILE *fp = NULL;
