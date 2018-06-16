@@ -19,23 +19,23 @@ if [ -z "$PS1" ]; then
     exit 1;
 fi
 
-export MPIMEMU_START_INDEX=1
+export MPIMEMU_START_INDEX=0
 export MPIMEMU_PPN=16
 export MPIMEMU_MAX_PES=64
 #export MPIMEMU_RUN_CMD="mpirun -n nnn -npernode NNN aaa"
 export MPIMEMU_RUN_CMD="mpirun -n nnn aaa"
 
 ### some example numpe functions
-#export MPIMEMU_NUMPE_FUN="2**X"
+export MPIMEMU_NUMPE_FUN="2**X"
 #export MPIMEMU_NUMPE_FUN="2 * X * $MPIMEMU_PPN"
 #export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN ** X"
-export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * X"
+#export MPIMEMU_NUMPE_FUN="$MPIMEMU_PPN * X"
 
 export MPIMEMU_DATA_DIR_PREFIX="$HOME"
 # in samples per second
 export MPIMEMU_SAMPS_PER_S="10"
 # in seconds
-export MPIMEMU_SAMP_DURATION="10"
+export MPIMEMU_SAMP_DURATION="2"
 # disables synthetic mpi communication workload during data collection
 #export MPIMEMU_DISABLE_WORKLOAD=1
 
