@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2011-2017 Los Alamos National Security, LLC.
+# Copyright (c) 2011-2018 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -14,7 +14,7 @@
 
 AC_PREREQ([2.60])
 
-AC_INIT([mpimemu], [1.2-alpha], [samuel@lanl.gov])
+AC_INIT([mpimemu], [1.2], [samuel@lanl.gov])
 
 # Check If AM_SILENT_RULES Rule Are Supported
 # If So, Build Using AM_SILENT_RULES
@@ -68,7 +68,7 @@ AC_CONFIG_FILES([Makefile
 
 AC_OUTPUT
 
-# let the user know the configuration 
+# let the user know the configuration
 
 cat << EOF
 
