@@ -124,15 +124,6 @@ class smaps_parser {
                 if (add_entry_to_tally) {
                     sample.data_in_kb[idx] += to_int64(value);
                 }
-#if 1 // Debug memnesia memory usage using the PSS metric.
-                else {
-                    static uint64_t memnesia_pss = 0;
-                    if (memnesia_smaps_sampler::PSS == idx) {
-                        memnesia_pss += to_int64(value);
-                        std::cout << "MEMNESIA-PSS(kB)=" << memnesia_pss << std::endl;
-                    }
-                }
-#endif
                 // Sanity
                 static const string exp_units("kB");
                 if (exp_units != units) {
