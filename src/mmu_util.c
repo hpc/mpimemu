@@ -45,8 +45,8 @@ mmu_util_str_to_ull(const char *str,
     if (NULL == str || NULL == val_if_valid) return MMU_FAILURE_INVALID_ARG;
 
     *val_if_valid = 0;
-    tmp_ptr = (char *)str; 
-    
+    tmp_ptr = (char *)str;
+
     /* make certain str contrains only digits */
     while ('\0' != *tmp_ptr) {
         if (!isdigit(*tmp_ptr)) {
