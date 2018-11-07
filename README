@@ -163,7 +163,7 @@ Take idle system memory usage into consideration (e.g system image size).
 mpimemu can provide a general sense of memory usage scaling, but it is important
 to note that not all the memory being consumed on a compute resource is due to
 MPI library usage. Generally it is a good idea to start your scaling runs at 1
-MPI task to get a general sense about "close-to-base" memory usage (i.e base
+MPI task to get a general sense about "close-to-base" memory usage (i.e., base
 system usage).
 
 mpimemu-plot presents MPI memory usage as (MemUsed - Pre Init MemUsed). Please
@@ -177,7 +177,7 @@ Try the following if using mpicc.
 ./configure CC=mpicc
 
 ################################################################################
-Copyright (c) 2011-2017 Los Alamos National Security, LLC.
+Copyright (c) 2011-2018 Los Alamos National Security, LLC.
                         All rights reserved.
 
 This program was prepared by Los Alamos National Security, LLC at Los Alamos
