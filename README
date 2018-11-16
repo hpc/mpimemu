@@ -16,6 +16,18 @@ Please see README.QUICKSTART.
 http://hpc.github.com/mpimemu
 
 ########################################
+## Citing mpimemu
+########################################
+@techreport{gutierrez2018mpimemu,
+  title={{A Memory Consumption Benchmark for MPI Implementations}},
+  author={Samuel K. Guti\'{e}rrez},
+  year={2018},
+  institution={Los Alamos National Laboratory (LANL)},
+  address={Los Alamos, NM},
+  number={LA-UR-18-30898}
+}
+
+########################################
 ## Installation
 ########################################
 
