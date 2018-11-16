@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2011-2013 Los Alamos National Security, LLC.
+# Copyright (c) 2011-2018 Los Alamos National Security, LLC.
 #                         All rights reserved.
 #
 # This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -15,5 +15,5 @@
 SUBDIRS = src
 
 EXTRA_DIST = \
-AUTHORS README THANKS COPYRIGHT autogen ChangeLog util README.QUICKSTART
-
+AUTHORS README THANKS COPYRIGHT autogen ChangeLog util README.QUICKSTART \
+docs
