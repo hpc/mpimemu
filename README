@@ -16,6 +16,11 @@ Please see README.QUICKSTART.
 http://hpc.github.com/mpimemu
 
 ########################################
+## About mpimemu (Technical Report)
+########################################
+docs/mpimemu-report-20181114.pdf
+
+########################################
 ## Citing mpimemu
 ########################################
 @techreport{gutierrez2018mpimemu,
