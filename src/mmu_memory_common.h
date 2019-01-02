@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2012-2013 Los Alamos National Security, LLC.
+/*
+ * Copyright (c) 2012-2019 Los Alamos National Security, LLC.
  *                         All rights reserved.
  *
  * This program was prepared by Los Alamos National Security, LLC at Los Alamos
@@ -29,7 +29,7 @@ typedef uint16_t mmu_memory_flags_t;
 #define MMU_MEMORY_PROC_SELF_TAB_LEN 10
 /* number of elements in proc_node_tab - not including terminator */
 #define MMU_MEMORY_PROC_NODE_TAB_LEN 13
-/* must be max(MMU_MEMORY_PROC_SELF_TAB_LEN, MMU_MEMORY_PROC_NODE_TAB_LEN) */ 
+/* must be max(MMU_MEMORY_PROC_SELF_TAB_LEN, MMU_MEMORY_PROC_NODE_TAB_LEN) */
 #define MMU_MEMORY_SAMP_LIST_LEN MMU_MEMORY_PROC_NODE_TAB_LEN
 
 /* /// sample types /// */
