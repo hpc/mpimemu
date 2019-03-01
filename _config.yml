@@ -1,6 +1,6 @@
-title: Mpimemu
-description: Simple MPI application that approximates memory usage of mpi libraries.
-google_analytics: 
+title: mpimemu
+description: A memory consumption benchmark for MPI libraries.
+google_analytics:
 show_downloads: true
 theme: jekyll-theme-minimal
 
