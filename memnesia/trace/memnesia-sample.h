@@ -37,8 +37,7 @@ public:
         const std::string &func_name
     ) : target_func_name(func_name)
       , capture_time(memnesia_time())
-      , smaps(memnesia_smaps_sampler::get_sample()
-    ) { }
+      , smaps(memnesia_smaps_sampler::get_sample()) { }
     //
     std::string
     get_target_func_name(void) const
