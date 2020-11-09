@@ -1,5 +1,6 @@
 ### Distributions
-- [mpimemu-1.2.tar.gz](dists/mpimemu-1.2.tar.gz)
+- [mpimemu-1.3.tar.gz](dists/mpimemu-1.3.tar.gz)
+- [~~mpimemu-1.2.tar.gz~~](dists/mpimemu-1.2.tar.gz)
 - [~~mpimemu-1.1.tar.gz~~](dists/mpimemu-1.1.tar.gz)
 - [~~mpimemu-1.0.tar.gz~~](dists/mpimemu-1.0.tar.gz)
 
