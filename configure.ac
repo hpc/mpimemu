@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2019 Triad National Security, LLC
+# Copyright (c) 2011-2020 Triad National Security, LLC
 #                         All rights reserved.
 #
 # This file is part of the mpimemu project. See the LICENSE file at the
@@ -8,7 +8,7 @@
 
 AC_PREREQ([2.60])
 
-AC_INIT([mpimemu], [1.3-alpha], [samuel@lanl.gov])
+AC_INIT([mpimemu], [1.3], [samuel@lanl.gov])
 
 # Check If AM_SILENT_RULES Rule Are Supported
 # If So, Build Using AM_SILENT_RULES
