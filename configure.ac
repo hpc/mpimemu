@@ -8,7 +8,7 @@
 
 AC_PREREQ([2.60])
 
-AC_INIT([mpimemu], [1.3], [samuel@lanl.gov])
+AC_INIT([mpimemu], [1.4-alpha], [samuel@lanl.gov])
 
 # Check If AM_SILENT_RULES Rule Are Supported
 # If So, Build Using AM_SILENT_RULES
