@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Triad National Security, LLC
+ * Copyright (c) 2010-2020 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -159,7 +159,7 @@ mmu_process_set_sample_time(mmu_process_t *p,
 static int
 sample(mmu_process_t *p, mmu_memory_flags_t flags)
 {
-    int rc = MMU_FAILURE, i = 0;
+    int rc = MMU_FAILURE;
     bool dowork = (mmu_mpi_with_workload(p->mpi) && mmu_mpi_initialized());
     size_t total_iters = 0;
     useconds_t sleep_utime;
@@ -177,7 +177,7 @@ sample(mmu_process_t *p, mmu_memory_flags_t flags)
     sleep_utime = mmu_memory_get_usleep_time_per_iteration(p->memory);
 
     /* /// start sampling /// */
-    for (i = 0; i < total_iters; ++i) {
+    for (size_t i = 0; i < total_iters; ++i) {
         /* only add an mpi workload if requested and mpi has been initialized */
         if (dowork) {
             if (MMU_SUCCESS != (rc = mmu_mpi_work(p->mpi))) {
@@ -627,8 +627,8 @@ mmu_process_process_usage(const mmu_process_t *p)
 
     if (mmu_mpi_world_rank_zero(p->mpi)) {
         fprintf(stdout, "### item name, min (kB), max (kB), average (kB)\n");
-        int samp_type_index = 0;
-        int samp_item_index = 0;
+        size_t samp_type_index = 0;
+        size_t samp_item_index = 0;
         for (samp_type_index = 0;
              samp_type_index < p->memory->num_sample_types;
              ++samp_type_index) {

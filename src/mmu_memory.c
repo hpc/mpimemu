@@ -111,7 +111,7 @@ static char * mmu_memory_proc_node_tab[MMU_MEMORY_PROC_NODE_TAB_LEN + 1] = {
 static inline bool
 is_valid_key(const char *key,
              mmu_memory_flags_t flags,
-             int *tab_index_if_valid)
+             size_t *tab_index_if_valid)
 {
     int i;
     char **target_tab_ptr = NULL;
@@ -216,7 +216,7 @@ memory_node_dump(const mmu_memory_sample_t *sample)
 /* ////////////////////////////////////////////////////////////////////////// */
 static inline int
 update_memory_data(mmu_memory_sample_t *sample,
-                   int target_index,
+                   size_t target_index,
                    unsigned long long int value)
 {
     if (NULL == sample) return MMU_FAILURE_INVALID_ARG;
@@ -286,7 +286,7 @@ get_sample(mmu_memory_t *mem,
     //too small?
     char current_line_buf[MMU_MEMORY_LINE_LEN_MAX];
     char current_key_buf[MMU_MEMORY_KEY_LEN_MAX];
-    int key_index = 0;
+    size_t key_index = 0;
     FILE *fp = NULL;
     mmu_list_t *target_list_ptr = NULL;
     mmu_memory_sample_t *sample = NULL;
