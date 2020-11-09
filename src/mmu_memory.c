@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Triad National Security, LLC
+ * Copyright (c) 2010-2020 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -394,7 +394,7 @@ get_sample(mmu_memory_t *mem,
             }
             /* cap before we process because
              * mmu_util_str_to_ull only wants digits */
-            while ('\0' != hptr && isdigit(*hptr)) {
+            while ('\0' != *hptr && isdigit(*hptr)) {
                 ++hptr;
             }
             *hptr = '\0';
