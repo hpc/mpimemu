@@ -51,6 +51,7 @@ get_mpi_err_str(int mpirc)
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+#if MPI_VERSION < 3
 static const char *
 get_herr_str(int h_err)
 {
@@ -79,7 +80,6 @@ get_herr_str(int h_err)
     return err_str;
 }
 
-#if MPI_VERSION < 3
 /* ////////////////////////////////////////////////////////////////////////// */
 static int
 get_netnum(mmu_mpi_t *m,
