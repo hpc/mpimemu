@@ -90,15 +90,19 @@ of various sizes. The following environment variables change the way
 `MPIMEMU_RUN_CMD`: Specifies a *run template* that will be used to launch
 mpimemu jobs.
 
-### Example Run Template with mpirun
+### Example Run Templates With `mpirun`
 ```
 mpirun -n nnn aaa
+```
+```
 mpirun -n nnn -npernode NNN aaa
 ```
 
-### Example Run Template with aprun
+### Example Run Templates with `aprun`
 ```
 aprun -n nnn aaa
+```
+```
 aprun -n nnn -N NNN aaa
 ```
 
@@ -115,12 +119,12 @@ changes after each run and is determined by `MPIMEMU_NUMPE_FUN(X)`. More on
 `NNN`: Replaced with `MPIMEMU_PPN`. If `MPIMEMU_PPN` is not set, 1 will be used.
 
 `MPIMEMU_NUMPE_FUN`: Specifies the function that determines how `nnn` grows with
-respect to X. "X" must be provided within the string defining the function.
+respect to X. **"X" must be provided within the string defining the function.**
 
 ### Example (bash-like)
 ```
 export MPIMEMU_START_INDEX=1
-export MPIMEMU_NUMPE_FUN="X + 1"
+export MPIMEMU_NUMPE_FUN="X+1"
 export MPIMEMU_MAX_PES=4
 ```
 Will run jobs of size 1, 2, 3, 4.
@@ -199,7 +203,7 @@ MPI library usage. Generally it is good practice to start your scaling runs at 1
 MPI process to get a general sense about *close-to-base* memory usage (i.e.,
 base system usage).
 
-`mpimemu-plot` presents MPI memory usage as (MemUsed - Pre Init MemUsed). Please
+`mpimemu-plot` presents MPI memory usage as `MemUsed - Pre Init MemUsed`. Please
 contact me if you have a better metric.
 
 ## FAQ
@@ -208,7 +212,7 @@ Why is configure failing with:
 ```
 [X] cannot compile MPI applications. cannot continue.
 ```
-Try the following if using mpicc.
+Try the following, if using `mpicc`.
 ```
 ./configure CC=mpicc
 ```
