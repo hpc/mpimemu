@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2010-2019 Triad National Security, LLC
+ * Copyright (c) 2010-2021 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
  * top-level directory of this distribution.
  */
 
-#ifndef CONSTANTS_INCLUDED
-#define CONSTANTS_INCLUDED
+#ifndef MMU_CONSTANTS_INCLUDED
+#define MMU_CONSTANTS_INCLUDED
 
 /* default sample rate in samples per second */
 #define MMU_DEFAULT_SAMPLE_RATE 10
@@ -38,6 +38,6 @@ enum {
     MMU_FAILURE_LIST_POP,
     /* differing processes per node */
     MMU_FAILURE_PPN_DIFFERS
-} mpimemu_ret;
+};
 
-#endif /* ifndef CONSTANTS_INCLUDED */
+#endif /* ifndef MMU_CONSTANTS_INCLUDED */

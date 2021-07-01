@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 Triad National Security, LLC
+ * Copyright (c) 2010-2021 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -42,10 +42,10 @@
 #include <stdint.h>
 #endif
 
-/* max key length */
-#define MMU_MEMORY_KEY_LEN_MAX 64
 /* max line length used for /proc entry parsing. */
-#define MMU_MEMORY_LINE_LEN_MAX 2048
+#define MMU_MEMORY_LINE_LEN_MAX 4096
+/* max key length */
+#define MMU_MEMORY_KEY_LEN_MAX MMU_MEMORY_LINE_LEN_MAX
 
 enum {
     VMPEAK = 0,
