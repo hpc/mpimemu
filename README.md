@@ -90,7 +90,7 @@ of various sizes. The following environment variables change the way
 `MPIMEMU_RUN_CMD`: Specifies a *run template* that will be used to launch
 mpimemu jobs.
 
-### Example Run Templates With `mpirun`
+### Example Run Templates With mpirun
 ```
 mpirun -n nnn aaa
 ```
@@ -98,7 +98,7 @@ mpirun -n nnn aaa
 mpirun -n nnn -npernode NNN aaa
 ```
 
-### Example Run Templates with `aprun`
+### Example Run Templates With aprun
 ```
 aprun -n nnn aaa
 ```
