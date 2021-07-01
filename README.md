@@ -9,7 +9,7 @@ Please see [README.QUICKSTART](README.QUICKSTART).
 
 ## Latest Distributions
 
-http://hpc.github.com/mpimemu
+https://hpc.github.io/mpimemu
 
 ## About mpimemu (Technical Report)
 
@@ -123,7 +123,7 @@ export MPIMEMU_START_INDEX=1
 export MPIMEMU_NUMPE_FUN="X + 1"
 export MPIMEMU_MAX_PES=4
 ```
-Will run jobs of size: 1, 2, 3, 4.
+Will run jobs of size 1, 2, 3, 4.
 
 ### Useful, Accepted Arithmetic Operators
 ```
@@ -205,7 +205,9 @@ contact me if you have a better metric.
 ## FAQ
 
 Why is configure failing with:
+```
 [X] cannot compile MPI applications. cannot continue.
+```
 Try the following if using mpicc.
 ```
 ./configure CC=mpicc
