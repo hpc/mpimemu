@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
-# Copyright (c) 2017-2019 Triad National Security, LLC
+# Copyright (c) 2017-2021 Triad National Security, LLC
 #                         All rights reserved.
 #
 # This file is part of the mpimemu project. See the LICENSE file at the
@@ -183,12 +183,12 @@ class TimeSeriesAccumulator:
             'MPI_MEM_USAGE': [],
             'ALL_MEM_USAGE': []
         }
-        for _, ts in e.rank_to_time_series.iteritems():
-            for tsk, tsi in ts.iteritems():
-                tva = zip(tsi.data['times'], tsi.data['svals'])
+        for _, ts in e.rank_to_time_series.items():
+            for tsk, tsi in ts.items():
+                tva = list(zip(tsi.data['times'], tsi.data['svals']))
                 delta_map[tsk] += TimeSeriesAccumulator.deltas(tva)
 
-        for k, v in delta_map.iteritems():
+        for k, v in delta_map.items():
             ut = ut_map[k]
             for i in v:
                 t = i[0]
@@ -202,11 +202,11 @@ class TimeSeriesAccumulator:
             'MPI_MEM_USAGE': [],
             'ALL_MEM_USAGE': []
         }
-        for mk, mv in ut_map.iteritems():
+        for mk, mv in ut_map.items():
             tu = ut_map[mk]
             tus = tus_map[mk]
             first = True
-            for t, u in sorted(tu.iteritems()):
+            for t, u in sorted(tu.items()):
                 if first:
                     tus.append((t, u))
                     first = False
@@ -215,7 +215,7 @@ class TimeSeriesAccumulator:
                 tui = (t, prev[1] + u)
                 tus.append(tui)
 
-        for k, v in sorted(tus_map.iteritems()):
+        for k, v in sorted(tus_map.items()):
             ts = res[k]
             for i in v:
                 ts.push(i[0], i[1])
@@ -267,13 +267,13 @@ class Experiment:
 
                 while (line_num < num_lines and
                        content[line_num] != '# [Run Info Begin]'):
-                    l = content[line_num]
+                    ln = content[line_num]
                     # Skip comments.
-                    if (l.startswith('#')):
+                    if ln.startswith('#'):
                         line_num += 1
                         continue
 
-                    ldata = l.split(' ')
+                    ldata = ln.split(' ')
                     dtype = ldata[0]
                     # dfunc = ldata[1]
                     dtime = float(ldata[2])
@@ -374,7 +374,7 @@ class Reporter:
             self.fig_height = 3
             self.figsize = (self.fig_width, self.fig_height)
 
-            for plotk in self.key2plot.iterkeys():
+            for plotk in self.key2plot.keys():
                 self.plot(plotk)
 
             print('# Report written to {}'.format(self.dname))
@@ -400,7 +400,7 @@ class Reporter:
                 self.ax, colorer, tsi
             )
         else:
-            for rank, ts in self.experiment.rank_to_time_series.iteritems():
+            for rank, ts in self.experiment.rank_to_time_series.items():
                 tsi = ts[plot_key]
                 self.add_plot(
                     self.ax, colorer, tsi

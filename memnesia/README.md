@@ -41,3 +41,21 @@ newly generated output data. For example,
 #
 # Report written to /home/samuel/supermagic-20210812-132413.memnesia
 ```
+
+## Generating a Report
+
+Install script prerequisites:
+```shell
+python3 -m pip install --user matplotlib
+```
+
+Run `memnesia-report`:
+```shell
+/path/to/memnesia-report /path/to/output_data.memnesia
+```
+
+If successful, the path to the newly generated report will be displayed.  For
+example,
+```
+# Report written to /home/samuel/supermagic-2PE-memnesia-report
+```
