@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 Triad National Security, LLC
+ * Copyright (c) 2017-2021 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -139,14 +139,6 @@ class smaps_parser {
                     );
                     exit(EXIT_FAILURE);
                 }
-            }
-            else {
-                fprintf(
-                    stderr,
-                    "PARSE ERROR: Unexpected format: key \'%s\' not found.\n",
-                    key.c_str()
-                );
-                exit(EXIT_FAILURE);
             }
         }
         return (hit_last ? !eop : eop);

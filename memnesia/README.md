@@ -12,6 +12,32 @@ cd build &&  CC=mpicc CXX=mpic++ cmake .. && make -j2 && cd -
 ```
 
 ## Run
+Running under memnesia supervision is straightforward for dynamically linked
+executables: simply `LD_PRELOAD` the `memnesia-trace.so` library that is
+generated at build time.
+For example,
 ```
-TODO
+LD_PRELOAD=/path/to/memnesia-trace.so mpirun -n 2 ./supermagic
+```
+
+If memnesia instrumentation was successfully loaded, then the following
+banner will be displayed:
+```
+#
+#
+#  _______ _______________ _________________________(_)_____ _
+#  __  __ `__ \  _ \_  __ `__ \_  __ \  _ \_  ___/_  /_  __ `/
+#  _  / / / / /  __/  / / / / /  / / /  __/(__  )_  / / /_/ /
+#  /_/ /_/ /_/\___//_/ /_/ /_//_/ /_/\___//____/ /_/  \__,_/
+#
+#
+```
+
+At the end of the application's execution, memnesia will emit the path of the
+newly generated output data. For example,
+```
+#
+# memnesia memory consumption analysis complete...
+#
+# Report written to /home/samuel/supermagic-20210812-132413.memnesia
 ```
