@@ -60,7 +60,7 @@ example,
 # Report written to /home/samuel/supermagic-2PE-memnesia-report
 ```
 
-## Citing [memnesia](memnesia)
+## Citing memnesia
 
 ```
 @article{gutierrez:ccpe:2019,
