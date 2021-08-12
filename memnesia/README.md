@@ -49,7 +49,7 @@ Install script prerequisites:
 python3 -m pip install --user matplotlib
 ```
 
-Run `memnesia-report`:
+Run [memnesia-report](utils/memnesia-report):
 ```shell
 /path/to/memnesia-report /path/to/output_data.memnesia
 ```
@@ -58,4 +58,20 @@ If successful, the path to the newly generated report will be displayed.  For
 example,
 ```
 # Report written to /home/samuel/supermagic-2PE-memnesia-report
+```
+
+## Citing [memnesia](memnesia)
+
+```
+@article{gutierrez:ccpe:2019,
+  title={{On the Memory Attribution Problem: A Solution and Case Study Using MPI}},
+  author={Samuel K. Guti\'{e}rrez and Dorian C. Arnold and Kei Davis and Patrick
+      McCormick},
+  journal={Journal on Concurrency and Computation: Practice and Experience},
+  pages={e5159},
+  publisher={Wiley Online Library},
+  year={2019},
+  month={February},
+  doi={https://doi.org/10.1002/cpe.5159}
+}
 ```
