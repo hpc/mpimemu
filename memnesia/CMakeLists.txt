@@ -1,17 +1,21 @@
 #
-# Copyright (c) 2017-2019 Triad National Security, LLC
+# Copyright (c) 2017-2021 Triad National Security, LLC
 #                         All rights reserved.
 #
 # This file is part of the mpimemu project. See the LICENSE file at the
 # top-level directory of this distribution.
 #
 
-project(memnesia)
+# Set minimum required cmake version
+cmake_minimum_required(VERSION 3.19)
 
-cmake_minimum_required(VERSION 3.1)
+project(memnesia VERSION 0.0.1 LANGUAGES C CXX)
 
 # Enable C++11 support.
 set (CMAKE_CXX_STANDARD 11)
+
+# Generate a compile_commands.json file (for development tools)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -Wall -Wextra -g \
