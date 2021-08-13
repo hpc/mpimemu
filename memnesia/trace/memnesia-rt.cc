@@ -89,7 +89,7 @@ memnesia_rt::set_target_cmdline(void)
     if ((nl = strchr(lb, '\n')) != NULL) {
         *nl = '\0';
     }
-    snprintf(app_comm, sizeof(app_comm) - 1, "%s", lb);
+    snprintf(app_comm, sizeof(app_comm), "%s", lb);
 
     fclose(commf);
 }
