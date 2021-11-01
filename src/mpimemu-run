@@ -63,7 +63,7 @@ sub which_mpimemu
 {
     my $which_mpimemu = undef;
 
-    $which_mpimemu = `which mpimemu 2>/dev/null`;
+    chomp($which_mpimemu = `which mpimemu 2>/dev/null`);
 
     if (!$which_mpimemu) {
         # check if it is in the same directory as this script
