@@ -19,9 +19,6 @@ AC_CONFIG_SRCDIR([src])
 # note: -Wall -Werror are automake options.  they are NOT compiler flags
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
-AM_CONFIG_HEADER([config.h])
-
-AC_GNU_SOURCE
 # checks for programs.
 # note that we are checking for mpicc first, the next check will verify CC
 AC_PROG_CC([mpicc cc])
@@ -38,7 +35,6 @@ AC_LINK_IFELSE([
 )
 
 AM_PROG_CC_C_O
-AC_PROG_CC_C99
 
 # checks for libraries.
 # none at this point
