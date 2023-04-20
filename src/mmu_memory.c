@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2021 Triad National Security, LLC
+ * Copyright (c) 2010-2023 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -481,7 +481,7 @@ mmu_memory_mma_ptr_list_construct(size_t list_len,
 
     *new_ptr_list = NULL;
     /* +1 for NULL cap -- so we know when to stop traversing the pointer list */
-    if (NULL == (new = calloc(list_len + 1, sizeof(*new)))) {
+    if (NULL == (new = calloc(list_len + 1, sizeof(mmu_memory_sample_mma_t *)))) {
         MMU_OOR_COMPLAIN();
         return MMU_FAILURE_OOR;
     }
@@ -570,7 +570,7 @@ mmu_memory_construct(mmu_memory_t **m)
         return MMU_FAILURE_OOR;
     }
     if (NULL == (tmp->sample_list =
-        calloc(MMU_MEMORY_LAST, sizeof(*(tmp->sample_list))))) {
+        calloc(MMU_MEMORY_LAST, sizeof(mmu_list_t *)))) {
         MMU_OOR_COMPLAIN();
         goto out;
     }

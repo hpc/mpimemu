@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 Triad National Security, LLC
+ * Copyright (c) 2010-2023 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -125,10 +125,12 @@ list_grow(mmu_list_t *list,
 }
 
 /* ////////////////////////////////////////////////////////////////////////// */
+#if 0
 static inline bool
 list_full(const mmu_list_t *list) {
     return (list->capacity == list->size);
 }
+#endif
 
 /* ////////////////////////////////////////////////////////////////////////// */
 int

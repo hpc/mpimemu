@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011-2021 Triad National Security, LLC
+# Copyright (c) 2011-2023 Triad National Security, LLC
 #                         All rights reserved.
 #
 # This file is part of the mpimemu project. See the LICENSE file at the
@@ -21,6 +21,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AM_CONFIG_HEADER([config.h])
 
+AC_GNU_SOURCE
 # checks for programs.
 # note that we are checking for mpicc first, the next check will verify CC
 AC_PROG_CC([mpicc cc])
@@ -38,7 +39,6 @@ AC_LINK_IFELSE([
 
 AM_PROG_CC_C_O
 AC_PROG_CC_C99
-AC_GNU_SOURCE
 
 # checks for libraries.
 # none at this point
