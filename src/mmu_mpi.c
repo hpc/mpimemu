@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 Triad National Security, LLC
+ * Copyright (c) 2010-2023 Triad National Security, LLC
  *                         All rights reserved.
  *
  * This file is part of the mpimemu project. See the LICENSE file at the
@@ -499,7 +499,7 @@ mmu_mpi_finalize(mmu_mpi_t *m)
 bool
 mmu_mpi_initialized(void)
 {
-    int initialized;
+    int initialized = 0;
 
     (void)MPI_Initialized(&initialized);
 

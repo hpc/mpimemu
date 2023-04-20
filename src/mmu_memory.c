@@ -501,14 +501,13 @@ mmu_memory_mma_ptr_list_destruct(mmu_memory_sample_mma_t ***ptr_list)
 
     tmp = *ptr_list;
     if (NULL != tmp) {
-        int i;
-        for (i = 0; NULL != tmp[i]; ++i) {
-            free(tmp[i]);
-            tmp[i] = NULL;
+        for (int i = 0; NULL != tmp[i]; ++i) {
+            mmu_memory_sample_mma_destruct(&tmp[i]);
         }
         free(tmp);
         tmp = NULL;
     }
+    *ptr_list = NULL;
 
     return MMU_SUCCESS;
 }
