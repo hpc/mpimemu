@@ -194,7 +194,7 @@ mmu_list_append(mmu_list_t *list,
                 const void *base,
                 size_t extent)
 {
-    mmu_list_item_t *new_item;
+    mmu_list_item_t *new_item = NULL;
     int rc = MMU_FAILURE;
 
     if (NULL == list || NULL == base || 0 == extent) {
