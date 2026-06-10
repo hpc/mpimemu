@@ -123,7 +123,7 @@ respect to X. **"X" must be provided within the string defining the function.**
 
 ### Example (bash-like)
 ```
-export MPIMEMU_START_INDEX=1
+export MPIMEMU_START_INDEX=0
 export MPIMEMU_NUMPE_FUN="X+1"
 export MPIMEMU_MAX_PES=4
 ```
